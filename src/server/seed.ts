@@ -173,16 +173,24 @@ export function ownedGear(db: DB): OwnedGear[] {
  * (builtin=1) is linked to its library entry, and grinders without saved ranges get the library's
  * ranges — the same values the old hardcoded chart supplied, so conversions don't change.
  */
-export function linkGearToCatalog(db: DB) {
-  const rows = db.prepare("SELECT id, grindRanges, catalogId FROM gear_items WHERE builtin=1").all() as { id: string; grindRanges: string | null; catalogId: string | null }[];
+export function linkGearToCatalog(db: DB, dir = SEED_DIR) {
+  const rows = db.prepare("SELECT id, type, units, grindRanges, catalogId FROM gear_items WHERE builtin=1").all() as { id: string; type: string; units: string | null; grindRanges: string | null; catalogId: string | null }[];
+  if (!rows.length) return 0;
+  // Ranges these installs used came from code that no longer exists. If the install's seed
+  // setup.json says which ranges/units it uses, those win over the library's (which may differ).
+  const setup = readSeed<{ grindRanges?: Record<string, unknown>; units?: Record<string, string> }>("setup.json", dir) ?? {};
   let linked = 0;
   db.transaction(() => {
     for (const r of rows) {
       const c = catalogGear(r.id);
       if (!c) continue;
-      const ranges = r.grindRanges ?? (c.grindRanges ? JSON.stringify(c.grindRanges) : null);
-      db.prepare("UPDATE gear_items SET catalogId=?, catalogVersion=?, category=?, grindRanges=?, builtin=0 WHERE id=?")
-        .run(c.id, c.version, c.category, ranges, r.id);
+      const own = setup.grindRanges?.[r.id];
+      const ranges = r.grindRanges ?? (own ? JSON.stringify(own) : c.grindRanges ? JSON.stringify(c.grindRanges) : null);
+      const units = setup.units?.[r.id] ?? r.units;
+      db.prepare("UPDATE gear_items SET catalogId=?, catalogVersion=?, category=?, grindRanges=?, units=?, builtin=0 WHERE id=?")
+        .run(c.id, c.version, c.category, ranges, units, r.id);
+      if (r.type === "grinder" && !ranges) console.warn(`[catalog] ${r.id}: no grind ranges (none saved, none in setup.json, none in the library) — conversions show "no conversion data yet"`);
+      else if (r.type === "grinder" && !r.grindRanges) console.log(`[catalog] ${r.id}: ranges from ${own ? "this install's setup.json" : "the gear library"}`);
       linked++;
     }
   })();

@@ -201,3 +201,20 @@ test("suggest: library gear → an update of that entry with the user's ranges, 
   assert.ok(up.githubUrl.endsWith("/edit/main/catalog/gear/comandante-c40.json"));
   assert.ok(libraryEntryFor({ ...g, grindRanges: null }, {}).issues.some((i) => /Nothing to suggest/.test(i)));
 });
+
+test("older installs: linking uses the install's setup.json ranges/units over the library's", () => {
+  const dir = fs.mkdtempSync(path.join(tmp, "old-own-"));
+  const own = { step: 1, methods: { pourover: { low: 80, high: 100 } } };
+  fs.writeFileSync(path.join(dir, "setup.json"), JSON.stringify({ grindRanges: { k6: own }, units: { k6: "clicks" } }));
+  const db = openDb(path.join(tmp, "old-own.db"));
+  const t = new Date().toISOString();
+  for (const id of ["k6", "zp6"]) db.prepare("INSERT INTO gear_items (id, name, type, units, builtin, grindRanges, createdAt, updatedAt) VALUES (?, ?, 'grinder', 'x', 1, NULL, ?, ?)").run(id, id, t, t);
+  assert.equal(linkGearToCatalog(db, dir), 2);
+  const k6 = db.prepare("SELECT * FROM gear_items WHERE id='k6'").get();
+  assert.deepEqual(JSON.parse(k6.grindRanges), own, "the install's ranges, not the library's");
+  assert.equal(k6.units, "clicks");
+  const zp6 = db.prepare("SELECT * FROM gear_items WHERE id='zp6'").get();
+  assert.deepEqual(JSON.parse(zp6.grindRanges), cat.gear.find((g) => g.id === "zp6").grindRanges ?? null, "no override → library");
+  assert.equal(zp6.units, "x", "units untouched without an override");
+  db.close();
+});
