@@ -21,7 +21,7 @@ const SPEC = JSON.parse(fs.readFileSync("tests/fixtures/spec-grinders.json", "ut
 const FULL_SETUP = path.resolve("tests/fixtures/full-setup");
 const owned = (ids) => ids.map((id) => {
   const c = cat.gear.find((g) => g.id === id);
-  return { id: c.id, name: c.name, type: c.type, category: c.category, units: c.units, grindRanges: SPEC[id]?.grindRanges ?? c.grindRanges ?? null };
+  return { id: c.id, name: c.name, type: c.type, category: c.category, units: SPEC[id]?.units ?? c.units, grindRanges: SPEC[id]?.grindRanges ?? c.grindRanges ?? null };
 });
 
 test("library loads with no errors; templates reference real gear", () => {
@@ -123,11 +123,14 @@ test("no gear is hardcoded in src/ (library ids never appear as string literals)
 test("an install's setup.json can carry its own ranges for a gear item (used instead of the library's)", () => {
   const dir = fs.mkdtempSync(path.join(tmp, "own-ranges-"));
   const own = { step: 1, methods: { pourover: { low: 10, high: 20 } } };
-  fs.writeFileSync(path.join(dir, "setup.json"), JSON.stringify({ gear: ["ode-gen2", "hario-v60-02"], recipes: [], grindRanges: { "ode-gen2": own } }));
+  fs.writeFileSync(path.join(dir, "setup.json"), JSON.stringify({ gear: ["ode-gen2", "hario-v60-02"], recipes: [], grindRanges: { "ode-gen2": own }, units: { "ode-gen2": "notches" } }));
   const db = openDb(path.join(tmp, "own-ranges.db"));
   runSeed(db, dir);
   assert.deepEqual(JSON.parse(db.prepare("SELECT grindRanges FROM gear_items WHERE id='ode-gen2'").get().grindRanges), own);
   assert.equal(db.prepare("SELECT catalogId FROM gear_items WHERE id='ode-gen2'").get().catalogId, "ode-gen2", "still linked to the library");
+  assert.equal(db.prepare("SELECT units FROM gear_items WHERE id='ode-gen2'").get().units, "notches");
+  runSeed(db, dir); // a re-run keeps the install's units
+  assert.equal(db.prepare("SELECT units FROM gear_items WHERE id='ode-gen2'").get().units, "notches");
   db.close();
 });
 

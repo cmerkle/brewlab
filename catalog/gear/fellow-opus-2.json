@@ -1,0 +1,49 @@
+{
+  "id": "fellow-opus-2",
+  "version": 1,
+  "name": "Fellow Opus 2",
+  "brand": "Fellow",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Electric conical burr grinder; dial 0–10 with fine adjustment for espresso.",
+  "units": "",
+  "burrs": null,
+  "espressoCapable": true,
+  "grindRanges": {
+    "scale": "dial 0–10",
+    "min": 0,
+    "max": 10,
+    "methods": {
+      "espresso": {
+        "low": 0,
+        "high": 2
+      },
+      "aeropress": {
+        "low": 3,
+        "high": 5
+      },
+      "pourover": {
+        "low": 5,
+        "high": 9
+      },
+      "immersion": {
+        "low": 8,
+        "high": 10
+      },
+      "batch": {
+        "low": 7,
+        "high": 10
+      }
+    },
+    "notes": {
+      "batch": "Fellow's Aiden batch-brew range; Aiden single-serve is 5–7.",
+      "immersion": "French press and cold brew.",
+      "aeropress": "Prismo attachment: 1–3."
+    }
+  },
+  "rangeInfo": {
+    "confidence": "manufacturer",
+    "source": "https://www.sweetmarias.com/cdn/shop/files/Fellow_Opus_2_Getting_Started_Guide.pdf",
+    "note": "Fellow Opus 2 Getting Started Guide (hosted by a retailer), grind settings chart: espresso 0–2, Prismo 1–3, AeroPress 3–5, pour-over 5–9, French press/cold brew 8–10; Aiden settings: single-serve 5–7, batch brew 7–10. “For darker roasts, select a higher number within the recommended grind range.”"
+  }
+}

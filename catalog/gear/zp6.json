@@ -1,12 +1,36 @@
 {
   "id": "zp6",
-  "version": 1,
+  "version": 2,
   "name": "1Zpresso ZP6",
   "brand": "1Zpresso",
   "type": "grinder",
   "category": "hand-grinder",
-  "details": "Hand grinder for filter; preferred for clarity on pour over.",
-  "units": "rotations",
+  "details": "Hand grinder for filter coffee. External dial read in numbers (“points”): 10 clicks per number, 9 numbers per rotation; 4.5 = #4 and 5 clicks.",
+  "units": "",
   "burrs": "Stock ZP6 burrs (clarity-focused)",
-  "espressoCapable": false
+  "espressoCapable": false,
+  "grindRanges": {
+    "scale": "dial numbers from zero (burrs closed); 4.5 = #4 and 5 clicks",
+    "min": 0,
+    "step": 0.1,
+    "methods": {
+      "pourover": {
+        "low": 4,
+        "high": 5
+      },
+      "immersion": {
+        "low": 5,
+        "high": 6
+      }
+    },
+    "notes": {
+      "pourover": "1Zpresso groups siphon with pour over.",
+      "espresso": "1Zpresso's ZP6 Special chart lists no espresso range."
+    }
+  },
+  "rangeInfo": {
+    "confidence": "manufacturer",
+    "source": "https://1zpresso.coffee/grind-setting/",
+    "note": "1Zpresso “ZP6 Special Grind Setting Reference” chart (ZP6-special-Grind-Setting-Reference-20221031.jpg on that page): siphon/pour over 4–5, French press 5–6 (points)."
+  }
 }

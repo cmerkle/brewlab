@@ -1,12 +1,39 @@
 {
   "id": "timemore-c3",
-  "version": 1,
+  "version": 2,
   "name": "Timemore Chestnut C3",
   "brand": "Timemore",
   "type": "grinder",
   "category": "hand-grinder",
-  "details": "Hand grinder; settings counted in clicks from zero.",
+  "details": "Hand grinder; clicks counted from the start point (dial turned fully clockwise). Timemore advises not to grind at the finest 0–6 clicks.",
   "units": "clicks",
   "burrs": null,
-  "espressoCapable": null
+  "espressoCapable": null,
+  "grindRanges": {
+    "scale": "clicks from the start point",
+    "min": 0,
+    "step": 1,
+    "methods": {
+      "espresso": {
+        "low": 7,
+        "high": 8
+      },
+      "pourover": {
+        "low": 13,
+        "high": 16
+      },
+      "immersion": {
+        "low": 17,
+        "high": 20
+      }
+    },
+    "notes": {
+      "immersion": "French press."
+    }
+  },
+  "rangeInfo": {
+    "confidence": "manufacturer",
+    "source": "https://cdn.shopify.com/s/files/1/0406/3343/4269/files/Timemore_C2_C3_Bedienungsanleitung.pdf",
+    "note": "Timemore C2/C3 manual (multilingual, hosted by a retailer), table for C3/C3 Max: espresso 7–8 clicks, pour over 13–16, French press 17–20. “For your reference only.”"
+  }
 }

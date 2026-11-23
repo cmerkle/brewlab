@@ -1,6 +1,6 @@
 {
   "id": "k-ultra",
-  "version": 1,
+  "version": 2,
   "name": "1Zpresso K-Ultra",
   "brand": "1Zpresso",
   "type": "grinder",
@@ -8,5 +8,43 @@
   "details": "External numbered dial, 100 clicks per rotation, 20 microns per click (dial reading = clicks ÷ 10). All-rounder, espresso-capable.",
   "units": "clicks",
   "burrs": "Stock K-Ultra burrs",
-  "espressoCapable": true
+  "espressoCapable": true,
+  "grindRanges": {
+    "scale": "clicks from zero (burrs closed); dial number = clicks ÷ 10",
+    "min": 0,
+    "step": 1,
+    "dialDivisor": 10,
+    "methods": {
+      "espresso": {
+        "low": 30,
+        "high": 45
+      },
+      "aeropress": {
+        "low": 50,
+        "high": 70
+      },
+      "batch": {
+        "low": 50,
+        "high": 70
+      },
+      "pourover": {
+        "low": 80,
+        "high": 90
+      },
+      "immersion": {
+        "low": 90,
+        "high": 100
+      }
+    },
+    "notes": {
+      "aeropress": "1Zpresso groups AeroPress, moka pot and drip coffee maker (5–7).",
+      "immersion": "French press 9–10 on the dial.",
+      "pourover": "1Zpresso groups siphon with pour over."
+    }
+  },
+  "rangeInfo": {
+    "confidence": "manufacturer",
+    "source": "https://1zpresso.coffee/grind-setting/",
+    "note": "1Zpresso “Kultra Grind Setting Reference” chart (Kultra-Grind-Setting-Reference-20221031.jpg on that page), in dial points: Turkish 2–3.5, espresso 3–4.5, AeroPress/moka/drip coffee maker 5–7, siphon/pour over 8–9, French press 9–10."
+  }
 }

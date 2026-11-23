@@ -1,6 +1,6 @@
 {
   "id": "breville-smart-grinder-pro",
-  "version": 1,
+  "version": 2,
   "name": "Breville Smart Grinder Pro",
   "brand": "Breville",
   "type": "grinder",
@@ -8,5 +8,35 @@
   "details": "Electric conical burr grinder, 60 settings.",
   "units": "",
   "burrs": null,
-  "espressoCapable": null
+  "espressoCapable": null,
+  "grindRanges": {
+    "scale": "settings 1–60",
+    "min": 1,
+    "max": 60,
+    "step": 1,
+    "methods": {
+      "espresso": {
+        "low": 1,
+        "high": 30
+      },
+      "batch": {
+        "low": 46,
+        "high": 54
+      },
+      "immersion": {
+        "low": 55,
+        "high": 60
+      }
+    },
+    "notes": {
+      "batch": "Breville's “drip filter” range.",
+      "immersion": "Breville's “plunger” (French press) range.",
+      "pourover": "Breville lists drip filter 46–54 and percolator 31–45 but no pour-over range."
+    }
+  },
+  "rangeInfo": {
+    "confidence": "manufacturer",
+    "source": "https://cdn.shopify.com/s/files/1/0487/2015/0691/files/Breville_ANZ-128875062-BCG820_ANZ_IB_B23_LR.pdf",
+    "note": "Breville BCG820 instruction book (ANZ edition, hosted by a retailer), coffee chart: espresso 1–30, percolator 31–45, drip filter 46–54, plunger 55–60."
+  }
 }

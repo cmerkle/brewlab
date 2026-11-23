@@ -41,9 +41,10 @@ export function runSeed(db: DB, dir = SEED_DIR): SeedReport {
   const t = nowIso();
   const report: SeedReport = { gear: 0, starterRecipes: 0, recipes: 0, brews: 0, inventory: 0, editions: 0, picks: 0, tastings: 0, avoids: 0 };
   // This instance's starting setup (seed-data/setup.json): library gear + recipe templates.
-  // grindRanges: this install's own ranges for some gear, used instead of the library's
-  // (e.g. ranges a spec requires); they're applied only when the gear is first installed.
-  const setup = readSeed<{ gear?: string[]; recipes?: string[]; grindRanges?: Record<string, unknown> }>("setup.json", dir) ?? {};
+  // This install's own values for some gear, used instead of the library's (e.g. what a spec
+  // requires): grindRanges apply only when the gear is first installed (later edits are kept);
+  // units always win, so a re-run of the seed never relabels the install's settings.
+  const setup = readSeed<{ gear?: string[]; recipes?: string[]; grindRanges?: Record<string, unknown>; units?: Record<string, string> }>("setup.json", dir) ?? {};
   const cat = loadCatalog();
   if (cat.errors.length) throw new Error(`Gear library has errors:\n${cat.errors.join("\n")}`);
 
@@ -55,7 +56,7 @@ export function runSeed(db: DB, dir = SEED_DIR): SeedReport {
       const row = gearFromCatalog(c);
       // Keep ranges the user has edited; otherwise take the library's.
       const own = setup.grindRanges?.[id];
-      upsert(db, "gear_items", { ...row, grindRanges: existing?.grindRanges ?? (own ? JSON.stringify(own) : row.grindRanges), builtin: 0, createdAt: existing?.createdAt ?? t, updatedAt: t });
+      upsert(db, "gear_items", { ...row, units: setup.units?.[id] ?? row.units, grindRanges: existing?.grindRanges ?? (own ? JSON.stringify(own) : row.grindRanges), builtin: 0, createdAt: existing?.createdAt ?? t, updatedAt: t });
       report.gear++;
     }
 

@@ -101,7 +101,8 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
 - Seed upserts use `INSERT … ON CONFLICT(id) DO UPDATE`, never `INSERT OR REPLACE` (REPLACE
   deletes first, firing `ON DELETE SET NULL`). Seed runs only on first start (`meta.seededAt`),
   from `SEED_DIR` if it has files (see `seed-data/README.md`); starter recipe ids are 1001+.
-  `setup.json` may carry per-install `grindRanges` overrides.
+  `setup.json` may carry per-install `grindRanges` (first install only) and `units` (always win)
+  overrides.
 - **Gear & recipe library = data** (`catalog/`): `catalog/gear/<id>.json` (specs + grind ranges
   with `rangeInfo` confidence/source) and `catalog/recipes/<id>.json` (templates; grind = position
   0–1 inside the method range, rendered by `renderTemplate`; optional `family` = one per brewer,

@@ -1,6 +1,6 @@
 {
   "id": "niche-zero",
-  "version": 1,
+  "version": 2,
   "name": "Niche Zero",
   "brand": "Niche",
   "type": "grinder",
@@ -8,5 +8,33 @@
   "details": "Single-dose conical burr grinder, stepless.",
   "units": "",
   "burrs": null,
-  "espressoCapable": null
+  "espressoCapable": null,
+  "grindRanges": {
+    "scale": "dial numbers",
+    "min": 0,
+    "step": 1,
+    "methods": {
+      "espresso": {
+        "low": 5,
+        "high": 20
+      },
+      "aeropress": {
+        "low": 30,
+        "high": 35
+      },
+      "pourover": {
+        "low": 35,
+        "high": 45
+      }
+    },
+    "notes": {
+      "immersion": "Niche lists French press as 45 and up (open-ended), so there's no range for it here.",
+      "pourover": "Niche's V60 range."
+    }
+  },
+  "rangeInfo": {
+    "confidence": "manufacturer",
+    "source": "https://www.nichecoffee.co.uk/blogs/exploring-coffee/the-ultimate-grind-size-guide-for-niche-grinders",
+    "note": "Niche's grind size guide, Niche Zero column: espresso 5–20, moka pot 20–30, AeroPress 30–35, V60 35–45, French press 45+."
+  }
 }

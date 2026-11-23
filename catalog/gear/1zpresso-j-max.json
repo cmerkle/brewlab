@@ -1,12 +1,48 @@
 {
   "id": "1zpresso-j-max",
-  "version": 1,
+  "version": 2,
   "name": "1Zpresso J-Max",
   "brand": "1Zpresso",
   "type": "grinder",
   "category": "hand-grinder",
-  "details": "Hand grinder with external adjustment; 1Zpresso lists 90 clicks per rotation for the J-Max S.",
+  "details": "Hand grinder with external adjustment: 90 clicks per rotation (9 numbers × 10 clicks).",
   "units": "clicks",
   "burrs": null,
-  "espressoCapable": null
+  "espressoCapable": null,
+  "grindRanges": {
+    "scale": "clicks from zero (burrs closed)",
+    "min": 0,
+    "step": 1,
+    "methods": {
+      "espresso": {
+        "low": 90,
+        "high": 150
+      },
+      "aeropress": {
+        "low": 180,
+        "high": 240
+      },
+      "batch": {
+        "low": 180,
+        "high": 240
+      },
+      "pourover": {
+        "low": 240,
+        "high": 300
+      },
+      "immersion": {
+        "low": 360,
+        "high": 420
+      }
+    },
+    "notes": {
+      "aeropress": "1Zpresso groups AeroPress, moka pot and drip coffee maker.",
+      "immersion": "French press."
+    }
+  },
+  "rangeInfo": {
+    "confidence": "manufacturer",
+    "source": "https://1zpresso.coffee/grind-setting/",
+    "note": "1Zpresso “J-Max Grind Setting Reference” chart (J-Max-Grind-setting-reference-20220721.jpg on that page), in clicks: Turkish 70–110, espresso 90–150, AeroPress/moka/drip coffee maker 180–240, siphon/pour over 240–300, French press 360–420."
+  }
 }

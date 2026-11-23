@@ -1,12 +1,44 @@
 {
   "id": "1zpresso-q2",
-  "version": 1,
+  "version": 2,
   "name": "1Zpresso Q2",
   "brand": "1Zpresso",
   "type": "grinder",
   "category": "hand-grinder",
-  "details": "Compact hand grinder; 1Zpresso lists 30 clicks per rotation (internal adjustment).",
-  "units": "clicks",
+  "details": "Compact hand grinder with internal adjustment: 10 numbers per rotation, 3 clicks per number.",
+  "units": "rotations",
   "burrs": null,
-  "espressoCapable": null
+  "espressoCapable": null,
+  "grindRanges": {
+    "scale": "rotations from zero (burrs closed); 1.8 = 1 rotation and 8 numbers",
+    "min": 0,
+    "step": 0.1,
+    "methods": {
+      "aeropress": {
+        "low": 1.2,
+        "high": 2
+      },
+      "batch": {
+        "low": 1.2,
+        "high": 2
+      },
+      "pourover": {
+        "low": 1.8,
+        "high": 3.2
+      },
+      "immersion": {
+        "low": 2.6,
+        "high": 3.8
+      }
+    },
+    "notes": {
+      "espresso": "1Zpresso's Q chart lists no espresso range.",
+      "aeropress": "1Zpresso groups AeroPress, moka pot and drip coffee maker."
+    }
+  },
+  "rangeInfo": {
+    "confidence": "manufacturer",
+    "source": "https://1zpresso.coffee/grind-setting/",
+    "note": "1Zpresso “Q Grind Setting Reference” chart for the Q series (grind-setting_q_en_20260423.jpg on that page), in rotations: AeroPress/moka/drip coffee maker 1.2–2.0, siphon/pour over 1.8–3.2, French press 2.6–3.8."
+  }
 }
