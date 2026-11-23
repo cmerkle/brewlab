@@ -421,3 +421,8 @@ label.toggle-row input { width: 20px; height: 20px; flex: 0 0 auto; }
 pre.prompt { white-space: pre-wrap; word-break: break-word; font-size: .75rem; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px; max-height: 50vh; overflow: auto; margin: 0; }
 .ok-note { background: color-mix(in srgb, var(--accent) 12%, transparent); border-radius: 8px; padding: 8px 10px; display: block; }
 .suggestion { border-color: var(--accent); }
+
+/* ---------- suggest to the library ---------- */
+.suggest-row { border-top: 1px solid var(--line); padding-top: 10px; }
+a.button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+a.button.disabled { opacity: .45; pointer-events: none; }

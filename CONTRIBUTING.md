@@ -2,6 +2,15 @@
 
 Thanks for helping! The most useful contributions are **gear** and **grind ranges** — they're plain JSON, no code.
 
+## The easy way: from the app
+
+Add the gear to your own Brewlab (Gear → "+" → *Add custom gear*), fill in its details and Kind, and save. Then, in its editor:
+
+- **Suggest this gear to the library…** turns custom gear into a library entry.
+- **Suggest a change to the gear library…** (on gear you added from the library) proposes your grind ranges for that entry.
+
+Brewlab checks the entry with the same rules as CI, tells you what's missing (usually a source link for grind ranges), and gives you **Copy**, **Download**, and **Open on GitHub** — which opens a new file in this repo with the entry filled in, so "Propose new file" makes the pull request. Nothing is sent from your Brewlab.
+
 ## Add gear to the library
 
 One file per model in `catalog/gear/<id>.json` (the `id` must match the file name, lowercase with dashes):
@@ -43,12 +52,22 @@ A grinder may include `grindRanges` — the low/high setting **per brew method**
 
 `catalog/recipes/<id>.json`. The grind is a **position** (0–1) inside the method's range on the user's grinder, so one template works on any grinder with ranges. Templates name the brewers they fit by library id and/or category.
 
+## What CI checks
+
+`npm run check:catalog` (CI runs it on every pull request) explains each problem in plain words:
+
+- the file is valid JSON matching the format, and its `id` matches the file name (ids are unique);
+- grind ranges have `rangeInfo` with `confidence` `manufacturer` or `community` and an **https** `source` — drafts aren't accepted;
+- each range has low ≤ high and sits inside the grinder's `min`/`max`;
+- `type` and `category` agree (grinder ↔ `*-grinder`), only grinders have ranges, only brewers have `defaultMethod`;
+- recipe templates only refer to gear that exists.
+
 ## Before you open a pull request
 
 ```bash
-npm ci && npm run build && npm run typecheck && npm test
+npm ci && npm run build && npm run check:catalog && npm run typecheck && npm test
 ```
 
-`npm test` validates every library file (schema, ordered ranges, a source for every range) and checks that no gear is hardcoded in `src/`.
+`npm test` also checks that no gear is hardcoded in `src/` and that no personal data slipped into the repo.
 
 For code changes, run the end-to-end checks in `tests/e2e` too (see the README).

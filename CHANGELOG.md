@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- **Suggest to the library:** the gear editor turns custom gear into a ready-to-submit library entry, or proposes your grind ranges for a library model. It's checked with the same rules as CI and comes with Copy, Download and "Open on GitHub" (a pre-filled new file).
+- **Stricter library rules**, shared by the app, tests and CI (`npm run check:catalog`): cited https sources only, ranges inside the grinder's min/max, type ↔ category consistency, plain-English errors.
+- Pull-request template for library contributions.
+
 ## 0.1.0 — first public release
 
 - Brew: recipes with a guided timer, ratio calculator, grind guide and grind converter (positional, per brew method), stash, brew log, gear.

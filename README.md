@@ -61,7 +61,7 @@ Nothing about specific gear is in the code. The **gear library** (`catalog/gear/
 
 **How conversion works:** a setting keeps its position inside the source grinder's range for that brew method and lands at the same position in the target grinder's range. Halfway through one grinder's pour-over range maps to halfway through the other's. Microns-per-click is never used.
 
-Missing gear, or have a source for a grind range? See [CONTRIBUTING.md](CONTRIBUTING.md).
+Missing gear, or have a source for a grind range? Add it to your own Brewlab, then use **Suggest to the library** in its gear editor: Brewlab checks it and opens a ready-to-submit pull request on GitHub. Details in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Discover and AI providers
 

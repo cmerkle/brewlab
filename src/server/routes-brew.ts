@@ -5,7 +5,7 @@ import path from "node:path";
 import { type DB, nowIso, todayLocal, deriveStatus, UPLOAD_DIR } from "./db.js";
 import { RecipeSchema, BrewSchema, InventorySchema, GearSchema, RecommendationSchema, TastingSchema, LIMITS, firstError } from "./schemas.js";
 import { validateRanges, METHODS } from "../shared/grind.js";
-import { loadCatalog, catalogGear, gearFromCatalog } from "./catalog.js";
+import { loadCatalog, catalogGear, gearFromCatalog, libraryEntryFor } from "./catalog.js";
 import { importFromLink, importFromPhoto } from "./imports.js";
 import { sameCoffee } from "./rules.js";
 import type { z } from "zod";
@@ -246,6 +246,14 @@ export function brewRouter(db: DB) {
        VALUES (@id, @name, @type, @brand, @details, @units, @burrs, @espressoCapable, @variants, @grindRanges, @defaultMethod, 0, @catalogId, @catalogVersion, @category, @t, @t)`,
     ).run({ ...row, id, name: id === row.id ? row.name : `${row.name} (${n - 1})`, t });
     res.json(gearRow(db.prepare("SELECT * FROM gear_items WHERE id=?").get(id)));
+  });
+  /** "Suggest to the library": a ready-to-submit catalog entry for this gear (nothing is sent anywhere). */
+  r.post("/gear/:id/library-entry", (req, res) => {
+    const row = db.prepare("SELECT * FROM gear_items WHERE id=?").get(req.params.id) as any;
+    if (!row) return bad(res, "Gear not found", 404);
+    const g = gearRow(row);
+    const b = req.body ?? {};
+    res.json(libraryEntryFor(g as any, { confidence: typeof b.confidence === "string" ? b.confidence : undefined, source: typeof b.source === "string" ? b.source : undefined, note: typeof b.note === "string" ? b.note.slice(0, 1000) : undefined }));
   });
   /** Replace a grinder's ranges with the library's current ones (offered, never automatic). */
   r.post("/gear/:id/reset-ranges", (req, res) => {

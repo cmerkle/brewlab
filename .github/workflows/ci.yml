@@ -16,4 +16,6 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run build
+      - name: Check the gear & recipe library
+        run: node scripts/check-catalog.mjs
       - run: npm test

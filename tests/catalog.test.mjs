@@ -130,3 +130,71 @@ test("an install's setup.json can carry its own ranges for a gear item (used ins
   assert.equal(db.prepare("SELECT catalogId FROM gear_items WHERE id='ode-gen2'").get().catalogId, "ode-gen2", "still linked to the library");
   db.close();
 });
+
+/* ---------- Phase 5: contribution rules + "Suggest to the library" ---------- */
+
+const { CatalogGear, libraryEntryFor } = await import("../dist/server/catalog.js");
+const okGrinder = {
+  id: "acme-hand", version: 1, name: "Acme Hand", brand: "Acme", type: "grinder", category: "hand-grinder", units: "clicks",
+  grindRanges: { min: 0, max: 40, step: 1, methods: { pourover: { low: 20, high: 28 } } },
+  rangeInfo: { confidence: "manufacturer", source: "https://example.com/acme-manual.pdf" },
+};
+const why = (g) => { const r = CatalogGear.safeParse(g); return r.success ? [] : r.error.issues.map((i) => i.message); };
+
+test("library rules: a well-formed entry passes; each rule rejects what it should", () => {
+  assert.deepEqual(why(okGrinder), []);
+  const cases = [
+    [{ rangeInfo: { ...okGrinder.rangeInfo, confidence: "drafted" } }, /cited source/],
+    [{ rangeInfo: { confidence: "community", source: null } }, /cite a source URL/],
+    [{ rangeInfo: { confidence: "community", source: "http://example.com/x" } }, /https:\/\//],
+    [{ rangeInfo: undefined }, /need a rangeInfo/],
+    [{ grindRanges: { ...okGrinder.grindRanges, methods: { pourover: { low: 30, high: 20 } } } }, /low must be ≤ high/],
+    [{ grindRanges: { ...okGrinder.grindRanges, methods: { pourover: { low: 20, high: 50 } } } }, /above the grinder's max 40/],
+    [{ grindRanges: { ...okGrinder.grindRanges, methods: {} } }, /no methods/],
+    [{ category: "cone-dripper" }, /needs a grinder category/],
+    [{ type: "brewer" }, /for grinders, but type is "brewer"/],
+  ];
+  for (const [patch, re] of cases) {
+    const msgs = why({ ...okGrinder, ...patch });
+    assert.ok(msgs.some((m) => re.test(m)), `${JSON.stringify(patch)} → ${msgs.join(" | ") || "(accepted)"}`);
+  }
+  assert.ok(why({ id: "x-dripper", version: 1, name: "X", brand: null, type: "brewer", category: "cone-dripper", grindRanges: okGrinder.grindRanges, rangeInfo: okGrinder.rangeInfo }).some((m) => /only grinders/.test(m)));
+});
+
+const row = (o) => ({ id: "x", name: "X", type: "grinder", brand: null, category: "hand-grinder", details: null, units: "clicks", burrs: null, espressoCapable: null, variants: null, defaultMethod: null, grindRanges: null, catalogId: null, ...o });
+
+test("suggest: custom grinder → a new entry that passes the library rules once a source is given", () => {
+  const g = row({ id: "my-comandante", name: "Comandante C41", brand: "Comandante", grindRanges: { step: 1, methods: { pourover: { low: 22, high: 28 } } } });
+  const noSource = libraryEntryFor(g, {});
+  assert.equal(noSource.kind, "new");
+  assert.equal(noSource.id, "comandante-c41");
+  assert.ok(noSource.issues.some((i) => /confidence/.test(i)) && noSource.issues.some((i) => /source/.test(i)), noSource.issues.join(" | "));
+  const ok = libraryEntryFor(g, { confidence: "community", source: "https://example.com/chart", note: "Chart says V60 22–28." });
+  assert.deepEqual(ok.issues, []);
+  const entry = JSON.parse(ok.json);
+  assert.deepEqual(Object.keys(entry).slice(0, 6), ["id", "version", "name", "brand", "type", "category"]);
+  assert.equal(entry.rangeInfo.note, "Chart says V60 22–28.");
+  assert.ok(ok.githubUrl.startsWith("https://github.com/") && ok.githubUrl.includes("filename=comandante-c41.json"));
+  assert.equal(JSON.parse(decodeURIComponent(new URL(ok.githubUrl).searchParams.get("value"))).id, "comandante-c41");
+});
+
+test("suggest: custom gear without ranges needs no source; missing Kind and name clashes are explained", () => {
+  assert.deepEqual(libraryEntryFor(row({ name: "Bloom Dripper", type: "brewer", category: "cone-dripper", units: null }), {}).issues, []);
+  assert.ok(libraryEntryFor(row({ name: "Mystery", category: null }), {}).issues.some((i) => /Kind/.test(i)));
+  const clash = libraryEntryFor(row({ name: "Comandante C40", brand: "Comandante" }), {});
+  assert.ok(clash.issues.some((i) => /already has "comandante-c40"/.test(i)), clash.issues.join(" | "));
+});
+
+test("suggest: library gear → an update of that entry with the user's ranges, version bumped", () => {
+  const lib = cat.gear.find((x) => x.id === "comandante-c40");
+  const g = row({ id: "comandante-c40", name: "My C40", catalogId: "comandante-c40", grindRanges: { step: 1, methods: { pourover: { low: 22, high: 30 } } } });
+  const up = libraryEntryFor(g, { confidence: "community", source: "https://example.com/c40" });
+  assert.equal(up.kind, "update");
+  assert.deepEqual(up.issues, []);
+  const e = JSON.parse(up.json);
+  assert.equal(e.name, lib.name, "keeps the library's identity, not the user's nickname");
+  assert.equal(e.version, lib.version + 1);
+  assert.deepEqual(e.grindRanges.methods.pourover, { low: 22, high: 30 });
+  assert.ok(up.githubUrl.endsWith("/edit/main/catalog/gear/comandante-c40.json"));
+  assert.ok(libraryEntryFor({ ...g, grindRanges: null }, {}).issues.some((i) => /Nothing to suggest/.test(i)));
+});

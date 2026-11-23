@@ -93,6 +93,26 @@ try {
   await p.locator('[data-testid="settings"]').waitFor({ timeout: 5000 }).catch(() => {});
   const after = await (await fetch(`${BASE}/api/recipes`)).json();
   check(after.length === recipes.length, "re-running setup kept every recipe");
+
+  // Phase 5: suggest the custom grinder to the library (nothing is sent; a ready-to-submit entry).
+  const gear = await (await fetch(`${BASE}/api/gear`)).json();
+  const c40 = gear.find((g) => g.name === "Comandante C40");
+  await p.goto(`${BASE}/#/brew/gear`);
+  await p.locator(`[data-testid="gear-${c40.id}"]`).getByRole("button", { name: "Edit" }).click();
+  await p.locator('[data-testid="suggest-open"]').click();
+  await p.locator('[data-testid="suggest-json"]').waitFor();
+  const issues = await p.locator('[data-testid="suggest-issues"]').innerText();
+  check(/already has "comandante-c40"/.test(issues), "a custom grinder that's already in the library is pointed at the library entry");
+  check(/source/i.test(issues), "grind ranges without a source can't be submitted");
+  check((await p.locator('[data-testid="suggest-github"]').getAttribute("aria-disabled")) === "true", "GitHub link disabled until it passes");
+  const json = JSON.parse(await p.locator('[data-testid="suggest-json"]').innerText());
+  check(json.name === "Comandante C40" && json.grindRanges?.methods?.pourover?.low === 22, "entry carries the grinder and its calibrated range");
+  await p.fill("#sg-source", "https://example.com/c40-chart");
+  await p.waitForTimeout(600);
+  check(!/source/i.test(await p.locator('[data-testid="suggest-issues"]').innerText()), "adding an https source clears the source problem");
+  await p.getByRole("button", { name: "Back" }).last().click(); // the top dialog's Back
+  await p.locator('[data-testid="suggest"]').waitFor({ state: "detached" });
+  check(await p.locator("#ge-name").isVisible(), "Back closes the suggestion and returns to the gear editor");
 } catch (e) {
   check(false, `crashed: ${e.message}`);
   await p.screenshot({ path: "onboarding-fail.png" }).catch(() => {});

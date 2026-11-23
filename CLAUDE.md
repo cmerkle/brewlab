@@ -110,6 +110,11 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   only — never map size bands or microns to methods. Converter tests use
   `tests/fixtures/spec-grinders.json`, not library values.
 - Older installs are linked to the library at startup (`linkGearToCatalog`).
+- **Contribution rules live in `CatalogGear`'s superRefine** (catalog.ts) — one set of rules for
+  loading, `npm test`, `npm run check:catalog` (CI) and the in-app "Suggest to the library"
+  (`libraryEntryFor` → `POST /api/gear/:id/library-entry`: new entry for custom gear, version-bumped
+  update with the user's ranges for library gear; nothing is sent — the user opens GitHub's
+  new-file/edit page, repo from `LIBRARY_REPO`, default `cmerkle/brewlab`).
 - `recipes.method` / `gear_items.defaultMethod`: conversion needs to know which method range a
   setting sits in (e.g. a Switch as pour-over vs immersion).
 - **First-run setup** (`src/web/Setup.tsx`, `src/server/routes-setup.ts`): shown while

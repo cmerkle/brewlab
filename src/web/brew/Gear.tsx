@@ -97,6 +97,7 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
     return out;
   });
   const [error, setError] = useState<string | null>(null);
+  const [suggesting, setSuggesting] = useState(false);
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }));
 
   const save = async () => {
@@ -229,6 +230,108 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
           </>
         )}
         <ErrorBox error={error} />
+        {item && (
+          <div className="suggest-row">
+            <button className="link" onClick={() => setSuggesting(true)} data-testid="suggest-open">
+              {item.catalogId ? "Suggest a change to the gear library…" : "Suggest this gear to the library…"}
+            </button>
+          </div>
+        )}
+      </div>
+      {suggesting && item && <SuggestToLibrary item={item} onClose={() => setSuggesting(false)} />}
+    </FullScreen>
+  );
+}
+
+/* ------------------------------ Suggest to the library ------------------------------ */
+
+interface LibraryEntry { kind: "new" | "update"; id: string; file: string; json: string; issues: string[]; githubUrl: string; repo: string }
+
+/** Builds a ready-to-submit library entry from this gear (saved values). Nothing is sent anywhere. */
+function SuggestToLibrary({ item, onClose }: { item: GearT; onClose: () => void }) {
+  const { toast } = useData();
+  const [confidence, setConfidence] = useState("manufacturer");
+  const [source, setSource] = useState("");
+  const [note, setNote] = useState("");
+  const [entry, setEntry] = useState<LibraryEntry | null>(null);
+  const hasRanges = item.type === "grinder" && Boolean(item.grindRanges && Object.keys(item.grindRanges.methods ?? {}).length);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      api.post<LibraryEntry>(`/api/gear/${encodeURIComponent(item.id)}/library-entry`, { confidence, source, note }).then(setEntry).catch(() => {});
+    }, 250);
+    return () => clearTimeout(t);
+  }, [item.id, confidence, source, note]);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(entry!.json);
+      toast("Copied");
+    } catch {
+      toast("Couldn't copy — select the text instead", "err");
+    }
+  };
+  const download = () => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([entry!.json], { type: "application/json" }));
+    a.download = `${entry!.id}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  };
+  const ready = entry && entry.issues.length === 0;
+  return (
+    <FullScreen title="Suggest to the gear library" onClose={onClose}>
+      <div className="stack form" data-testid="suggest">
+        <p className="small">
+          {entry?.kind === "update"
+            ? <>Proposes your grind ranges for <strong>{entry.id}</strong> in the shared gear library, so everyone adding it gets them.</>
+            : <>Turns <strong>{item.name}</strong> into a library entry, so anyone can add it from the library.</>}{" "}
+          It uses this gear's <em>saved</em> values. Nothing is sent from Brewlab — you submit it on GitHub.
+        </p>
+        {hasRanges && (
+          <>
+            <p className="muted small">Grind ranges need a source anyone can check — the manufacturer's manual or chart, or a published community chart. Only per-method settings the source actually states.</p>
+            <Field label="Where the ranges come from" htmlFor="sg-conf">
+              <select id="sg-conf" value={confidence} onChange={(e) => setConfidence(e.target.value)}>
+                <option value="manufacturer">The manufacturer (manual, chart, website)</option>
+                <option value="community">A published community chart</option>
+              </select>
+            </Field>
+            <Field label="Source link" htmlFor="sg-source">
+              <input id="sg-source" type="url" inputMode="url" placeholder="https://…" value={source} onChange={(e) => setSource(e.target.value)} autoCapitalize="off" spellCheck={false} />
+            </Field>
+            <Field label="What the source says (optional)" htmlFor="sg-note">
+              <textarea id="sg-note" rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. Pour-over 22–28 clicks, espresso 7–12." />
+            </Field>
+          </>
+        )}
+        {!entry && <p className="muted">Preparing…</p>}
+        {entry && (
+          <>
+            {ready ? (
+              <p className="ok-note small" data-testid="suggest-ready">✓ Ready — this passes the library's checks.</p>
+            ) : (
+              <div className="error small" data-testid="suggest-issues">
+                <strong>Before it can be submitted:</strong>
+                <ul className="plain">{entry.issues.map((i) => <li key={i}>{i}</li>)}</ul>
+              </div>
+            )}
+            <div className="small muted"><code>{entry.file}</code></div>
+            <pre className="prompt" data-testid="suggest-json">{entry.json}</pre>
+            <div className="row-actions">
+              <button onClick={copy}>Copy</button>
+              <button onClick={download}>Download</button>
+              <a className={`button primary ${ready ? "" : "disabled"}`} href={ready ? entry.githubUrl : undefined} aria-disabled={!ready}
+                target="_blank" rel="noreferrer noopener" data-testid="suggest-github">
+                {entry.kind === "new" ? "Open on GitHub" : "Edit on GitHub"}
+              </a>
+            </div>
+            <p className="muted small">
+              {entry.kind === "new"
+                ? <>GitHub opens a new file in <code>{entry.repo}</code> with this content filled in — then “Propose new file” makes a pull request (GitHub forks the repo for you).</>
+                : <>GitHub opens <code>{entry.file}</code> for editing — paste this over it, then “Propose changes”.</>}{" "}
+              Needs a free GitHub account. See CONTRIBUTING.md in the repo.
+            </p>
+          </>
+        )}
       </div>
     </FullScreen>
   );

@@ -72,6 +72,7 @@ const PAGES = [
     await p.fill("#cg-v60", "25");
     await p.locator('[data-testid="calibration"]').waitFor();
   } },
+  { name: "dialog: Suggest to the library", hash: "brew/gear", dialog: true, act: async (p) => { await p.locator('[data-testid="gear-ode-gen2"]').getByRole("button", { name: "Edit" }).click(); await p.locator('[data-testid="suggest-open"]').click(); await p.locator('[data-testid="suggest-json"]').waitFor(); } },
   { name: "dialog: Gear library", hash: "brew/gear", dialog: true, act: async (p) => { await p.getByRole("button", { name: "Add gear" }).click(); await p.locator('[data-testid="gear-library"] li').first().waitFor(); } },
 ];
 
