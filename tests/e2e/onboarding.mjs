@@ -144,6 +144,31 @@ try {
   await p.locator("img.bag-photo").waitFor({ timeout: 90000 });
   check(uploads.length === 2, "pasting an image (⌘V) reads it too");
   await p.getByRole("button", { name: "Back" }).last().click();
+
+  // Duplicate a bag (bought more than one): coffee details copied, a new unopened bag.
+  const orig = await (await fetch(`${BASE}/api/inventory`, { method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ name: "Twin Peaks", roaster: "Sample Roasters", origin: "Kenya", processMethod: "Washed", roastDate: "2026-11-01",
+      purchaseDate: "2026-11-05", openedDate: "2026-11-06", amountG: 250, price: 19, rating: 4, notes: "Two bags bought", source: "manual" }) })).json();
+  await p.goto(`${BASE}/#/brew/stash`);
+  await p.reload(); // the bag was created through the API — load it
+  await p.locator(`[data-testid="bag-${orig.id}"] .menu .icon-btn`).click();
+  await p.getByRole("menuitem", { name: "Duplicate" }).click();
+  await p.locator('[data-testid="bag-copy-note"]').waitFor();
+  check(await p.getByRole("heading", { name: "Add another bag" }).isVisible(), "Duplicate opens “Add another bag”");
+  const val = (id) => p.inputValue(id);
+  check((await val("#bf-name")) === "Twin Peaks" && (await val("#bf-roaster")) === "Sample Roasters" && (await val("#bf-origin")) === "Kenya", "coffee details copied");
+  check((await val("#bf-roastDate")) === "2026-11-01" && (await val("#bf-purchaseDate")) === "2026-11-05", "dates copied");
+  check((await val("#bf-openedDate")) === "" && (await val("#bf-finishedDate")) === "", "opened/finished start empty (a new bag)");
+  check(!(await p.locator('[data-testid="bf-photo-picker"]').count()), "no import section on a copy");
+  await p.fill("#bf-roastDate", "2026-11-03");
+  await p.getByRole("button", { name: "Save bag" }).click();
+  await p.locator('[data-testid="bag-copy-note"]').waitFor({ state: "detached" });
+  const twins = (await (await fetch(`${BASE}/api/inventory`)).json()).filter((b) => b.name === "Twin Peaks");
+  const copy = twins.find((b) => b.id !== orig.id);
+  check(twins.length === 2, "two bags of the same coffee in the Stash");
+  check(copy && copy.status === "unopened" && copy.rating == null && copy.amountG === 250 && copy.price === 19 && copy.roastDate === "2026-11-03", "the copy: unopened, unrated, same size/price, edited roast date");
+  const o2 = twins.find((b) => b.id === orig.id);
+  check(o2.status === "open" && o2.rating === 4 && o2.roastDate === "2026-11-01", "the original is unchanged");
 } catch (e) {
   check(false, `crashed: ${e.message}`);
   await p.screenshot({ path: "onboarding-fail.png" }).catch(() => {});

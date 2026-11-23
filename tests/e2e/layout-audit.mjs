@@ -50,6 +50,7 @@ const PAGES = [
   { name: "dialog: Ratio calculator", hash: "more", dialog: true, act: async (p) => p.getByRole("button", { name: /Ratio calculator/ }).click() },
   { name: "dialog: Recipe editor", hash: "brew/recipes", dialog: true, act: async (p) => { await p.locator('[data-testid="recipe-1001"] [data-testid="recipe-toggle"]').click(); await p.locator('[data-testid="recipe-1001"]').getByRole("button", { name: "Edit" }).click(); } },
   { name: "dialog: Add a bag", hash: "brew/stash", dialog: true, act: async (p) => p.getByRole("button", { name: "Add a bag" }).click() },
+  { name: "dialog: Duplicate bag", hash: "brew/stash", dialog: true, act: async (p) => { await p.locator('[data-testid="bag-1"] .menu .icon-btn').click(); await p.getByRole("menuitem", { name: "Duplicate" }).click(); await p.locator('[data-testid="bag-copy-note"]').waitFor(); } },
   { name: "dialog: Finish bag", hash: "brew/stash", dialog: true, act: async (p) => p.locator('[data-testid="bag-1"]').getByRole("button", { name: "Mark finished" }).click() },
   { name: "dialog: Brew log form", hash: "brew/log", dialog: true, act: async (p) => p.locator('[data-testid="brew-1"]').getByRole("button", { name: "Edit" }).click() },
   { name: "dialog: Gear editor", hash: "brew/gear", dialog: true, act: async (p) => p.locator('[data-testid="gear-ode-gen2"]').getByRole("button", { name: "Edit" }).click() },

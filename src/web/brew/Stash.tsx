@@ -14,15 +14,17 @@ const VERDICTS = [
 export function Stash() {
   const { bags, loaded } = useData();
   const [editing, setEditing] = useState<Bag | "new" | null>(null);
+  const [copying, setCopying] = useState<Bag | null>(null);
   useAction("add-bag", () => setEditing("new"));
   return (
     <div className="stack">
       {!loaded && <p className="muted">Loading…</p>}
       {loaded && bags.length === 0 && <p className="muted">No bags yet.</p>}
       <div className="cards">
-        {bags.map((b) => <BagCard key={b.id} b={b} onEdit={() => setEditing(b)} />)}
+        {bags.map((b) => <BagCard key={b.id} b={b} onEdit={() => setEditing(b)} onDuplicate={() => setCopying(b)} />)}
       </div>
       {editing && <BagForm bag={editing === "new" ? null : editing} onClose={() => setEditing(null)} />}
+      {copying && <BagForm bag={null} copyOf={copying} onClose={() => setCopying(null)} />}
     </div>
   );
 }
@@ -47,7 +49,7 @@ export function stock(b: Bag, brews: Brew[]): { text: string; tone: "warn" } | n
   return null;
 }
 
-function BagCard({ b, onEdit }: { b: Bag; onEdit: () => void }) {
+function BagCard({ b, onEdit, onDuplicate }: { b: Bag; onEdit: () => void; onDuplicate: () => void }) {
   const { reload, act, brews, limits } = useData();
   const [open, setOpen] = useState(false);
   const [detail, setDetail] = useState<{ recipes: Recipe[]; brews: Brew[] } | null>(null);
@@ -91,7 +93,7 @@ function BagCard({ b, onEdit }: { b: Bag; onEdit: () => void }) {
         {b.photo && <img className="bag-thumb" src={b.photo} alt="" loading="lazy" />}
         <h3>{b.name}</h3>
         <span className={`status ${b.status}`} data-testid="bag-status">{b.status}</span>
-        <Menu label={`More actions for ${b.name}`} items={[{ label: "Edit", onClick: onEdit }, { label: "Delete", onClick: del, danger: true }]} />
+        <Menu label={`More actions for ${b.name}`} items={[{ label: "Edit", onClick: onEdit }, { label: "Duplicate", onClick: onDuplicate }, { label: "Delete", onClick: del, danger: true }]} />
       </header>
       <div className="muted">{[b.roaster, b.origin, b.processMethod, b.roastLevel].filter(Boolean).join(" · ")}</div>
       {(fresh || low) && (
@@ -298,14 +300,19 @@ function ImagePicker({ id, label, onImage, disabled }: { id: string; label: stri
   );
 }
 
-function BagForm({ bag, onClose }: { bag: Bag | null; onClose: () => void }) {
+/**
+ * Add / edit a bag. `copyOf` starts a NEW bag from an existing one (bought more than one bag):
+ * everything about the coffee is copied; opened/finished dates and the rating start empty.
+ */
+function BagForm({ bag, copyOf, onClose }: { bag: Bag | null; copyOf?: Bag; onClose: () => void }) {
+  const src = bag ?? copyOf ?? null;
   const { limits, reload, toast } = useData();
   const [f, setF] = useState({
-    name: bag?.name ?? "", roaster: bag?.roaster ?? "", origin: bag?.origin ?? "", processMethod: bag?.processMethod ?? "",
-    roastLevel: bag?.roastLevel ?? "", roastDate: bag?.roastDate ?? "", purchaseDate: bag?.purchaseDate ?? "",
-    openedDate: bag?.openedDate ?? "", finishedDate: bag?.finishedDate ?? "", amountG: bag?.amountG ?? null as number | null,
-    price: bag?.price ?? null as number | null, url: bag?.url ?? "", rating: bag?.rating ?? null as number | null, notes: bag?.notes ?? "",
-    photo: bag?.photo ?? null as string | null,
+    name: src?.name ?? "", roaster: src?.roaster ?? "", origin: src?.origin ?? "", processMethod: src?.processMethod ?? "",
+    roastLevel: src?.roastLevel ?? "", roastDate: src?.roastDate ?? "", purchaseDate: src?.purchaseDate ?? "",
+    openedDate: bag?.openedDate ?? "", finishedDate: bag?.finishedDate ?? "", amountG: src?.amountG ?? null as number | null,
+    price: src?.price ?? null as number | null, url: src?.url ?? "", rating: bag?.rating ?? null as number | null, notes: src?.notes ?? "",
+    photo: src?.photo ?? null as string | null,
   });
   const [error, setError] = useState<string | null>(null);
   const [imp, setImp] = useState<ImportRes | null>(null);
@@ -403,7 +410,7 @@ function BagForm({ bag, onClose }: { bag: Bag | null; onClose: () => void }) {
       if (bag) await api.put(`/api/inventory/${bag.id}`, body);
       else await api.post("/api/inventory", { ...body, source: "manual" });
       await reload(["bags", "recipes"]);
-      toast(bag ? "Bag updated" : "Bag added to the Stash");
+      toast(bag ? "Bag updated" : copyOf ? "Another bag added to the Stash" : "Bag added to the Stash");
       onClose();
     } catch (e: any) {
       setError(e.message);
@@ -417,10 +424,15 @@ function BagForm({ bag, onClose }: { bag: Bag | null; onClose: () => void }) {
   );
 
   return (
-    <FullScreen title={bag ? "Edit bag" : "Add a bag"} onClose={onClose}
+    <FullScreen title={bag ? "Edit bag" : copyOf ? "Add another bag" : "Add a bag"} onClose={onClose}
       footer={<div className="row"><button onClick={onClose}>Cancel</button><button className="primary grow" onClick={save}>Save bag</button></div>}>
       <div className="stack form" data-testid="bag-form">
-        {!bag && (
+        {copyOf && (
+          <p className="note small" data-testid="bag-copy-note">
+            A copy of <strong>{copyOf.name}</strong>{copyOf.roaster ? ` (${copyOf.roaster})` : ""} as a new, unopened bag — opened and finished dates and the rating start empty. Change anything that's different, like the roast date, then save.
+          </p>
+        )}
+        {!bag && !copyOf && (
           <section className="import">
             <h3>Import the details</h3>
             <p className="hint">Both only pre-fill the form — check and edit before saving.</p>

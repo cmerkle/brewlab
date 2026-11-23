@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Duplicate a bag:** Stash → ⋯ → *Duplicate* starts a new bag pre-filled from an existing one, for when you buy more than one bag of a coffee. It copies the name, roaster, origin, process, roast level, roast and purchase dates, size, price, link, notes and photo. The opened and finished dates and the rating start empty. Nothing is saved until you tap Save, so you can change the roast date first.
+
 - **Bag photos from anywhere:** take a photo, choose one from Photos or Files, paste an image (button or ⌘V/Ctrl+V), or drag and drop it on a desktop. It was camera-only before. Images are converted to a JPEG (longest side 2048 px) on the device, so HEIC photos, screenshots and pasted PNGs all work and upload faster. Attaching a photo to an existing bag gets the same options.
 - **Look it up online:** after reading the label, a provider with web search finds the coffee on the roaster's own site.
   - The product page is read by the link importer; the AI's own read of the page only fills gaps.
