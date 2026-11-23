@@ -1,0 +1,12 @@
+{
+  "id": "1zpresso-j-max",
+  "version": 1,
+  "name": "1Zpresso J-Max",
+  "brand": "1Zpresso",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Hand grinder with external adjustment; 1Zpresso lists 90 clicks per rotation for the J-Max S.",
+  "units": "clicks",
+  "burrs": null,
+  "espressoCapable": null
+}

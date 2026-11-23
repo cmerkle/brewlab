@@ -1,0 +1,11 @@
+{
+  "id": "orea-o2",
+  "version": 1,
+  "name": "Orea O2",
+  "brand": "Orea",
+  "type": "brewer",
+  "category": "flat-bottom-dripper",
+  "details": "Flat-bottom fast-flow dripper.",
+  "variants": null,
+  "defaultMethod": "pourover"
+}

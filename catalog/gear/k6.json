@@ -1,0 +1,12 @@
+{
+  "id": "k6",
+  "version": 1,
+  "name": "Kingrinder K6",
+  "brand": "Kingrinder",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Hand grinder with external adjustment.",
+  "units": "clicks",
+  "burrs": "Stock K6 burrs",
+  "espressoCapable": true
+}

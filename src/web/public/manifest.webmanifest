@@ -1,0 +1,24 @@
+{
+  "id": "/",
+  "name": "Brewlab",
+  "short_name": "Brewlab",
+  "description": "Brew recipes, grind guide, coffee stash and weekly picks.",
+  "start_url": "/#/brew/recipes",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f5f0ea",
+  "theme_color": "#8a5530",
+  "categories": ["food", "lifestyle", "utilities"],
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Recipes", "url": "/#/brew/recipes", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Stash", "url": "/#/brew/stash", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Brew Log", "url": "/#/brew/log", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Discover", "url": "/#/discover/board", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

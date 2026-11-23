@@ -1,0 +1,38 @@
+{
+  "brews": [
+    {
+      "id": 1,
+      "recipeId": 1001,
+      "recipeName": "Hoffmann V60",
+      "brewerId": "hario-v60-02",
+      "coffee": "Sunrise Natural",
+      "doseG": 15,
+      "waterG": 250,
+      "tempC": 98,
+      "grinderId": "ode-gen2",
+      "grindSetting": "setting 5.1",
+      "inventoryId": 1,
+      "rating": 4,
+      "notes": "Bright and sweet; slightly fast drawdown.",
+      "totalTimeSec": 175,
+      "brewedAt": "2026-11-16T08:05:00.000Z"
+    },
+    {
+      "id": 2,
+      "recipeId": 1015,
+      "recipeName": "AeroPress Default",
+      "brewerId": "aeropress",
+      "coffee": "Sunrise Natural",
+      "doseG": 15,
+      "waterG": 230,
+      "tempC": 92,
+      "grinderId": "ode-gen2",
+      "grindSetting": "setting 4.2",
+      "inventoryId": 1,
+      "rating": 5,
+      "notes": "Syrupy, lots of berry.",
+      "totalTimeSec": 150,
+      "brewedAt": "2026-11-18T07:40:00.000Z"
+    }
+  ]
+}

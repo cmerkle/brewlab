@@ -1,0 +1,14 @@
+{
+  "id": "fellow-aiden",
+  "version": 1,
+  "name": "Fellow Aiden",
+  "brand": "Fellow",
+  "type": "brewer",
+  "category": "batch-brewer",
+  "details": "Programmable batch brewer (temperature, bloom, pulses).",
+  "variants": [
+    "Single-serve basket",
+    "Batch basket"
+  ],
+  "defaultMethod": "batch"
+}

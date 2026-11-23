@@ -1,0 +1,25 @@
+services:
+  brewlab:
+    image: ghcr.io/cmerkle/brewlab:latest
+    build: .   # or build it yourself: docker compose up -d --build
+    container_name: brewlab
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-UTC}
+      # Optional — the AI provider can also be set in the app (More → Settings → AI provider).
+      # Variables set here take precedence when LLM_API_KEY or LLM_BASE_URL is set. See .env.example.
+      LLM_PROVIDER: ${LLM_PROVIDER:-anthropic}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-}
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+    volumes:
+      - brewlab-data:/data
+    ports:
+      # ⚠️ Brewlab has NO LOGIN. This publishes port 7642 on every interface so your LAN and a
+      # reverse proxy on another machine can reach it. Never forward 7642 on your router.
+      # If a public hostname points at it, put authentication in front of it in the proxy.
+      # Host-only instead: "127.0.0.1:7642:7642"
+      - "7642:7642"
+
+volumes:
+  brewlab-data:

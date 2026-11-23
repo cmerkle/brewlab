@@ -1,0 +1,50 @@
+{
+  "id": "baratza-encore",
+  "version": 1,
+  "name": "Baratza Encore",
+  "brand": "Baratza",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Electric conical burr grinder, 40 settings (1 = finest).",
+  "units": "",
+  "burrs": "40 mm conical",
+  "espressoCapable": false,
+  "grindRanges": {
+    "scale": "settings 1–40",
+    "min": 1,
+    "max": 40,
+    "step": 1,
+    "methods": {
+      "espresso": {
+        "low": 2,
+        "high": 6
+      },
+      "pourover": {
+        "low": 13,
+        "high": 14
+      },
+      "aeropress": {
+        "low": 8,
+        "high": 11
+      },
+      "immersion": {
+        "low": 30,
+        "high": 32
+      },
+      "batch": {
+        "low": 13,
+        "high": 14
+      }
+    },
+    "notes": {
+      "pourover": "Baratza lists V60 13–14 and Chemex 20–21.",
+      "immersion": "Baratza lists French press 30–32 and siphon 14.",
+      "espresso": "Baratza lists espresso 2–6, but the Encore isn't designed for espresso machines."
+    }
+  },
+  "rangeInfo": {
+    "confidence": "manufacturer",
+    "source": "https://cdn.shopify.com/s/files/1/1656/1527/files/Encore-Manual.pdf",
+    "note": "Baratza Encore manual, “Setting the Grind Control”: espresso 2–6; brewer 13–14; V60 13–14; Chemex 20–21; AeroPress 8–11; siphon 14; French press 30–32. A general guideline — your beans and roast shift it."
+  }
+}

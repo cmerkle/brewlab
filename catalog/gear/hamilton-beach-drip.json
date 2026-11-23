@@ -1,0 +1,11 @@
+{
+  "id": "hamilton-beach-drip",
+  "version": 1,
+  "name": "Hamilton Beach drip brewer",
+  "brand": "Hamilton Beach",
+  "type": "brewer",
+  "category": "batch-brewer",
+  "details": "Drip machine for larger batches.",
+  "variants": null,
+  "defaultMethod": "batch"
+}

@@ -1,0 +1,12 @@
+{
+  "id": "niche-zero",
+  "version": 1,
+  "name": "Niche Zero",
+  "brand": "Niche",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Single-dose conical burr grinder, stepless.",
+  "units": "",
+  "burrs": null,
+  "espressoCapable": null
+}

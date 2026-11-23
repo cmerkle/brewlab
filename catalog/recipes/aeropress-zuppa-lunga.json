@@ -1,0 +1,40 @@
+{
+  "id": "aeropress-zuppa-lunga",
+  "legacyId": 1010,
+  "version": 1,
+  "name": "AeroPress Zuppa Lunga",
+  "credit": "Lance Hedrick",
+  "method": "aeropress",
+  "brewer": {
+    "ids": [
+      "aeropress"
+    ],
+    "categories": [
+      "aeropress"
+    ]
+  },
+  "doseG": 15,
+  "waterG": 150,
+  "tempC": 99,
+  "grind": {
+    "position": 0.1667,
+    "preferredGrinders": [
+      "k-ultra"
+    ]
+  },
+  "steps": [
+    {
+      "atSec": 0,
+      "label": "Pour to 150g",
+      "targetWaterG": 150,
+      "detail": "Stir, then tamp the top filter down onto the bed"
+    },
+    {
+      "atSec": 60,
+      "label": "Press",
+      "targetWaterG": 150,
+      "detail": "Press slowly through the tamped top filter"
+    }
+  ],
+  "notes": "Lance Hedrick's AeroPress zuppa lunga: 15g / 150g with a tamped top filter."
+}

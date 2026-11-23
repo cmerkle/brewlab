@@ -1,0 +1,12 @@
+{
+  "id": "zp6",
+  "version": 1,
+  "name": "1Zpresso ZP6",
+  "brand": "1Zpresso",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Hand grinder for filter; preferred for clarity on pour over.",
+  "units": "rotations",
+  "burrs": "Stock ZP6 burrs (clarity-focused)",
+  "espressoCapable": false
+}

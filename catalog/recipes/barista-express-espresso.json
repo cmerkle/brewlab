@@ -1,0 +1,35 @@
+{
+  "id": "barista-express-espresso",
+  "legacyId": 1020,
+  "version": 1,
+  "name": "Barista Express Espresso",
+  "genericName": "Espresso (1:2)",
+  "credit": null,
+  "method": "espresso",
+  "brewer": {
+    "ids": [
+      "breville-barista-express"
+    ],
+    "categories": [
+      "espresso-machine"
+    ]
+  },
+  "doseG": 18,
+  "waterG": 36,
+  "tempC": 93,
+  "grind": {
+    "position": 0.5,
+    "preferredGrinders": [
+      "df64-gen2"
+    ]
+  },
+  "steps": [
+    {
+      "atSec": 0,
+      "label": "Pull to 36g",
+      "targetWaterG": 36,
+      "detail": "54mm double basket, 1:2 in about 28–32 seconds"
+    }
+  ],
+  "notes": "Default 1:2 espresso on the Breville Barista Express (54mm portafilter)."
+}

@@ -1,0 +1,139 @@
+# Brewlab
+
+A self-hosted coffee app for home brewers: one Docker container, one SQLite database, no account.
+
+- **Brew:** recipes with a guided brew timer, ratio calculator, a grind guide that **converts settings between your grinders**, your coffee stash, a brew log, and your gear.
+- **Discover:** a weekly board of coffees to try. It starts with popular picks and learns from what you rate. An AI provider is optional: with one, Brewlab researches roasters' current offerings; without one, you add candidates and Brewlab filters and ranks them.
+
+It's built for phones first (installable as an app on iPhone and desktop), and works on tablets and desktops too.
+
+> ⚠️ **There is no login.** Anyone who can reach Brewlab can read and change everything in it. Run it on your home network or behind Tailscale/WireGuard, and if you put it behind a public hostname, **add authentication in your reverse proxy** (an access list, basic auth, Authelia, Cloudflare Access…). Never forward its port on your router.
+
+---
+
+## Quick start
+
+```bash
+git clone https://github.com/cmerkle/brewlab.git
+cd brewlab
+docker compose up -d
+```
+
+Open `http://<server-ip>:7642`. The first visit opens a short setup:
+
+1. **Welcome:** set up your gear, explore with demo data (all fictional), or restore a Brewlab export.
+2. **Brewers** and **grinders:** choose from the built-in library, or add your own. For a grinder that isn't listed, type the setting you use for a V60 and Brewlab proposes a pour-over range, so conversions work straight away.
+3. **Preferences:** grams or ounces, °C or °F, default ratio.
+4. **Starter recipes** that fit your gear, with grind settings already in your grinder's units.
+5. **Discover:** on or off, an optional taste quiz, and an optional AI provider.
+
+Every step can be skipped and redone from **More → Settings → Run setup again**.
+
+| | |
+|---|---|
+| Logs | `docker compose logs -f` |
+| Health | `curl -s localhost:7642/api/health` |
+| Update | `docker compose pull && docker compose up -d` (or `git pull && docker compose up -d --build`) |
+| Stop | `docker compose down` (keeps your data) |
+
+`docker compose down -v` **deletes the volume and all your data.**
+
+### Network exposure
+
+`docker-compose.yml` publishes port **7642 on every interface**, so devices on your network and a reverse proxy on another machine can reach it. To keep it on the host only, change the mapping to `127.0.0.1:7642:7642`.
+
+### HTTPS and installing the app
+
+Browsers only offer "Install" (and the offline shell) over HTTPS. Put Brewlab behind a reverse proxy with a certificate (Nginx Proxy Manager, Caddy, Traefik, Cloudflare Tunnel, Tailscale Serve…), forwarding to `http://<server>:7642`. Then:
+
+- **iPhone (Safari):** Share → *Add to Home Screen*.
+- **Desktop (Chrome/Edge):** the install icon in the address bar.
+
+And again: if that hostname is reachable from the internet, add authentication in the proxy.
+
+## Your gear, not ours
+
+Nothing about specific gear is in the code. The **gear library** (`catalog/gear/*.json`) and **recipe templates** (`catalog/recipes/*.json`) are data:
+
+- Adding a model from the library gives you your own editable copy.
+- Grinders come with grind ranges **only where a source is cited** (each shows its confidence and links its source). Every other grinder starts with "no conversion data yet". Add your own ranges under *Gear*, or use the calibration helper.
+- Recipe templates store grind as a *position inside the method's range*, so a template renders onto whatever grinder you have.
+
+**How conversion works:** a setting keeps its position inside the source grinder's range for that brew method and lands at the same position in the target grinder's range. Halfway through one grinder's pour-over range maps to halfway through the other's. Microns-per-click is never used.
+
+Missing gear, or have a source for a grind range? See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Discover and AI providers
+
+Set a provider in the app under **More → Settings → AI provider**: choose one, paste a key, then **Test connection**.
+
+| Provider | Bag photo → fields | Weekly research |
+|---|---|---|
+| Anthropic | ✓ | ✓ web search |
+| OpenAI | ✓ | ✓ web search |
+| Google Gemini | ✓ | ✓ Google Search |
+| OpenAI-compatible (Ollama, LM Studio, OpenRouter…) | ✓ if the model takes images | ✗ no web search, so research stays manual |
+
+- **The key is write-only.** The app only reports whether one is saved. It's stored in `/data/secrets.json` (owner-only permissions), outside the database, so it's not in exports or backups.
+- **Environment variables work too** (see [`.env.example`](.env.example)), and they take precedence when `LLM_API_KEY` or `LLM_BASE_URL` is set.
+- **Without a provider everything still works:** bag photos use local OCR (Tesseract), and on *Discover → Refresh* you add candidates yourself (paste or import a roaster link).
+
+*Discover → Your taste* shows what the board is based on:
+- **Ratings:** your Stash stars, brew ratings and tasting log, summarised by origin, process, roast and tasting notes.
+- **How personal it gets:** popular picks with no ratings, a mix with 1–4 rated coffees, tailored picks from 5.
+- **Always leave out:** cinnamon-forward, co-ferments or flavoured, and intense fermentation funk. All are off by default; the app suggests them from your low ratings and never turns one on by itself.
+- **Exactly what the research is told,** shown word for word.
+
+## Data and backups
+
+Everything lives in the `brewlab-data` volume at `/data`: the database (`brewlab.db`), bag photos (`uploads/`), nightly snapshots (`backups/`, newest 14 kept) and `secrets.json` if you saved an AI key.
+
+On **More** you can *Back up now*, download a snapshot, or *Export all data (JSON)*. An export can be restored from the first-run setup of a fresh install. For off-machine copies:
+
+```bash
+docker compose cp brewlab:/data ./brewlab-data-copy
+```
+
+To restore a snapshot: stop the app, copy it over `/data/brewlab.db` (delete any `brewlab.db-wal` / `-shm` beside it), start again.
+
+## Configuration
+
+All optional, set as environment variables. Compose reads a `.env` file next to `docker-compose.yml`.
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `TZ` | `UTC` | Time zone for the Monday 08:00 refresh, nightly backup and "today". |
+| `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_BASE_URL` | *(unset)* | AI provider via environment instead of the in-app form. `LLM_MODEL` is required except for Anthropic. |
+| `BACKUP_KEEP` | `14` | Snapshots to keep. |
+| `DISABLE_CRON` | *(unset)* | `1` turns off the weekly refresh and nightly backup. |
+| `IMPORT_ALLOW_HOSTS` | *(unset)* | Hosts the link importer may fetch even though they're private addresses (normally refused). |
+| `SEED_DIR` | `/app/seed-data` | Optional starting data for a new install (see [`seed-data/README.md`](seed-data/README.md)). |
+
+## Development
+
+```bash
+npm ci
+npm run build            # Vite → dist/public, tsc → dist/server.js
+npm run typecheck
+npm test                 # unit tests (run after build)
+HOST=127.0.0.1 PORT=3100 DATA_DIR=./.dev-data DISABLE_CRON=1 npm start
+```
+
+Works on Node 20+; the image runs Node 24.
+
+End-to-end checks (Playwright) live in `tests/e2e`:
+
+```bash
+cd tests/e2e && npm i && npx playwright install chromium
+# first-run setup, on an EMPTY install:
+docker run -d --rm --name brewlab-empty -p 127.0.0.1:3103:7642 ghcr.io/cmerkle/brewlab:latest
+BASE=http://localhost:3103 npm run onboarding
+# layout audit (phones, foldables, desktop), on a fresh install with demo data loaded:
+docker run -d --rm --name brewlab-demo -p 127.0.0.1:3104:7642 ghcr.io/cmerkle/brewlab:latest
+curl -XPOST localhost:3104/api/setup/demo && curl -XPOST localhost:3104/api/setup/complete
+ONLY="iPhone SE portrait" BASE=http://localhost:3104 npm run layout   # one viewport per run keeps memory low
+```
+
+## License
+
+[MIT](LICENSE)

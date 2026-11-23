@@ -1,0 +1,48 @@
+{
+  "id": "show-horse-v60-03",
+  "legacyId": 1005,
+  "version": 1,
+  "name": "Show Horse — V60 03",
+  "genericName": "Show Horse",
+  "family": "show-horse",
+  "credit": "Coffee Chronicler",
+  "method": "pourover",
+  "brewer": {
+    "ids": [
+      "hario-v60-03"
+    ],
+    "categories": [
+      "cone-dripper"
+    ]
+  },
+  "doseG": 20,
+  "waterG": 320,
+  "tempC": 93,
+  "grind": {
+    "position": 0.5,
+    "preferredGrinders": [
+      "zp6"
+    ]
+  },
+  "steps": [
+    {
+      "atSec": 0,
+      "label": "Bloom to 60g",
+      "targetWaterG": 60,
+      "detail": "Wet all grounds, gentle swirl"
+    },
+    {
+      "atSec": 45,
+      "label": "Pour to 190g",
+      "targetWaterG": 190,
+      "detail": "Second pour, steady spiral"
+    },
+    {
+      "atSec": 90,
+      "label": "Pour to 320g",
+      "targetWaterG": 320,
+      "detail": "Third pour, then let it draw down"
+    }
+  ],
+  "notes": "Coffee Chronicler's Show Horse on the larger V60 03."
+}

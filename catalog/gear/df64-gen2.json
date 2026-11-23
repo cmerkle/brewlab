@@ -1,0 +1,12 @@
+{
+  "id": "df64-gen2",
+  "version": 1,
+  "name": "DF64 Gen 2",
+  "brand": "Turin / DF",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Single-dose flat-burr grinder, used for espresso.",
+  "units": "",
+  "burrs": "Stock 64mm flat burrs",
+  "espressoCapable": true
+}

@@ -1,0 +1,52 @@
+{
+  "id": "hoffmann-v60",
+  "legacyId": 1001,
+  "version": 1,
+  "name": "Hoffmann V60",
+  "credit": "James Hoffmann",
+  "method": "pourover",
+  "brewer": {
+    "ids": [
+      "hario-v60-02"
+    ],
+    "categories": [
+      "cone-dripper"
+    ]
+  },
+  "doseG": 30,
+  "waterG": 500,
+  "tempC": 100,
+  "grind": {
+    "position": 0.3,
+    "preferredGrinders": [
+      "zp6"
+    ]
+  },
+  "steps": [
+    {
+      "atSec": 0,
+      "label": "Bloom to 60g",
+      "targetWaterG": 60,
+      "detail": "Pour 2× the dose, swirl to wet all grounds"
+    },
+    {
+      "atSec": 45,
+      "label": "Pour to 300g",
+      "targetWaterG": 300,
+      "detail": "Main pour to 60% by 1:15"
+    },
+    {
+      "atSec": 75,
+      "label": "Pour to 500g",
+      "targetWaterG": 500,
+      "detail": "Finish by 1:45, gentle stir, then a light swirl"
+    },
+    {
+      "atSec": 105,
+      "label": "Drawdown",
+      "targetWaterG": 500,
+      "detail": "Let it drain flat — aim to finish around 3:30"
+    }
+  ],
+  "notes": "James Hoffmann's Ultimate V60 technique. Use water just off the boil for light roasts."
+}

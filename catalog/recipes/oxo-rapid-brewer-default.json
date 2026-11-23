@@ -1,0 +1,47 @@
+{
+  "id": "oxo-rapid-brewer-default",
+  "legacyId": 1017,
+  "version": 1,
+  "name": "OXO Rapid Brewer Default",
+  "genericName": "Rapid brewer default",
+  "credit": null,
+  "method": "rapid",
+  "brewer": {
+    "ids": [
+      "oxo-rapid-brewer"
+    ],
+    "categories": [
+      "rapid-brewer"
+    ]
+  },
+  "doseG": 20,
+  "waterG": 300,
+  "tempC": 94,
+  "grind": {
+    "position": 0.5,
+    "preferredGrinders": [
+      "k-ultra"
+    ]
+  },
+  "steps": [
+    {
+      "atSec": 0,
+      "label": "Pour to 300g",
+      "targetWaterG": 300,
+      "detail": "Stir to saturate"
+    },
+    {
+      "atSec": 30,
+      "label": "Steep",
+      "targetWaterG": 300,
+      "detail": "Cap and let it steep"
+    },
+    {
+      "atSec": 150,
+      "label": "Press / release",
+      "targetWaterG": 300,
+      "detail": ""
+    }
+  ],
+  "notes": "Default OXO Rapid Brewer brew."
+}

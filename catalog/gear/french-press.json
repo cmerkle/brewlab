@@ -1,0 +1,11 @@
+{
+  "id": "french-press",
+  "version": 1,
+  "name": "French press",
+  "brand": null,
+  "type": "brewer",
+  "category": "french-press",
+  "details": "Full immersion.",
+  "variants": null,
+  "defaultMethod": "immersion"
+}

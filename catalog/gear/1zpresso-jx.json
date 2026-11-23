@@ -1,0 +1,12 @@
+{
+  "id": "1zpresso-jx",
+  "version": 1,
+  "name": "1Zpresso JX",
+  "brand": "1Zpresso",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Hand grinder for filter coffee.",
+  "units": "clicks",
+  "burrs": null,
+  "espressoCapable": null
+}

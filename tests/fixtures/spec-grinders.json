@@ -1,0 +1,170 @@
+{
+  "_comment": "Example grinder ranges for the converter tests (the worked example: ZP6 5.0 rotations = K6 90 clicks = K-Ultra 72 clicks = Ode 5). Test data only — not library data, and not verified against the grinders.",
+  "zp6": {
+    "name": "1Zpresso ZP6",
+    "units": "rotations",
+    "grindRanges": {
+      "scale": "rotations from zero, 0.1-rotation steps",
+      "min": 0,
+      "max": 8,
+      "step": 0.1,
+      "methods": {
+        "aeropress": {
+          "low": 3.5,
+          "high": 4.25
+        },
+        "pourover": {
+          "low": 4.5,
+          "high": 5.5
+        },
+        "immersion": {
+          "low": 5,
+          "high": 6
+        },
+        "rapid": {
+          "low": 4,
+          "high": 5
+        },
+        "batch": {
+          "low": 5,
+          "high": 6
+        }
+      },
+      "notes": {
+        "espresso": "The ZP6 is a filter grinder and can't grind fine enough for espresso — use the DF64 or the K-Ultra."
+      }
+    }
+  },
+  "k6": {
+    "name": "Kingrinder K6",
+    "units": "clicks",
+    "grindRanges": {
+      "scale": "clicks from zero (about 16 µm per click)",
+      "min": 0,
+      "max": 240,
+      "step": 1,
+      "methods": {
+        "espresso": {
+          "low": 30,
+          "high": 45
+        },
+        "aeropress": {
+          "low": 60,
+          "high": 75
+        },
+        "pourover": {
+          "low": 80,
+          "high": 100
+        },
+        "immersion": {
+          "low": 90,
+          "high": 110
+        },
+        "rapid": {
+          "low": 70,
+          "high": 90
+        },
+        "batch": {
+          "low": 90,
+          "high": 110
+        }
+      }
+    }
+  },
+  "k-ultra": {
+    "name": "1Zpresso K-Ultra",
+    "units": "clicks",
+    "grindRanges": {
+      "scale": "clicks on the external numbered dial (100 clicks per rotation, 20 µm per click; dial = clicks ÷ 10)",
+      "min": 0,
+      "max": 300,
+      "step": 1,
+      "dialDivisor": 10,
+      "methods": {
+        "espresso": {
+          "low": 24,
+          "high": 36
+        },
+        "aeropress": {
+          "low": 48,
+          "high": 60
+        },
+        "pourover": {
+          "low": 64,
+          "high": 80
+        },
+        "immersion": {
+          "low": 72,
+          "high": 88
+        },
+        "rapid": {
+          "low": 56,
+          "high": 72
+        },
+        "batch": {
+          "low": 72,
+          "high": 88
+        }
+      }
+    }
+  },
+  "ode-gen2": {
+    "name": "Fellow Ode Gen 2",
+    "units": "",
+    "grindRanges": {
+      "scale": "numbered settings 1–11, with two sub-steps between numbers (5.1 = 5⅓, 5.2 = 5⅔)",
+      "min": 1,
+      "max": 11,
+      "step": 0.3333333333333333,
+      "notation": "thirds",
+      "methods": {
+        "aeropress": {
+          "low": 2,
+          "high": 3.5
+        },
+        "pourover": {
+          "low": 4,
+          "high": 6
+        },
+        "immersion": {
+          "low": 5,
+          "high": 7
+        },
+        "rapid": {
+          "low": 3,
+          "high": 5
+        },
+        "batch": {
+          "low": 5,
+          "high": 7
+        }
+      },
+      "notes": {
+        "espresso": "The Ode Gen 2 is a filter-only grinder and doesn't grind fine enough for espresso — use the DF64 or the K-Ultra."
+      }
+    }
+  },
+  "df64-gen2": {
+    "name": "DF64 Gen 2",
+    "units": "",
+    "grindRanges": {
+      "scale": "numbered dial (stepless), 0.5 steps; stock burrs",
+      "min": 0,
+      "max": 90,
+      "step": 0.5,
+      "methods": {
+        "espresso": {
+          "low": 10,
+          "high": 20
+        }
+      },
+      "notes": {
+        "pourover": "The DF64 is set up for espresso here — use one of the filter grinders for this method.",
+        "immersion": "The DF64 is set up for espresso here — use one of the filter grinders for this method.",
+        "aeropress": "The DF64 is set up for espresso here — use one of the filter grinders for this method.",
+        "rapid": "The DF64 is set up for espresso here — use one of the filter grinders for this method.",
+        "batch": "The DF64 is set up for espresso here — use one of the filter grinders for this method."
+      }
+    }
+  }
+}

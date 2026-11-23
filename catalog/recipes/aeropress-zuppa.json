@@ -1,0 +1,40 @@
+{
+  "id": "aeropress-zuppa",
+  "legacyId": 1011,
+  "version": 1,
+  "name": "AeroPress Zuppa",
+  "credit": "Lance Hedrick",
+  "method": "aeropress",
+  "brewer": {
+    "ids": [
+      "aeropress"
+    ],
+    "categories": [
+      "aeropress"
+    ]
+  },
+  "doseG": 20,
+  "waterG": 150,
+  "tempC": 99,
+  "grind": {
+    "position": 0,
+    "preferredGrinders": [
+      "k-ultra"
+    ]
+  },
+  "steps": [
+    {
+      "atSec": 0,
+      "label": "Pour to 150g",
+      "targetWaterG": 150,
+      "detail": "Stir, then tamp the top filter"
+    },
+    {
+      "atSec": 60,
+      "label": "Press",
+      "targetWaterG": 150,
+      "detail": "Short and strong"
+    }
+  ],
+  "notes": "Lance Hedrick's AeroPress zuppa (short and strong): 20g / 150g."
+}

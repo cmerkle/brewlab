@@ -1,0 +1,43 @@
+# Dependencies & build output
+node_modules/
+dist/
+tests/e2e/node_modules/
+
+# Local data — never commit databases or uploaded photos
+data/
+.dev-data/
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+uploads/
+*backup*.db
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Logs, runtime files, test output
+*.log
+.dev-data.pid
+tests/e2e/results.json
+test-results/
+playwright-report/
+coverage/
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Claude Code local settings
+.claude/settings.local.json
+.dev-empty/
+.dev-empty.pid
+.dev-empty.log
+
+# Maintainer-local files
+CLAUDE.local.md

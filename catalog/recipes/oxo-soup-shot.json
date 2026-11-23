@@ -1,0 +1,46 @@
+{
+  "id": "oxo-soup-shot",
+  "legacyId": 1008,
+  "version": 1,
+  "name": "OXO Soup Shot",
+  "credit": "Lance Hedrick",
+  "method": "rapid",
+  "brewer": {
+    "ids": [
+      "oxo-rapid-brewer"
+    ],
+    "categories": [
+      "rapid-brewer"
+    ]
+  },
+  "doseG": 22,
+  "waterG": 80,
+  "tempC": 99,
+  "grind": {
+    "position": 0,
+    "preferredGrinders": [
+      "k-ultra"
+    ]
+  },
+  "steps": [
+    {
+      "atSec": 0,
+      "label": "Pour to 80g",
+      "targetWaterG": 80,
+      "detail": "99°C, stir to saturate"
+    },
+    {
+      "atSec": 30,
+      "label": "Steep",
+      "targetWaterG": 80,
+      "detail": "Cap and let it steep"
+    },
+    {
+      "atSec": 90,
+      "label": "Press / release",
+      "targetWaterG": 80,
+      "detail": "Expect about 66g yield"
+    }
+  ],
+  "notes": "Lance Hedrick's soup shot on the OXO Rapid Brewer: 22g / 80g at 99°C, about 66g yield."
+}

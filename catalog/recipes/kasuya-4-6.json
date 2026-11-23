@@ -1,0 +1,64 @@
+{
+  "id": "kasuya-4-6",
+  "legacyId": 1002,
+  "version": 1,
+  "name": "Kasuya 4:6",
+  "credit": "Tetsu Kasuya",
+  "method": "pourover",
+  "brewer": {
+    "ids": [
+      "hario-v60-02"
+    ],
+    "categories": [
+      "cone-dripper"
+    ]
+  },
+  "doseG": 20,
+  "waterG": 300,
+  "tempC": 92,
+  "grind": {
+    "position": 0.8,
+    "preferredGrinders": [
+      "zp6"
+    ]
+  },
+  "steps": [
+    {
+      "atSec": 0,
+      "label": "Pour to 50g",
+      "targetWaterG": 50,
+      "detail": "First 40% sets sweetness/acidity — pour 1"
+    },
+    {
+      "atSec": 45,
+      "label": "Pour to 120g",
+      "targetWaterG": 120,
+      "detail": "Pour 2"
+    },
+    {
+      "atSec": 90,
+      "label": "Pour to 180g",
+      "targetWaterG": 180,
+      "detail": "Last 60% sets strength — pour 3"
+    },
+    {
+      "atSec": 135,
+      "label": "Pour to 240g",
+      "targetWaterG": 240,
+      "detail": "Pour 4"
+    },
+    {
+      "atSec": 180,
+      "label": "Pour to 300g",
+      "targetWaterG": 300,
+      "detail": "Pour 5"
+    },
+    {
+      "atSec": 210,
+      "label": "Remove dripper",
+      "targetWaterG": 300,
+      "detail": "Pull the dripper around 3:30"
+    }
+  ],
+  "notes": "Tetsu Kasuya's 4:6 method, coarse grind, five pours every 45 seconds."
+}

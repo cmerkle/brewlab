@@ -1,0 +1,46 @@
+{
+  "id": "oxo-zuppa-lunga",
+  "legacyId": 1009,
+  "version": 1,
+  "name": "OXO Zuppa Lunga",
+  "credit": "Lance Hedrick",
+  "method": "rapid",
+  "brewer": {
+    "ids": [
+      "oxo-rapid-brewer"
+    ],
+    "categories": [
+      "rapid-brewer"
+    ]
+  },
+  "doseG": 22,
+  "waterG": 220,
+  "tempC": 99,
+  "grind": {
+    "position": 0.25,
+    "preferredGrinders": [
+      "k-ultra"
+    ]
+  },
+  "steps": [
+    {
+      "atSec": 0,
+      "label": "Pour to 220g",
+      "targetWaterG": 220,
+      "detail": "Stir to saturate"
+    },
+    {
+      "atSec": 30,
+      "label": "Steep",
+      "targetWaterG": 220,
+      "detail": "Cap and let it steep"
+    },
+    {
+      "atSec": 120,
+      "label": "Press / release",
+      "targetWaterG": 220,
+      "detail": ""
+    }
+  ],
+  "notes": "Lance Hedrick's zuppa lunga on the OXO: 22g / 220g."
+}

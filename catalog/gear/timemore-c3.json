@@ -1,0 +1,12 @@
+{
+  "id": "timemore-c3",
+  "version": 1,
+  "name": "Timemore Chestnut C3",
+  "brand": "Timemore",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Hand grinder; settings counted in clicks from zero.",
+  "units": "clicks",
+  "burrs": null,
+  "espressoCapable": null
+}

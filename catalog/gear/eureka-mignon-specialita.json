@@ -1,0 +1,12 @@
+{
+  "id": "eureka-mignon-specialita",
+  "version": 1,
+  "name": "Eureka Mignon Specialità",
+  "brand": "Eureka",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Espresso-focused flat burr grinder, stepless.",
+  "units": "",
+  "burrs": null,
+  "espressoCapable": null
+}

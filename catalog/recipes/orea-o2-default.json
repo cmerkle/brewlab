@@ -1,0 +1,47 @@
+{
+  "id": "orea-o2-default",
+  "legacyId": 1014,
+  "version": 1,
+  "name": "Orea O2 Default",
+  "genericName": "Flat-bottom dripper default",
+  "credit": null,
+  "method": "pourover",
+  "brewer": {
+    "ids": [
+      "orea-o2"
+    ],
+    "categories": [
+      "flat-bottom-dripper"
+    ]
+  },
+  "doseG": 18,
+  "waterG": 300,
+  "tempC": 94,
+  "grind": {
+    "position": 0.3,
+    "preferredGrinders": [
+      "zp6"
+    ]
+  },
+  "steps": [
+    {
+      "atSec": 0,
+      "label": "Bloom to 50g",
+      "targetWaterG": 50,
+      "detail": "Swirl"
+    },
+    {
+      "atSec": 40,
+      "label": "Pour to 175g",
+      "targetWaterG": 175,
+      "detail": "Steady centre pour"
+    },
+    {
+      "atSec": 80,
+      "label": "Pour to 300g",
+      "targetWaterG": 300,
+      "detail": "Finish and let it drain — fast flow, ~2:30"
+    }
+  ],
+  "notes": "Default for the flat-bottom Orea O2."
+}

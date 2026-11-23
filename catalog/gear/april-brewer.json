@@ -1,0 +1,10 @@
+{
+  "id": "april-brewer",
+  "version": 1,
+  "name": "April Brewer",
+  "brand": "April",
+  "type": "brewer",
+  "category": "flat-bottom-dripper",
+  "details": "Flat-bottom dripper.",
+  "defaultMethod": "pourover"
+}

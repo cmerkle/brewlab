@@ -1,0 +1,13 @@
+{
+  "id": "aeropress",
+  "version": 1,
+  "name": "AeroPress",
+  "brand": "AeroPress",
+  "type": "brewer",
+  "category": "aeropress",
+  "details": "With flow control cap.",
+  "variants": [
+    "Flow control cap"
+  ],
+  "defaultMethod": "aeropress"
+}

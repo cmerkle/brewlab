@@ -1,0 +1,12 @@
+{
+  "id": "baratza-virtuoso-plus",
+  "version": 1,
+  "name": "Baratza Virtuoso+",
+  "brand": "Baratza",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Electric conical burr grinder, 40 settings.",
+  "units": "",
+  "burrs": null,
+  "espressoCapable": null
+}

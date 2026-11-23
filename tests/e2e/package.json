@@ -1,0 +1,11 @@
+{
+  "name": "brewlab-e2e",
+  "private": true,
+  "type": "module",
+  "description": "End-to-end checks against a running Brewlab: first-run setup (empty install) and the layout audit.",
+  "scripts": {
+    "onboarding": "node onboarding.mjs",
+    "layout": "node layout-audit.mjs"
+  },
+  "devDependencies": { "playwright": "1.47.2" }
+}

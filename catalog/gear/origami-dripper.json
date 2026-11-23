@@ -1,0 +1,14 @@
+{
+  "id": "origami-dripper",
+  "version": 1,
+  "name": "Origami Dripper",
+  "brand": "Origami",
+  "type": "brewer",
+  "category": "cone-dripper",
+  "details": "Ceramic dripper; takes cone or wave filters.",
+  "defaultMethod": "pourover",
+  "variants": [
+    "S",
+    "M"
+  ]
+}

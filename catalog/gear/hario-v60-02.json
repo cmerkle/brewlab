@@ -1,0 +1,13 @@
+{
+  "id": "hario-v60-02",
+  "version": 1,
+  "name": "Hario V60 02",
+  "brand": "Hario",
+  "type": "brewer",
+  "category": "cone-dripper",
+  "details": "Cone dripper.",
+  "variants": [
+    "02"
+  ],
+  "defaultMethod": "pourover"
+}

@@ -1,0 +1,13 @@
+node_modules
+dist
+.dev-data
+.dev-data.log
+.dev-data.pid
+*.db
+.env
+.git
+tests
+tests/e2e/node_modules
+.env
+.env.*
+*.log

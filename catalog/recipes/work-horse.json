@@ -1,0 +1,46 @@
+{
+  "id": "work-horse",
+  "legacyId": 1003,
+  "version": 1,
+  "name": "Work Horse",
+  "credit": "Coffee Chronicler",
+  "method": "pourover",
+  "brewer": {
+    "ids": [
+      "hario-switch-03"
+    ],
+    "categories": [
+      "hybrid-dripper"
+    ]
+  },
+  "doseG": 20,
+  "waterG": 320,
+  "tempC": 94,
+  "grind": {
+    "position": 0.5,
+    "preferredGrinders": [
+      "zp6"
+    ]
+  },
+  "steps": [
+    {
+      "atSec": 0,
+      "label": "Pour to 160g",
+      "targetWaterG": 160,
+      "detail": "Switch open — percolation half"
+    },
+    {
+      "atSec": 45,
+      "label": "Pour to 320g",
+      "targetWaterG": 320,
+      "detail": "Close the switch — immersion half"
+    },
+    {
+      "atSec": 120,
+      "label": "Open switch and drain",
+      "targetWaterG": 320,
+      "detail": "Release and let it draw down"
+    }
+  ],
+  "notes": "Coffee Chronicler's Work Horse: 50/50 percolation / immersion on the Hario Switch. Base recipe 20g / 320g."
+}

@@ -1,0 +1,11 @@
+{
+  "id": "oxo-rapid-brewer",
+  "version": 1,
+  "name": "OXO Rapid Brewer",
+  "brand": "OXO",
+  "type": "brewer",
+  "category": "rapid-brewer",
+  "details": "Rapid immersion brewer.",
+  "variants": null,
+  "defaultMethod": "rapid"
+}

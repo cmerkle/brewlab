@@ -1,0 +1,10 @@
+{
+  "id": "clever-dripper",
+  "version": 1,
+  "name": "Clever Dripper",
+  "brand": "Clever",
+  "type": "brewer",
+  "category": "immersion-dripper",
+  "details": "Immersion dripper with a valve that drains when set on a cup.",
+  "defaultMethod": "immersion"
+}

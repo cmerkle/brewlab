@@ -1,0 +1,44 @@
+{
+  "items": [
+    {
+      "id": 1,
+      "name": "Sunrise Natural",
+      "roaster": "Example Roasters",
+      "origin": "Ethiopia",
+      "processMethod": "Natural",
+      "roastLevel": "Light",
+      "roastDate": "2026-11-10",
+      "purchaseDate": "2026-11-12",
+      "openedDate": "2026-11-15",
+      "finishedDate": null,
+      "amountG": 340,
+      "price": 22,
+      "url": null,
+      "rating": 5,
+      "notes": "Demo bag — blueberry, jasmine, honey.",
+      "source": "manual",
+      "createdAt": "2026-11-12T12:00:00.000Z",
+      "updatedAt": "2026-11-15T12:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "name": "House Blend",
+      "roaster": "Sample Coffee Co.",
+      "origin": "Brazil · Colombia",
+      "processMethod": "Washed",
+      "roastLevel": "Medium",
+      "roastDate": "2026-11-14",
+      "purchaseDate": "2026-11-16",
+      "openedDate": null,
+      "finishedDate": null,
+      "amountG": 1000,
+      "price": 30,
+      "url": null,
+      "rating": null,
+      "notes": "Demo bag — chocolate, caramel, almond.",
+      "source": "manual",
+      "createdAt": "2026-11-16T12:00:00.000Z",
+      "updatedAt": "2026-11-16T12:00:00.000Z"
+    }
+  ]
+}

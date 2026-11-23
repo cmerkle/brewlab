@@ -1,0 +1,12 @@
+{
+  "id": "breville-smart-grinder-pro",
+  "version": 1,
+  "name": "Breville Smart Grinder Pro",
+  "brand": "Breville",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Electric conical burr grinder, 60 settings.",
+  "units": "",
+  "burrs": null,
+  "espressoCapable": null
+}

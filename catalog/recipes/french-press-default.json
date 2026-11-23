@@ -1,0 +1,47 @@
+{
+  "id": "french-press-default",
+  "legacyId": 1018,
+  "version": 1,
+  "name": "French Press Default",
+  "genericName": "French press default",
+  "credit": null,
+  "method": "immersion",
+  "brewer": {
+    "ids": [
+      "french-press"
+    ],
+    "categories": [
+      "french-press"
+    ]
+  },
+  "doseG": 30,
+  "waterG": 500,
+  "tempC": 96,
+  "grind": {
+    "position": 0.5,
+    "preferredGrinders": [
+      "k6"
+    ]
+  },
+  "steps": [
+    {
+      "atSec": 0,
+      "label": "Pour to 500g",
+      "targetWaterG": 500,
+      "detail": "Pour all the water"
+    },
+    {
+      "atSec": 240,
+      "label": "Break crust & skim",
+      "targetWaterG": 500,
+      "detail": "Stir the crust, skim the foam"
+    },
+    {
+      "atSec": 480,
+      "label": "Plunge to surface & pour",
+      "targetWaterG": 500,
+      "detail": "Press just to the surface, pour gently"
+    }
+  ],
+  "notes": "Long-steep French press: 4 minutes, break the crust, wait, pour."
+}

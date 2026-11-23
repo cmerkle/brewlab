@@ -1,0 +1,48 @@
+{
+  "id": "show-horse-switch-valve-open",
+  "legacyId": 1006,
+  "version": 1,
+  "name": "Show Horse — Switch (valve open)",
+  "genericName": "Show Horse",
+  "family": "show-horse",
+  "credit": "Coffee Chronicler",
+  "method": "pourover",
+  "brewer": {
+    "ids": [
+      "hario-switch-03"
+    ],
+    "categories": [
+      "hybrid-dripper"
+    ]
+  },
+  "doseG": 20,
+  "waterG": 320,
+  "tempC": 93,
+  "grind": {
+    "position": 0.5,
+    "preferredGrinders": [
+      "zp6"
+    ]
+  },
+  "steps": [
+    {
+      "atSec": 0,
+      "label": "Bloom to 60g",
+      "targetWaterG": 60,
+      "detail": "Valve open the whole brew"
+    },
+    {
+      "atSec": 45,
+      "label": "Pour to 190g",
+      "targetWaterG": 190,
+      "detail": "Second pour"
+    },
+    {
+      "atSec": 90,
+      "label": "Pour to 320g",
+      "targetWaterG": 320,
+      "detail": "Third pour, then let it draw down"
+    }
+  ],
+  "notes": "Coffee Chronicler's Show Horse on the Switch with the valve open (brews like a V60)."
+}

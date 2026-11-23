@@ -1,0 +1,43 @@
+{
+  "_comment": "Every gear item and recipe template of the original setup — exercises seeding and rendering.",
+  "gear": [
+    "aeropress",
+    "aeropress-xl",
+    "breville-barista-express",
+    "df64-gen2",
+    "fellow-aiden",
+    "french-press",
+    "hamilton-beach-drip",
+    "hario-switch-03",
+    "hario-v60-02",
+    "hario-v60-03",
+    "k-ultra",
+    "k6",
+    "ode-gen2",
+    "orea-o2",
+    "oxo-rapid-brewer",
+    "zp6"
+  ],
+  "recipes": [
+    "hoffmann-v60",
+    "kasuya-4-6",
+    "work-horse",
+    "show-horse-v60-02",
+    "show-horse-v60-03",
+    "show-horse-switch-valve-open",
+    "switch-full-immersion",
+    "oxo-soup-shot",
+    "oxo-zuppa-lunga",
+    "aeropress-zuppa-lunga",
+    "aeropress-zuppa",
+    "aiden-single-serve",
+    "aiden-batch",
+    "orea-o2-default",
+    "aeropress-default",
+    "aeropress-xl-default",
+    "oxo-rapid-brewer-default",
+    "french-press-default",
+    "hamilton-beach-big-batch",
+    "barista-express-espresso"
+  ]
+}

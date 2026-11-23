@@ -1,0 +1,10 @@
+{
+  "id": "kalita-wave-185",
+  "version": 1,
+  "name": "Kalita Wave 185",
+  "brand": "Kalita",
+  "type": "brewer",
+  "category": "flat-bottom-dripper",
+  "details": "Flat-bottom dripper, 2–4 cups.",
+  "defaultMethod": "pourover"
+}

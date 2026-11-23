@@ -1,0 +1,16 @@
+{
+  "_comment": "Demo setup for exploring Brewlab. All coffees, roasters and notes are fictional.",
+  "gear": [
+    "hario-v60-02",
+    "aeropress",
+    "french-press",
+    "ode-gen2"
+  ],
+  "recipes": [
+    "hoffmann-v60",
+    "kasuya-4-6",
+    "aeropress-default",
+    "aeropress-zuppa",
+    "french-press-default"
+  ]
+}

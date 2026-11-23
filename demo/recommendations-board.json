@@ -1,0 +1,104 @@
+{
+  "latestEdition": {
+    "id": 1,
+    "weekLabel": "Demo week",
+    "createdAt": "2026-11-16T12:00:00.000Z",
+    "seasonNote": "A sample board so you can see how Discover works — every coffee here is fictional.",
+    "picks": [
+      {
+        "id": 1,
+        "rank": 1,
+        "kind": "pick",
+        "name": "Highland Washed",
+        "roaster": "Example Roasters",
+        "origin": "Kenya",
+        "processMethod": "Washed",
+        "tastingNotes": "Blackcurrant, grapefruit, brown sugar",
+        "roastLevel": "Light",
+        "priceAmount": 21,
+        "priceText": "$21 / 12 oz",
+        "url": "",
+        "whyFit": "Demo pick: bright and juicy, in the style of the coffees you rated highly.",
+        "brewTip": "V60 · 1:16 · 94°C",
+        "funkRisk": "Low — washed",
+        "status": "new",
+        "inventoryState": "not_added"
+      },
+      {
+        "id": 2,
+        "rank": 2,
+        "kind": "pick",
+        "name": "Valley Honey",
+        "roaster": "Sample Coffee Co.",
+        "origin": "Costa Rica",
+        "processMethod": "Honey",
+        "tastingNotes": "Peach, panela, cacao",
+        "roastLevel": "Light-medium",
+        "priceAmount": 19,
+        "priceText": "$19 / 12 oz",
+        "url": "",
+        "whyFit": "Demo pick: sweeter and rounder.",
+        "brewTip": "V60 · 1:16 · 93°C",
+        "funkRisk": "Low — honey process",
+        "status": "new",
+        "inventoryState": "not_added"
+      },
+      {
+        "id": 3,
+        "rank": 3,
+        "kind": "wildcard",
+        "name": "Mountain Anaerobic",
+        "roaster": "Example Roasters",
+        "origin": "Colombia",
+        "processMethod": "Anaerobic natural",
+        "tastingNotes": "Strawberry, cacao nib",
+        "roastLevel": "Light",
+        "priceAmount": 26,
+        "priceText": "$26 / 12 oz",
+        "url": "",
+        "whyFit": "Demo wildcard: a clean experimental lot to stretch the palate.",
+        "brewTip": "AeroPress · 1:15 · 90°C",
+        "funkRisk": "Moderate — anaerobic, but clean",
+        "status": "new",
+        "inventoryState": "not_added"
+      }
+    ]
+  },
+  "pastEditions": [],
+  "tastings": [
+    {
+      "id": 1,
+      "name": "Sunrise Natural",
+      "roaster": "Example Roasters",
+      "origin": "Ethiopia",
+      "processMethod": "Natural",
+      "verdict": "loved",
+      "notes": "Demo tasting — blueberry bomb.",
+      "createdAt": "2026-11-15T12:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "name": "Smoky Dark",
+      "roaster": "Sample Coffee Co.",
+      "origin": "Sumatra",
+      "processMethod": "Wet-hulled",
+      "verdict": "not_for_me",
+      "notes": "Demo tasting — too earthy.",
+      "createdAt": "2026-11-10T12:00:00.000Z"
+    }
+  ],
+  "avoids": [
+    {
+      "id": 1,
+      "name": "Cinnamon Fizz",
+      "roaster": "Example Roasters",
+      "reason": "Demo avoid — heavily flavoured co-ferment.",
+      "url": ""
+    }
+  ],
+  "refresh": {
+    "lastRunAt": null,
+    "lastStatus": "demo",
+    "lastNote": "Demo data — add your own candidates or connect an AI provider for real picks."
+  }
+}

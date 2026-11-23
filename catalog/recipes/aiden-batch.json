@@ -1,0 +1,50 @@
+{
+  "id": "aiden-batch",
+  "legacyId": 1013,
+  "version": 1,
+  "name": "Aiden Batch",
+  "credit": null,
+  "method": "batch",
+  "brewer": {
+    "ids": [
+      "fellow-aiden"
+    ],
+    "categories": []
+  },
+  "doseG": 60,
+  "waterG": 1000,
+  "tempC": 93,
+  "grind": {
+    "position": 0.5,
+    "preferredGrinders": [
+      "ode-gen2"
+    ]
+  },
+  "steps": [
+    {
+      "atSec": 0,
+      "label": "Bloom to 150g",
+      "targetWaterG": 150,
+      "detail": "Program: batch basket, 93°C, bloom 2.5× dose for 60s"
+    },
+    {
+      "atSec": 60,
+      "label": "Pulse to 430g",
+      "targetWaterG": 430,
+      "detail": "Program: pulse 1"
+    },
+    {
+      "atSec": 150,
+      "label": "Pulse to 720g",
+      "targetWaterG": 720,
+      "detail": "Program: pulse 2"
+    },
+    {
+      "atSec": 240,
+      "label": "Pulse to 1000g",
+      "targetWaterG": 1000,
+      "detail": "Program: pulse 3; brew ends on its own"
+    }
+  ],
+  "notes": "Fellow Aiden batch profile using the batch basket: 93°C, 60s bloom, 3 pulses."
+}

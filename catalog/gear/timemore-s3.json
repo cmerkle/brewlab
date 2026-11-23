@@ -1,0 +1,12 @@
+{
+  "id": "timemore-s3",
+  "version": 1,
+  "name": "Timemore Chestnut S3",
+  "brand": "Timemore",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Hand grinder with external stepless-feel adjustment.",
+  "units": "clicks",
+  "burrs": null,
+  "espressoCapable": null
+}

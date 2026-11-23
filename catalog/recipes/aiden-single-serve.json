@@ -1,0 +1,44 @@
+{
+  "id": "aiden-single-serve",
+  "legacyId": 1012,
+  "version": 1,
+  "name": "Aiden Single-Serve",
+  "credit": null,
+  "method": "batch",
+  "brewer": {
+    "ids": [
+      "fellow-aiden"
+    ],
+    "categories": []
+  },
+  "doseG": 20,
+  "waterG": 320,
+  "tempC": 94,
+  "grind": {
+    "position": 0.5,
+    "preferredGrinders": [
+      "ode-gen2"
+    ]
+  },
+  "steps": [
+    {
+      "atSec": 0,
+      "label": "Bloom to 60g",
+      "targetWaterG": 60,
+      "detail": "Program: single-serve basket, 94°C, bloom 3× dose for 45s"
+    },
+    {
+      "atSec": 45,
+      "label": "Pulse to 190g",
+      "targetWaterG": 190,
+      "detail": "Program: pulse 1"
+    },
+    {
+      "atSec": 90,
+      "label": "Pulse to 320g",
+      "targetWaterG": 320,
+      "detail": "Program: pulse 2; brew ends on its own"
+    }
+  ],
+  "notes": "Fellow Aiden single-serve profile using the single-serve basket: 94°C, 45s bloom, 2 pulses."
+}

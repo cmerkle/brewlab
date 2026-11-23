@@ -1,0 +1,44 @@
+{
+  "id": "aeropress-xl-default",
+  "legacyId": 1016,
+  "version": 1,
+  "name": "AeroPress XL Default",
+  "credit": null,
+  "method": "aeropress",
+  "brewer": {
+    "ids": [
+      "aeropress-xl"
+    ],
+    "categories": []
+  },
+  "doseG": 30,
+  "waterG": 450,
+  "tempC": 92,
+  "grind": {
+    "position": 0.5,
+    "preferredGrinders": [
+      "k-ultra"
+    ]
+  },
+  "steps": [
+    {
+      "atSec": 0,
+      "label": "Pour to 450g",
+      "targetWaterG": 450,
+      "detail": "Flow control cap on, stir 3×"
+    },
+    {
+      "atSec": 120,
+      "label": "Swirl",
+      "targetWaterG": 450,
+      "detail": ""
+    },
+    {
+      "atSec": 150,
+      "label": "Press",
+      "targetWaterG": 450,
+      "detail": "Press for about 45 seconds"
+    }
+  ],
+  "notes": "Default AeroPress XL brew with the flow control cap."
+}

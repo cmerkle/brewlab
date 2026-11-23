@@ -1,0 +1,12 @@
+{
+  "id": "1zpresso-q2",
+  "version": 1,
+  "name": "1Zpresso Q2",
+  "brand": "1Zpresso",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Compact hand grinder; 1Zpresso lists 30 clicks per rotation (internal adjustment).",
+  "units": "clicks",
+  "burrs": null,
+  "espressoCapable": null
+}

@@ -1,0 +1,12 @@
+{
+  "id": "baratza-encore-esp",
+  "version": 1,
+  "name": "Baratza Encore ESP",
+  "brand": "Baratza",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Electric conical burr grinder with a finer espresso range.",
+  "units": "",
+  "burrs": null,
+  "espressoCapable": null
+}

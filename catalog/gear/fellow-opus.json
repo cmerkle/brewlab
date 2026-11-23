@@ -1,0 +1,12 @@
+{
+  "id": "fellow-opus",
+  "version": 1,
+  "name": "Fellow Opus",
+  "brand": "Fellow",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Electric conical burr grinder for espresso to cold brew.",
+  "units": "",
+  "burrs": null,
+  "espressoCapable": null
+}

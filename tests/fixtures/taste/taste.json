@@ -1,0 +1,9 @@
+{
+  "_comment": "Fictional taste seed for tests.",
+  "palateNotes": "I like bright, juicy washed coffees with clear fruit; heavy fermentation is not for me.",
+  "avoidRules": [
+    "cinnamon",
+    "coferment",
+    "funk"
+  ]
+}

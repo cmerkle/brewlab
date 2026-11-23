@@ -1,0 +1,41 @@
+{
+  "id": "hamilton-beach-big-batch",
+  "legacyId": 1019,
+  "version": 1,
+  "name": "Hamilton Beach Big Batch",
+  "genericName": "Big batch (drip machine)",
+  "credit": null,
+  "method": "batch",
+  "brewer": {
+    "ids": [
+      "hamilton-beach-drip"
+    ],
+    "categories": [
+      "batch-brewer"
+    ]
+  },
+  "doseG": 70,
+  "waterG": 1200,
+  "tempC": 93,
+  "grind": {
+    "position": 0.5,
+    "preferredGrinders": [
+      "ode-gen2"
+    ]
+  },
+  "steps": [
+    {
+      "atSec": 0,
+      "label": "Fill reservoir to 1200g",
+      "targetWaterG": 1200,
+      "detail": "Start the brewer"
+    },
+    {
+      "atSec": 360,
+      "label": "Stir the carafe",
+      "targetWaterG": 1200,
+      "detail": "Stir once it finishes"
+    }
+  ],
+  "notes": "Larger batches on the Hamilton Beach drip brewer."
+}

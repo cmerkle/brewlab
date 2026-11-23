@@ -1,0 +1,40 @@
+{
+  "id": "switch-full-immersion",
+  "legacyId": 1007,
+  "version": 1,
+  "name": "Switch Full Immersion",
+  "credit": null,
+  "method": "immersion",
+  "brewer": {
+    "ids": [
+      "hario-switch-03"
+    ],
+    "categories": [
+      "hybrid-dripper"
+    ]
+  },
+  "doseG": 20,
+  "waterG": 320,
+  "tempC": 94,
+  "grind": {
+    "position": 0.5,
+    "preferredGrinders": [
+      "zp6"
+    ]
+  },
+  "steps": [
+    {
+      "atSec": 0,
+      "label": "Pour to 320g",
+      "targetWaterG": 320,
+      "detail": "Switch closed — pour all the water, gentle stir"
+    },
+    {
+      "atSec": 150,
+      "label": "Open switch and drain",
+      "targetWaterG": 320,
+      "detail": "Release at 2:30; drawdown about a minute"
+    }
+  ],
+  "notes": "Full immersion on the Hario Switch, valve closed until release."
+}

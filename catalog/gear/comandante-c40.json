@@ -1,0 +1,12 @@
+{
+  "id": "comandante-c40",
+  "version": 1,
+  "name": "Comandante C40",
+  "brand": "Comandante",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Hand grinder; settings counted in clicks from zero (burrs closed).",
+  "units": "clicks",
+  "burrs": null,
+  "espressoCapable": null
+}
