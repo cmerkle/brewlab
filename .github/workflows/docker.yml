@@ -12,6 +12,8 @@ permissions:
 
 jobs:
   image:
+    # GitHub only: Gitea Actions also reads .github/workflows, but can't push to ghcr.io.
+    if: github.server_url == 'https://github.com'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
