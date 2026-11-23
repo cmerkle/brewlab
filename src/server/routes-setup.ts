@@ -4,7 +4,7 @@ import path from "node:path";
 import { type DB, nowIso } from "./db.js";
 import { getSettings, setSettings, isOnboarded, setOnboarded } from "./settings.js";
 import { compatibleTemplates, renderTemplate, catalogRecipe } from "./catalog.js";
-import { ownedGear, runSeed, linkGearToCatalog } from "./seed.js";
+import { ownedGear, runSeed, linkGearToCatalog, normalizeGrindSettings } from "./seed.js";
 import { recipeRow } from "./routes-brew.js";
 import { llmConfig, pingLlm, PROVIDERS } from "./llm.js";
 import { readSecrets, writeSecrets } from "./secrets.js";
@@ -102,7 +102,7 @@ export function setupRouter(db: DB) {
     res.json(
       compatibleTemplates(ownedGear(db)).map(({ template: t, rendered: x }) => ({
         id: t.id, name: x.name, method: x.method, credit: t.credit ?? null, brewerId: x.brewerId, brewerName: x.brewerName,
-        grinderName: x.grinderName, grindSetting: x.grindSetting, doseG: x.doseG, waterG: x.waterG, tempC: x.tempC,
+        grinderName: x.grinderName, grindSetting: x.grindSetting, grinderId: x.grinderId, doseG: x.doseG, waterG: x.waterG, tempC: x.tempC,
         alreadyAdded: existing.has(`${x.name}::${x.brewerId}`),
       })),
     );
@@ -172,6 +172,7 @@ export function setupRouter(db: DB) {
         }
       })();
       linkGearToCatalog(db); // exports from before the gear library
+      normalizeGrindSettings(db); // exports from before numeric grind settings
       setOnboarded(db, true);
       res.json({ ok: true, counts });
     } catch (e: any) {

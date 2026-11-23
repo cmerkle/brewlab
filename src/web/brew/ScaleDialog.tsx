@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api, type Brew, type Recipe } from "../api";
-import { FullScreen, NumInput, WaterInput, useData, Field, Stars, ErrorBox, fmtTime, fmtDate, getPref, setPref, usePref, useTemp } from "../ui";
+import { FullScreen, NumInput, WaterInput, TempInput, useData, Field, Stars, ErrorBox, fmtTime, fmtDate, getPref, setPref, usePref, useTemp } from "../ui";
 import { scaleSteps, applyRatio, ratioOf, fmtRatio, RATIO_TOGGLES, fmtG, type LastEdited, type Step } from "../../shared/brew";
-import { GrinderSwitcher, grindFor, useGrinders, methodOf } from "../grindui";
+import { GrinderSwitcher, grindFor, grindLabel, useGrinders, methodOf } from "../grindui";
+import { doseAdjustedGrind, fmtGrind, toGrindNumber } from "../../shared/grind";
 import { RatioCalculator } from "./RatioCalculator";
 
 export interface BrewPlan {
@@ -17,7 +18,7 @@ export interface BrewPlan {
   tempC: number | null;
   grinderId: string | null;
   grinderName: string | null;
-  grindSetting: string | null;
+  grindSetting: number | null;
   steps: Step[];
   inventoryId: number | null;
   /** Grinder picked on the recipe card's switcher (converted from the original). */
@@ -38,7 +39,8 @@ export interface ActiveBrew {
   dose: number | null;
   water: number | null;
   grinderId: string | null;
-  grindText: string;
+  grind: number | null;
+  tempC?: number | null;
   inventoryId: number | null;
   phase: "timer" | "log";
   startAt: number;
@@ -49,6 +51,8 @@ const STALE_MS = 3 * 3600 * 1000;
 export function getActiveBrew(): ActiveBrew | null {
   const a = getPref<ActiveBrew | null>(ACTIVE_KEY, null);
   if (!a || !a.startAt || Date.now() - a.startAt > STALE_MS) return null;
+  // Saved by an older version: grind was free text.
+  if (a.grind === undefined) a.grind = toGrindNumber((a as any).grindText);
   return a;
 }
 export const clearActiveBrew = () => setPref(ACTIVE_KEY, null);
@@ -141,23 +145,31 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
     if (plan.recipeId != null) setPref(`grinder.recipe.${plan.recipeId}`, id);
   };
   const choice = grindFor(plan, grinderId, grinders, gear);
-  const [grindText, setGrindText] = useState<string>(resume?.grindText ?? choice.setting ?? plan.grindSetting ?? "");
-  const firstGrind = useRef(true);
-  useEffect(() => {
-    if (firstGrind.current) {
-      firstGrind.current = false;
-      return;
-    }
-    setGrindText(choice.setting ?? "");
-  }, [grinderId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const grinder = grinders.find((g) => g.id === choice.grinderId) ?? null;
+  const [tempC, setTempC] = useState<number | null>(resume?.tempC !== undefined ? resume.tempC : plan.tempC);
   const [inventoryId, setInventoryId] = useState<number | null>(resume?.inventoryId ?? plan.inventoryId);
-  const [phase, setPhase] = useState<"scale" | "timer" | "log">(resume?.phase ?? "scale");
+  const [phase, setPhase] = useState<"setup" | "timer" | "log">(resume?.phase ?? "setup");
   const [startAt, setStartAt] = useState<number | null>(resume?.startAt ?? null);
   const [endAt, setEndAt] = useState<number | null>(resume?.endAt ?? null);
   const [now, setNow] = useState(Date.now());
   const [calc, setCalc] = useState(false);
   const [sound, setSound] = usePref<boolean>("sound", true);
   const chime = useChime();
+
+  // Grind: the recipe's (converted to the chosen grinder), nudged for the dose on drip methods —
+  // until you type your own number.
+  const dripNudge = grinder && choice.setting != null && dose ? doseAdjustedGrind(grinder, method, choice.setting, plan.doseG, dose) : null;
+  const suggested = dripNudge?.dial ?? choice.setting;
+  const [typedGrind, setTypedGrind] = useState<{ value: number | null } | null>(resume ? { value: resume.grind } : null);
+  const grind = typedGrind ? typedGrind.value : suggested;
+  const firstGrinder = useRef(true);
+  useEffect(() => {
+    if (firstGrinder.current) {
+      firstGrinder.current = false;
+      return;
+    }
+    setTypedGrind(null); // another grinder: start from its converted setting
+  }, [grinderId]);
 
   const steps = useMemo(() => (water ? scaleSteps(plan.steps, plan.waterG, water) : plan.steps), [plan, water]);
   const ratio = dose && water ? ratioOf(dose, water) : null;
@@ -186,8 +198,8 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
   // Persist the running brew so it can be resumed if iOS closes the app.
   useEffect(() => {
     if ((phase === "timer" || phase === "log") && startAt)
-      setPref(ACTIVE_KEY, { plan, dose, water, grinderId, grindText, inventoryId, phase, startAt, endAt } satisfies ActiveBrew);
-  }, [phase, startAt, endAt, plan, dose, water, grinderId, grindText, inventoryId]);
+      setPref(ACTIVE_KEY, { plan, dose, water, grinderId, grind, tempC, inventoryId, phase: phase as "timer" | "log", startAt, endAt } satisfies ActiveBrew);
+  }, [phase, startAt, endAt, plan, dose, water, grinderId, grind, tempC, inventoryId]);
 
   const elapsed = startAt ? ((endAt ?? now) - startAt) / 1000 : 0;
   const currentIdx = steps.reduce((acc, s, i) => ((s.atSec ?? 0) <= elapsed ? i : acc), 0);
@@ -230,9 +242,17 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
   const [logDose, setLogDose] = useState<number | null>(resume ? resume.dose : null);
   const [logWater, setLogWater] = useState<number | null>(resume ? resume.water : null);
   const [logTime, setLogTime] = useState<number | null>(resume?.endAt ? Math.round((resume.endAt - resume.startAt) / 1000) : null);
+  const [logTemp, setLogTemp] = useState<number | null>(resume?.tempC !== undefined ? resume.tempC : plan.tempC);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  /** Setup done: show the timer, not running yet — Start begins it when you pour. */
+  const ready = () => {
+    lastIdx.current = null;
+    setStartAt(null);
+    setEndAt(null);
+    setPhase("timer");
+  };
   const start = () => {
     chime.unlock();
     lastIdx.current = null;
@@ -246,11 +266,12 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
     setEndAt(end);
     setLogDose(dose);
     setLogWater(water);
+    setLogTemp(tempC);
     setLogTime(startAt ? Math.round((end - startAt) / 1000) : null);
     setPhase("log");
   };
   const close = () => {
-    if (phase === "timer" && !confirm("Stop this brew? The timer will be discarded.")) return;
+    if (phase === "timer" && startAt && !confirm("Stop this brew? The timer will be discarded.")) return;
     clearActiveBrew();
     onClose();
   };
@@ -261,8 +282,8 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
     try {
       await api.post("/api/brews", {
         recipeId: plan.recipeId, recipeName: plan.name, brewerId: plan.brewerId, brewerName: plan.brewerName,
-        method, coffee: bag?.name ?? plan.coffee, doseG: logDose, waterG: logWater, tempC: plan.tempC,
-        grinderId: choice.grinderId, grinderName: choice.grinderName, grindSetting: grindText || null,
+        method, coffee: bag?.name ?? plan.coffee, doseG: logDose, waterG: logWater, tempC: logTemp,
+        grinderId: choice.grinderId, grinderName: choice.grinderName, grindSetting: grind,
         steps: logWater ? scaleSteps(plan.steps, plan.waterG, logWater) : steps, inventoryId, rating, notes: notes || null,
         totalTimeSec: logTime,
       });
@@ -289,20 +310,30 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
     </Field>
   );
 
-  const title = phase === "scale" ? "Scale it, then brew" : phase === "timer" ? plan.name : "Save to Brew Log";
+  const grindField = (id: string, hint?: string) => (
+    <Field label={`Grind setting${grinder?.units ? ` (${grinder.units})` : ""}`} htmlFor={id} hint={hint}>
+      <NumInput id={id} value={grind} onChange={(n) => setTypedGrind({ value: n })} min={0} max={10000} decimals={2} />
+    </Field>
+  );
+
+  const title = phase === "setup" ? "Brew setup" : phase === "timer" ? plan.name : "Save to Brew Log";
   return (
     <>
     <FullScreen
       title={title}
       onClose={close}
       footer={
-        phase === "scale" ? (
-          <button className="primary block" disabled={!valid} onClick={start}>Start brew</button>
+        phase === "setup" ? (
+          <button className="primary block" disabled={!valid} onClick={ready}>Ready to brew</button>
         ) : phase === "timer" ? (
           <div className="row">
-            <button onClick={() => { setPhase("scale"); clearActiveBrew(); }}>Back</button>
+            <button onClick={() => { setPhase("setup"); setStartAt(null); clearActiveBrew(); }}>Back</button>
             <button className="icon-btn" aria-pressed={sound} aria-label={sound ? "Mute step chime" : "Unmute step chime"} onClick={() => { chime.unlock(); setSound(!sound); }}><BellIcon off={!sound} /></button>
-            <button className="primary grow" onClick={finish}>Finish</button>
+            {startAt ? (
+              <button className="primary grow" onClick={finish}>Finish</button>
+            ) : (
+              <button className="primary grow" onClick={start}>Start timer</button>
+            )}
           </div>
         ) : (
           <div className="row">
@@ -312,9 +343,9 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
         )
       }
     >
-      {phase === "scale" && (
+      {phase === "setup" && (
         <div className="stack">
-          <div className="muted">{plan.name}{plan.brewerName ? ` · ${plan.brewerName}` : ""}{plan.tempC != null ? ` · ${temp.fmt(plan.tempC)}` : ""}</div>
+          <div className="muted">{plan.name}{plan.brewerName ? ` · ${plan.brewerName}` : ""}</div>
           <div className="grid3">
             <Field label="Coffee (g)" htmlFor="sd-dose">
               <NumInput id="sd-dose" value={dose} onChange={setDoseTyped} min={limits?.doseG.min} max={limits?.doseG.max} decimals={1} />
@@ -333,14 +364,21 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
             <button type="button" className="link" onClick={() => setCalc(true)}>Ratio calculator</button>
           </div>
           <div className="hint">Ratio toggles keep {last === "water" ? `the ${waterLabel.toLowerCase()}` : "the coffee dose"} fixed (whichever you edited last).</div>
+          <Field label={`Water temperature (${temp.label})`} htmlFor="sd-temp">
+            <TempInput id="sd-temp" value={tempC} onChange={setTempC} />
+          </Field>
 
           {bagPicker("sd-bag")}
           {lowCoffee && <div className="note" role="status">Only {Math.max(0, bag!.remainingG!)} g left in this bag — less than the {dose} g dose.</div>}
 
           <GrinderSwitcher recipe={plan} value={grinderId} onChange={setGrinderId} idPrefix="sd" onEditGrinder={onEditGrinder} />
-          <Field label="Grind setting used" htmlFor="sd-grind" hint="Converted automatically; edit or type one if there's no conversion data.">
-            <input id="sd-grind" value={grindText} onChange={(e) => setGrindText(e.target.value)} />
-          </Field>
+          {grindField("sd-grind", typedGrind ? undefined : "Converted automatically; type your own number if you like.")}
+          {dripNudge && !typedGrind && choice.setting != null && (
+            <div className="hint" role="status" data-testid="grind-dose-nudge">
+              {dose! > plan.doseG ? "Bigger" : "Smaller"} dose than the recipe's {fmtG(plan.doseG)} g, so a touch {dose! > plan.doseG ? "coarser" : "finer"}: {fmtGrind(dripNudge.dial, grinder)} instead of {fmtGrind(choice.setting, grinder)}.{" "}
+              <button type="button" className="link" onClick={() => setTypedGrind({ value: choice.setting })}>Use {fmtGrind(choice.setting, grinder)}</button>
+            </div>
+          )}
 
           {history.length > 0 && (
             <section className="dialin" aria-label="Dial-in history" data-testid="dialin">
@@ -349,7 +387,8 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
                 {history.map((b) => (
                   <li key={b.id}>
                     <strong>{fmtDate(b.brewedAt)}</strong>{inventoryId != null && b.recipeName ? ` · ${b.recipeName}` : ""} · {b.doseG} g / {b.waterG} g
-                    {b.grindSetting ? ` · ${b.grinderName ? `${b.grinderName} ` : ""}${b.grindSetting}` : ""}
+                    {b.grindSetting != null ? ` · ${grindLabel(b, gear)}` : ""}
+                    {b.tempC != null ? ` · ${temp.fmt(b.tempC)}` : ""}
                     {b.totalTimeSec != null ? ` · ${fmtTime(b.totalTimeSec)}` : ""}{b.rating ? ` · ${"★".repeat(b.rating)}` : ""}
                     {b.notes && <div className="muted">“{b.notes}”</div>}
                   </li>
@@ -366,7 +405,8 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
 
       {phase === "timer" && (
         <div className="timer">
-          {resume && <div className="hint">Resumed — the timer kept running while the app was closed.</div>}
+          {resume && startAt && <div className="hint">Resumed — the timer kept running while the app was closed.</div>}
+          {!startAt && <div className="hint" data-testid="timer-ready">Set up and ready — tap <strong>Start timer</strong> when you start pouring.</div>}
           <div className="clock" data-testid="clock">{fmtTime(elapsed)}</div>
           <div className="now-step">
             <div className="target" data-testid="timer-target">{cur?.targetWaterG != null ? `${fmtG(cur.targetWaterG)} g` : "—"}</div>
@@ -384,14 +424,14 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
           ) : (
             <div className="next-step done"><div>Last step — tap <strong>Finish</strong> when it's drained.</div></div>
           )}
-          <div className="muted small">Grind: {grindText || "—"} on {choice.grinderName ?? "—"} · {dose}g coffee / {water != null ? fmtG(water) : "—"}g {waterLabel.toLowerCase()}{bag ? ` · ${bag.name}` : ""}</div>
+          <div className="muted small">Grind: {fmtGrind(grind, grinder) || "—"} on {choice.grinderName ?? "—"}{tempC != null ? ` · ${temp.fmt(tempC)}` : ""} · {dose}g coffee / {water != null ? fmtG(water) : "—"}g {waterLabel.toLowerCase()}{bag ? ` · ${bag.name}` : ""}</div>
           <StepList steps={steps} active={currentIdx} />
         </div>
       )}
 
       {phase === "log" && (
         <div className="stack">
-          <div className="muted">{plan.name} · {fmtTime(logTime ?? 0)} · grind {grindText || "—"} on {choice.grinderName ?? "—"}</div>
+          <div className="muted">{plan.name} · {fmtTime(logTime ?? 0)} · grind {fmtGrind(grind, grinder) || "—"} on {choice.grinderName ?? "—"}</div>
           <div className="grid3">
             <Field label="Coffee (g)" htmlFor="lg-dose">
               <NumInput id="lg-dose" value={logDose} onChange={setLogDose} min={limits?.doseG.min} max={limits?.doseG.max} decimals={1} />
@@ -401,9 +441,12 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
               <NumInput id="lg-time" value={logTime} onChange={setLogTime} min={0} max={limits?.totalTimeSec.max} decimals={0} />
             </Field>
           </div>
-          <Field label="Grind setting used" htmlFor="lg-grind">
-            <input id="lg-grind" value={grindText} onChange={(e) => setGrindText(e.target.value)} />
-          </Field>
+          <div className="grid2">
+            {grindField("lg-grind")}
+            <Field label={`Water temperature (${temp.label})`} htmlFor="lg-temp">
+              <TempInput id="lg-temp" value={logTemp} onChange={setLogTemp} />
+            </Field>
+          </div>
           {bagPicker("lg-bag")}
           <Field label="Rating"><Stars value={rating} onChange={setRating} /></Field>
           <Field label="Notes" htmlFor="lg-notes"><textarea id="lg-notes" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} /></Field>

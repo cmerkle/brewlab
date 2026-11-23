@@ -5,7 +5,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { z } from "zod";
-import { METHODS, formatSetting, rangeFor, type GrindRanges, type Method } from "../shared/grind.js";
+import { METHODS, valueToDial, rangeFor, type GrindRanges, type Method } from "../shared/grind.js";
 
 export const CATALOG_DIR = process.env.CATALOG_DIR || path.resolve("catalog");
 
@@ -156,14 +156,9 @@ export function renderTemplate(t: RecipeTemplateT, owned: OwnedGear[]) {
     t.grind.preferredGrinders.map((id) => grinders.find((g) => (g.id === id || g.catalogId === id) && withRange(g))).find(Boolean) ??
     grinders.find(withRange) ??
     grinders[0] ?? null;
-  let grindSetting: string | null = null;
+  let grindSetting: number | null = null;
   const r = grinder ? rangeFor(grinder, m) : null;
-  if (grinder && r) {
-    const raw = r.low + t.grind.position * (r.high - r.low);
-    const step = grinder.grindRanges?.step;
-    const v = step ? Math.round(Math.round(raw / step) * step * 1000) / 1000 : Math.round(raw * 100) / 100;
-    grindSetting = formatSetting(grinder, v);
-  }
+  if (grinder && r) grindSetting = valueToDial(grinder, r.low + t.grind.position * (r.high - r.low));
   return {
     name: matchedBy === "category" && t.genericName ? t.genericName : t.name,
     matchedBy,

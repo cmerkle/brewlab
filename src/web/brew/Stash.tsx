@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api, type Bag, type Brew, type Recipe } from "../api";
 import { useData, Field, FullScreen, ErrorBox, NumInput, Stars, Menu, fmtDate, daysSince, useAction } from "../ui";
+import { grindLabel } from "../grindui";
 import { RecipeCard } from "./Recipes";
 import { ScaleDialog, type BrewPlan } from "./ScaleDialog";
 
@@ -50,7 +51,7 @@ export function stock(b: Bag, brews: Brew[]): { text: string; tone: "warn" } | n
 }
 
 function BagCard({ b, onEdit, onDuplicate }: { b: Bag; onEdit: () => void; onDuplicate: () => void }) {
-  const { reload, act, brews, limits } = useData();
+  const { reload, act, brews, limits, gear } = useData();
   const [open, setOpen] = useState(false);
   const [detail, setDetail] = useState<{ recipes: Recipe[]; brews: Brew[] } | null>(null);
   const [brewing, setBrewing] = useState<BrewPlan | null>(null);
@@ -146,7 +147,7 @@ function BagCard({ b, onEdit, onDuplicate }: { b: Bag; onEdit: () => void; onDup
           )}
           <h4>Brew history</h4>
           {detail.brews.length === 0 ? <p className="muted small">No brews logged against this bag yet.</p> : (
-            <ul className="plain small">{detail.brews.map((x) => <li key={x.id}>{fmtDate(x.brewedAt)} — {x.recipeName ?? "Brew"} · {x.doseG} g / {x.waterG} g{x.grindSetting ? ` · ${x.grindSetting}` : ""}{x.rating ? ` · ${x.rating}★` : ""}</li>)}</ul>
+            <ul className="plain small">{detail.brews.map((x) => <li key={x.id}>{fmtDate(x.brewedAt)} — {x.recipeName ?? "Brew"} · {x.doseG} g / {x.waterG} g{x.grindSetting != null ? ` · ${grindLabel(x, gear)}` : ""}{x.rating ? ` · ${x.rating}★` : ""}</li>)}</ul>
           )}
         </div>
       )}

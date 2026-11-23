@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Grind settings are plain numbers.** You type and see exactly what you set on the grinder: `88`, `5.0` or `5.1`. The grinder's unit word (clicks, rotations) is shown next to the field, and the "(dial 8.8)" readout is gone. Older text settings such as "72 clicks (dial 7.2)", "ZP6: 4.5-5" or "setting 5.1" are converted once at startup, after restoring a backup, and when an older client sends text. A range becomes its midpoint, and text with no number in it is cleared. The Fellow Ode's sub-steps are still typed as on the dial (5.1 = 5⅓).
+- **Brew setup** replaces "Scale it, then brew":
+  - **Water temperature** can be changed before brewing, and again in the log step before saving. The Brew Log keeps what you actually used.
+  - **The timer doesn't start on its own.** *Ready to brew* opens the timer screen at 0:00, and *Start timer* starts it when you begin pouring.
+- **Grind follows the dose on drip methods** (pour-over, Rapid Brewer, batch). A bigger bed drains slower, so each doubling of the dose moves the grind 20% of that method's range coarser, and each halving moves it finer. The screen says so ("a touch coarser: 75 clicks instead of 72"), and one tap goes back to the recipe's grind. Typing your own number turns the nudge off. Immersion, AeroPress and espresso aren't nudged.
+
 - **Duplicate a bag:** Stash → ⋯ → *Duplicate* starts a new bag pre-filled from an existing one, for when you buy more than one bag of a coffee. It copies the name, roaster, origin, process, roast level, roast and purchase dates, size, price, link, notes and photo. The opened and finished dates and the rating start empty. Nothing is saved until you tap Save, so you can change the roast date first.
 
 - **Bag photos from anywhere:** take a photo, choose one from Photos or Files, paste an image (button or ⌘V/Ctrl+V), or drag and drop it on a desktop. It was camera-only before. Images are converted to a JPEG (longest side 2048 px) on the device, so HEIC photos, screenshots and pasted PNGs all work and upload faster. Attaching a photo to an existing bag gets the same options.

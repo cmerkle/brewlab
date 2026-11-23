@@ -80,22 +80,56 @@ function roundTo(v: number, step: number | null | undefined): number {
   return Math.round(r * 1000) / 1000;
 }
 
-/** Format a numeric setting in the grinder's own units. */
-export function formatSetting(g: GrinderLike, value: number): string {
+/* Grind settings are plain numbers: exactly what you set on the grinder (88 on a K-Ultra counted
+   in clicks, 5.0 rotations on a ZP6, 5.1 on a Fellow Ode). The math below works on the
+   grinder's linear scale ("value"); the stored/typed number is the "dial" reading. They only
+   differ for "thirds" notation (Ode: dial 5.1 = value 5⅓). */
+
+/** Dial reading → linear value (Ode thirds: 5.1 → 5⅓). */
+export function dialToValue(g: GrinderLike, dial: number): number {
+  if (effectiveRanges(g)?.notation !== "thirds") return dial;
+  const whole = Math.floor(dial + 1e-9);
+  const sub = Math.min(Math.round((dial - whole) * 10), 2);
+  return whole + sub / 3;
+}
+
+/** Linear value → dial reading, rounded to the grinder's step. */
+export function valueToDial(g: GrinderLike, value: number): number {
   const r = effectiveRanges(g);
-  const units = g.units || "";
   if (r?.notation === "thirds") {
-    const whole = Math.floor(value + 1e-6);
-    const thirds = Math.round((value - whole) * 3);
-    const label = thirds === 0 ? `${whole}` : thirds === 3 ? `${whole + 1}` : `${whole}.${thirds}`;
-    return `setting ${label}`;
+    let whole = Math.floor(value + 1e-6);
+    let thirds = Math.round((value - whole) * 3);
+    if (thirds === 3) { whole += 1; thirds = 0; }
+    return whole + thirds / 10;
   }
-  const step = r?.step ?? null;
-  const decimals = step && step < 1 ? Math.max(1, (String(step).split(".")[1] ?? "").length) : 0;
-  const num = step && step < 1 ? value.toFixed(Math.min(decimals, 2)) : String(Math.round(value));
-  let out = units ? `${num} ${units}` : num;
-  if (r?.dialDivisor) out += ` (dial ${(value / r.dialDivisor).toFixed(1)})`;
-  return out;
+  return roundTo(value, r?.step);
+}
+
+function stepDecimals(g: GrinderLike | null | undefined): number | null {
+  const r = g ? effectiveRanges(g) : null;
+  if (r?.notation === "thirds") return null;
+  const step = r?.step;
+  if (!step || step >= 1) return step ? 0 : null;
+  return Math.min(Math.max(1, (String(step).split(".")[1] ?? "").length), 2);
+}
+
+/** The number alone, as the grinder shows it ("88", "5.0", "5.1", "15"). */
+export function fmtGrindNumber(dial: number, g?: GrinderLike | null): string {
+  const d = stepDecimals(g);
+  if (d != null) return dial.toFixed(d);
+  return String(Math.round(dial * 100) / 100);
+}
+
+/** Number plus the grinder's unit word, if it has one ("88 clicks", "5.0 rotations", "5.1"). */
+export function fmtGrind(dial: number | null | undefined, g?: GrinderLike | null): string {
+  if (dial == null || Number.isNaN(dial)) return "";
+  const n = fmtGrindNumber(dial, g);
+  return g?.units ? `${n} ${g.units}` : n;
+}
+
+/** Kept for callers that think in linear values: value → "88 clicks". */
+export function formatSetting(g: GrinderLike, value: number): string {
+  return fmtGrind(valueToDial(g, value), g);
 }
 
 /**
@@ -123,9 +157,21 @@ export function parseSetting(text: string | null | undefined, g?: GrinderLike | 
   return one ? fix(parseFloat(one[0])) : null;
 }
 
+/** Legacy text ("72 clicks (dial 7.2)", "ZP6: 4.5-5", "setting 5.1") or a number → dial number. */
+export function toGrindNumber(x: unknown, g?: GrinderLike | null): number | null {
+  if (x == null || x === "") return null;
+  if (typeof x === "number") return Number.isFinite(x) ? x : null;
+  const s = String(x).trim();
+  if (/^-?\d+(\.\d+)?$/.test(s)) return parseFloat(s);
+  const v = parseSetting(s, g);
+  if (v == null) return null;
+  return g ? valueToDial(g, v) : Math.round(v * 1000) / 1000;
+}
+
 export type ConvertResult =
   | {
       ok: true;
+      /** Dial number on the target grinder. */
       value: number;
       display: string;
       position: number;
@@ -136,8 +182,9 @@ export type ConvertResult =
 
 export const NO_DATA_MESSAGE = "No conversion data yet — add starting ranges for this grinder";
 
-/** Convert `value` (source grinder units) for brew method `m` to the target grinder. */
-export function convertSetting(value: number, from: GrinderLike, to: GrinderLike, m: Method): ConvertResult {
+/** Convert a dial number on `from` for brew method `m` to a dial number on `to`. */
+export function convertSetting(dial: number, from: GrinderLike, to: GrinderLike, m: Method): ConvertResult {
+  const value = dialToValue(from, dial);
   const src = rangeFor(from, m);
   if (!src) {
     const note = noteFor(from, m);
@@ -159,10 +206,10 @@ export function convertSetting(value: number, from: GrinderLike, to: GrinderLike
   let clamped = false;
   if (r?.min != null && out < r.min) { out = r.min; clamped = true; }
   if (r?.max != null && out > r.max) { out = r.max; clamped = true; }
-  out = roundTo(out, r?.step);
+  const outDial = valueToDial(to, out);
   const mic = METHOD_MICRONS[m];
   const microns = Math.round(mic.low + Math.min(Math.max(position, 0), 1) * (mic.high - mic.low));
-  return { ok: true, value: out, display: formatSetting(to, out), position, microns, clamped };
+  return { ok: true, value: outDial, display: fmtGrind(outDial, to), position, microns, clamped };
 }
 
 /** Starting recommendation for a grinder & method: midpoint of the range. */
@@ -174,13 +221,12 @@ export function recommend(g: GrinderLike, m: Method):
     const note = noteFor(g, m);
     return note ? { ok: false, reason: "unsupported", message: note } : { ok: false, reason: "no-data", message: NO_DATA_MESSAGE };
   }
-  const er = effectiveRanges(g);
-  const mid = roundTo((r.low + r.high) / 2, er?.step);
+  const mid = valueToDial(g, (r.low + r.high) / 2);
   return {
     ok: true,
     low: formatSetting(g, r.low),
     high: formatSetting(g, r.high),
-    start: formatSetting(g, mid),
+    start: fmtGrind(mid, g),
     startValue: mid,
     microns: METHOD_MICRONS[m],
   };
@@ -198,4 +244,32 @@ export function validateRanges(methods: Partial<Record<Method, { low?: number | 
       return `${METHOD_LABELS[m]}: the low value (${r.low}) is above the high value (${r.high}).`;
   }
   return null;
+}
+
+/* ------------------------------ dose → grind nudge ------------------------------ */
+
+/** Drip methods, where a bigger bed drains slower and wants a coarser grind. */
+export const DOSE_NUDGE_METHODS: readonly Method[] = ["pourover", "rapid", "batch"];
+/** Share of the method's range to move per doubling (or halving) of the dose. */
+export const DOSE_NUDGE_PER_DOUBLING = 0.2;
+
+/**
+ * Grind for a different dose than the recipe's: drip methods move coarser (bigger dose) or finer
+ * (smaller dose) by DOSE_NUDGE_PER_DOUBLING of the method range per doubling. Returns null when
+ * nothing changes (other methods, no range, same dose, or the step rounds it away).
+ */
+export function doseAdjustedGrind(
+  g: GrinderLike, m: Method, dial: number, recipeDoseG: number, doseG: number,
+): { dial: number; delta: number } | null {
+  if (!DOSE_NUDGE_METHODS.includes(m) || !(recipeDoseG > 0) || !(doseG > 0) || doseG === recipeDoseG) return null;
+  const r = rangeFor(g, m);
+  if (!r || r.high <= r.low) return null;
+  const er = effectiveRanges(g);
+  let v = dialToValue(g, dial) + DOSE_NUDGE_PER_DOUBLING * Math.log2(doseG / recipeDoseG) * (r.high - r.low);
+  if (er?.min != null) v = Math.max(er.min, v);
+  if (er?.max != null) v = Math.min(er.max, v);
+  const out = valueToDial(g, v);
+  const delta = Math.round((dialToValue(g, out) - dialToValue(g, dial)) * 1000) / 1000;
+  if (Math.abs(delta) < 1e-9) return null;
+  return { dial: out, delta };
 }

@@ -1,6 +1,6 @@
 import { CATEGORIES } from "./catalog.js";
 import { z } from "zod";
-import { METHODS } from "../shared/grind.js";
+import { METHODS, toGrindNumber } from "../shared/grind.js";
 
 /** Numeric limits — the single source for server validation AND form inputs (served at /api/schema). */
 export const LIMITS = {
@@ -38,6 +38,13 @@ export const StepSchema = z.object({
 
 const method = z.enum(METHODS).nullable().optional();
 
+/** A grind setting is a plain number (what you set on the grinder). Older clients may still send
+    text like "72 clicks" — its number is used. */
+const grind = z.preprocess(
+  (x) => (x == null || x === "" ? null : (toGrindNumber(x) ?? x)),
+  z.number({ error: "Grind setting must be a number" }).min(0, "Grind setting can't be negative").max(10000, "Grind setting must be at most 10000").nullable(),
+).optional();
+
 export const RecipeSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(200),
   brewerId: str(100),
@@ -49,7 +56,7 @@ export const RecipeSchema = z.object({
   tempC: optNum("tempC", "Temperature"),
   grinderId: str(100),
   grinderName: str(200),
-  grindSetting: str(200),
+  grindSetting: grind,
   steps: z.array(StepSchema).max(50).default([]),
   notes: str(5000),
   favorite: z.boolean().optional(),
@@ -68,7 +75,7 @@ export const BrewSchema = z.object({
   tempC: optNum("tempC", "Temperature"),
   grinderId: str(100),
   grinderName: str(200),
-  grindSetting: str(200),
+  grindSetting: grind,
   steps: z.array(StepSchema).max(50).nullable().optional(),
   inventoryId: z.number().int().nullable().optional(),
   rating: z.number().int().min(1, "Rating must be 1–5").max(5, "Rating must be 1–5").nullable().optional(),

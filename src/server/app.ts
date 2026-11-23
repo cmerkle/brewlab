@@ -4,7 +4,7 @@ import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import cron from "node-cron";
 import { openDb, UPLOAD_DIR, DB_PATH } from "./db.js";
-import { seedIfNeeded, counts, linkGearToCatalog } from "./seed.js";
+import { seedIfNeeded, counts, linkGearToCatalog, normalizeGrindSettings } from "./seed.js";
 import { loadCatalog } from "./catalog.js";
 import { brewRouter, dedupeRecipes, sweepUploads } from "./routes-brew.js";
 import { backupRouter, createBackup } from "./backup.js";
@@ -24,6 +24,8 @@ export function createApp(db = openDb()) {
   const seeded = seedIfNeeded(db);
   const linked = linkGearToCatalog(db);
   if (linked) console.log(`[catalog] linked ${linked} existing gear item(s) to the library`);
+  const grinds = normalizeGrindSettings(db);
+  if (grinds) console.log(`[grind] ${grinds} grind setting(s) converted to plain numbers`);
   if (seeded) console.log("First run — seed imported:", seeded);
   // Installs that already have data (seeded, or from before first-run setup existed) skip it.
   if (markExistingInstallOnboarded(db)) console.log("[setup] existing data — first-run setup skipped");

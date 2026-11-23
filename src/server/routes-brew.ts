@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { type DB, nowIso, todayLocal, deriveStatus, UPLOAD_DIR } from "./db.js";
 import { RecipeSchema, BrewSchema, InventorySchema, GearSchema, RecommendationSchema, TastingSchema, LIMITS, firstError } from "./schemas.js";
-import { validateRanges, METHODS } from "../shared/grind.js";
+import { validateRanges, METHODS, toGrindNumber } from "../shared/grind.js";
 import { loadCatalog, catalogGear, gearFromCatalog, libraryEntryFor } from "./catalog.js";
 import { importFromLink, importFromPhoto, lookupOnline } from "./imports.js";
 import { sameCoffee } from "./rules.js";
@@ -59,12 +59,15 @@ const normalizeJson = (s: string | null) => {
   }
 };
 
+/** Stored in a TEXT column (older databases), returned as a number. */
+const grindNum = (x: unknown) => toGrindNumber(x);
+
 export function recipeRow(r: any) {
-  return { ...r, steps: parseJ(r.steps) ?? [], favorite: Boolean(r.favorite), starter: Boolean(r.starter) };
+  return { ...r, grindSetting: grindNum(r.grindSetting), steps: parseJ(r.steps) ?? [], favorite: Boolean(r.favorite), starter: Boolean(r.starter) };
 }
 
 export function brewRow(r: any) {
-  return { ...r, steps: parseJ(r.steps) };
+  return { ...r, grindSetting: grindNum(r.grindSetting), steps: parseJ(r.steps) };
 }
 
 export function inventoryRow(db: DB, r: any) {

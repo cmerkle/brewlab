@@ -37,6 +37,16 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   grinder uses its saved `grindRanges` — copied from the gear library when installed, or entered
   by the user. No ranges for a method → "no conversion data yet", and the grinder stays selectable
   with a typed setting. Microns per click is a note only.
+- **Grind settings are numbers** (`grindSetting: number | null`) — the "dial" reading you set on
+  the grinder; the unit word comes from the grinder (`fmtGrind`). Conversion math runs on the
+  linear scale (`dialToValue`/`valueToDial`; they differ only for Ode-style `thirds`: dial 5.1 = 5⅓).
+  Legacy text is converted by `normalizeGrindSettings` (startup, seed, restore) and the API schema.
+- **Dose nudge** (`doseAdjustedGrind`): drip methods only (pourover/rapid/batch), ±20% of the
+  method range per doubling of dose vs the recipe; shown with a one-tap "Use <recipe grind>";
+  typing a grind turns it off.
+- Brew flow: **Brew setup** (dose/water/ratio/temp/bag/grinder) → *Ready to brew* → timer screen
+  idle at 0:00 → *Start timer* → *Finish* → log (temp and grind still editable). The active brew is
+  persisted only once the timer runs.
 - Pour steps scale off **water**, not dose. Ratio quick-toggles 1:13–1:17 plus 1:2; they hold
   whichever of coffee/water was edited last (coffee by default).
 - The brew timer reads **grams only**, even when the water field is in oz.

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useData, NumInput, usePref } from "../ui";
 import { useGrinders } from "../grindui";
-import { METHODS, METHOD_LABELS, recommend, convertSetting, effectiveRanges, rangeFor, NO_DATA_MESSAGE, DRAFT_NOTE, type Method } from "../../shared/grind";
+import { METHODS, METHOD_LABELS, recommend, convertSetting, valueToDial, effectiveRanges, rangeFor, NO_DATA_MESSAGE, DRAFT_NOTE, type Method } from "../../shared/grind";
 
 export function Guide({ onEditGrinder }: { onEditGrinder: (id: string) => void }) {
   const grinders = useGrinders();
@@ -64,7 +64,7 @@ function Converter({ onEditGrinder }: { onEditGrinder: (id: string) => void }) {
   const setFromId = (id: string) => setSavedFrom(id);
   const startValue = (() => {
     const r = from ? rangeFor(from, "pourover") : null;
-    return r ? Math.round(((r.low + r.high) / 2) * 100) / 100 : null;
+    return r && from ? valueToDial(from, (r.low + r.high) / 2) : null;
   })();
   const [value, setValue] = useState<number | null>(startValue);
   const fromRange = from ? rangeFor(from, method) : null;

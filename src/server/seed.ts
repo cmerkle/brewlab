@@ -2,6 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { type DB, nowIso, deriveStatus } from "./db.js";
+import { toGrindNumber } from "../shared/grind.js";
 import { loadCatalog, catalogGear, catalogRecipe, gearFromCatalog, renderTemplate, type OwnedGear } from "./catalog.js";
 
 export const SEED_DIR = process.env.SEED_DIR || path.resolve("seed-data");
@@ -157,6 +158,7 @@ export function runSeed(db: DB, dir = SEED_DIR): SeedReport {
     }
     db.prepare("INSERT INTO meta (key, value) VALUES ('seededAt', ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(t);
   })();
+  normalizeGrindSettings(db);
   return report;
 }
 
@@ -216,4 +218,32 @@ export function counts(db: DB) {
     avoids: c("SELECT COUNT(*) n FROM avoids"),
     gear: c("SELECT COUNT(*) n FROM gear_items"),
   };
+}
+
+/**
+ * Grind settings are numbers. Rows written by older versions hold text such as "72 clicks
+ * (dial 7.2)", "ZP6: 4.5-5" or "setting 5.1": rewrite each as the plain dial number, read with
+ * its grinder (name prefix, Ode thirds). Text with no number is cleared. Idempotent.
+ */
+export function normalizeGrindSettings(db: DB): number {
+  const grinders = new Map(
+    (db.prepare("SELECT id, name, units, grindRanges FROM gear_items").all() as any[]).map((g) => [
+      g.id, { id: g.id, name: g.name, units: g.units, grindRanges: g.grindRanges ? JSON.parse(g.grindRanges) : null },
+    ]),
+  );
+  let changed = 0;
+  db.transaction(() => {
+    for (const table of ["recipes", "brews"] as const) {
+      const rows = db.prepare(`SELECT id, grinderId, grindSetting FROM ${table} WHERE grindSetting IS NOT NULL`).all() as any[];
+      const upd = db.prepare(`UPDATE ${table} SET grindSetting=? WHERE id=?`);
+      for (const r of rows) {
+        const raw = String(r.grindSetting);
+        if (/^-?\d+(\.\d+)?$/.test(raw.trim())) continue;
+        const n = toGrindNumber(raw, grinders.get(r.grinderId) ?? null);
+        upd.run(n == null ? null : n, r.id);
+        changed++;
+      }
+    }
+  })();
+  return changed;
 }

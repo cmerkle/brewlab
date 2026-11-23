@@ -66,7 +66,8 @@ export interface Recipe {
   tempC: number | null;
   grinderId: string | null;
   grinderName: string | null;
-  grindSetting: string | null;
+  /** What you set on the grinder, as a plain number (units come from the grinder). */
+  grindSetting: number | null;
   steps: Step[];
   notes: string | null;
   favorite: boolean;
@@ -87,7 +88,8 @@ export interface Brew {
   tempC: number | null;
   grinderId: string | null;
   grinderName: string | null;
-  grindSetting: string | null;
+  /** What you set on the grinder, as a plain number (units come from the grinder). */
+  grindSetting: number | null;
   steps: Step[] | null;
   inventoryId: number | null;
   rating: number | null;

@@ -3,9 +3,10 @@ import { api, type Brew } from "../api";
 import { useData, Field, FullScreen, ErrorBox, NumInput, WaterInput, Stars, fmtDate, fmtTime, useAction, SearchInput, useTemp, TempInput } from "../ui";
 import { ScaleDialog, planFromBrew, type BrewPlan } from "./ScaleDialog";
 import { fmtRatio, ratioOf, scaleSteps } from "../../shared/brew";
+import { grindLabel } from "../grindui";
 
 export function BrewLog() {
-  const { brews, recipes, bags, loaded } = useData();
+  const { brews, recipes, bags, gear, loaded } = useData();
   const temp = useTemp();
   const [brewing, setBrewing] = useState<BrewPlan | null>(null);
   const [editing, setEditing] = useState<Brew | "new" | null>(null);
@@ -21,7 +22,7 @@ export function BrewLog() {
     return brews.filter((b) =>
       (!coffee || b.coffee === coffee) &&
       (!recipe || b.recipeName === recipe) &&
-      (!needle || [b.notes, b.recipeName, b.coffee, b.grindSetting].some((x) => x?.toLowerCase().includes(needle))));
+      (!needle || [b.notes, b.recipeName, b.coffee, b.grinderName].some((x) => x?.toLowerCase().includes(needle))));
   }, [brews, coffee, recipe, q]);
   const stats = useMemo(() => {
     const rated = shown.filter((b) => b.rating != null);
@@ -92,7 +93,7 @@ export function BrewLog() {
               </header>
               <div className="small">
                 {b.brewerName ?? "—"} · {b.doseG} g / {b.waterG} g ({fmtRatio(ratioOf(b.doseG, b.waterG))}) · {b.tempC != null ? `${temp.fmt(b.tempC)} · ` : ""}
-                <span data-testid="brew-grind">{b.grinderName ?? "—"}: {b.grindSetting ?? "—"}</span>
+                <span data-testid="brew-grind">{grindLabel(b, gear)}</span>
                 {b.totalTimeSec != null ? ` · ${fmtTime(b.totalTimeSec)}` : ""}
               </div>
               <div className="small" data-testid="brew-coffee">Coffee: {b.coffee ?? "—"}{bag ? " (from Stash)" : ""}</div>
@@ -128,7 +129,7 @@ function BrewForm({ brew, onClose }: { brew: Brew | null; onClose: () => void })
     tempC: brew?.tempC ?? null as number | null,
     grinderId: brew?.grinderId ?? null as string | null,
     grinderName: brew?.grinderName ?? null as string | null,
-    grindSetting: brew?.grindSetting ?? "",
+    grindSetting: brew?.grindSetting ?? null as number | null,
     inventoryId: brew?.inventoryId ?? null as number | null,
     rating: brew?.rating ?? null as number | null,
     notes: brew?.notes ?? "",
@@ -138,7 +139,7 @@ function BrewForm({ brew, onClose }: { brew: Brew | null; onClose: () => void })
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }));
   const save = async () => {
     setError(null);
-    const body = { ...f, recipeName: f.recipeName || null, coffee: f.coffee || null, grindSetting: f.grindSetting || null, notes: f.notes || null };
+    const body = { ...f, recipeName: f.recipeName || null, coffee: f.coffee || null, notes: f.notes || null };
     try {
       if (brew) await api.put(`/api/brews/${brew.id}`, body);
       else await api.post("/api/brews", body);
@@ -165,7 +166,7 @@ function BrewForm({ brew, onClose }: { brew: Brew | null; onClose: () => void })
           <Field label="Recipe" htmlFor="bl-recipe">
             <select id="bl-recipe" value={f.recipeId ?? ""} onChange={(e) => {
               const r = recipes.find((x) => x.id === Number(e.target.value));
-              setF((x) => r ? { ...x, recipeId: r.id, recipeName: r.name, brewerId: r.brewerId, brewerName: r.brewerName, doseG: x.doseG ?? r.doseG, waterG: x.waterG ?? r.waterG, tempC: x.tempC ?? r.tempC, grinderId: x.grinderId ?? r.grinderId, grindSetting: x.grindSetting || (r.grindSetting ?? "") } : { ...x, recipeId: null });
+              setF((x) => r ? { ...x, recipeId: r.id, recipeName: r.name, brewerId: r.brewerId, brewerName: r.brewerName, doseG: x.doseG ?? r.doseG, waterG: x.waterG ?? r.waterG, tempC: x.tempC ?? r.tempC, grinderId: x.grinderId ?? r.grinderId, grindSetting: x.grindSetting ?? r.grindSetting } : { ...x, recipeId: null });
             }}>
               <option value="">{f.recipeName && !f.recipeId ? f.recipeName : "— none —"}</option>
               {recipes.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
@@ -203,7 +204,9 @@ function BrewForm({ brew, onClose }: { brew: Brew | null; onClose: () => void })
               {grinders.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
             </select>
           </Field>
-          <Field label="Grind setting" htmlFor="bl-grind"><input id="bl-grind" value={f.grindSetting} onChange={(e) => set("grindSetting", e.target.value)} /></Field>
+          <Field label={`Grind setting${grinders.find((g) => g.id === f.grinderId)?.units ? ` (${grinders.find((g) => g.id === f.grinderId)!.units})` : ""}`} htmlFor="bl-grind">
+            <NumInput id="bl-grind" value={f.grindSetting} onChange={(n) => set("grindSetting", n)} min={0} max={10000} decimals={2} />
+          </Field>
         </div>
         <Field label="Total time (s)" htmlFor="bl-time"><NumInput id="bl-time" value={f.totalTimeSec} onChange={(n) => set("totalTimeSec", n)} min={0} max={limits?.totalTimeSec.max} decimals={0} /></Field>
         <Field label="Rating"><Stars value={f.rating} onChange={(n) => set("rating", n)} /></Field>

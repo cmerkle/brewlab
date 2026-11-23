@@ -37,11 +37,11 @@ test("library loads with no errors; templates reference real gear", () => {
 test("rendering onto the original setup (spec grinder ranges) reproduces the previous starter grind settings", () => {
   const mine = owned(JSON.parse(fs.readFileSync(path.join(FULL_SETUP, "setup.json"), "utf8")).gear);
   const want = {
-    "hoffmann-v60": "4.8 rotations", "kasuya-4-6": "5.3 rotations", "work-horse": "5.0 rotations",
-    "show-horse-v60-02": "5.0 rotations", "switch-full-immersion": "5.5 rotations", "aiden-batch": "setting 6",
-    "french-press-default": "100 clicks", "barista-express-espresso": "15.0", // the DF64's 0.5-step format (old hardcoded text was "15")
-    "oxo-soup-shot": "56 clicks (dial 5.6)",
-    "aeropress-zuppa-lunga": "50 clicks (dial 5.0)",
+    "hoffmann-v60": 4.8, "kasuya-4-6": 5.3, "work-horse": 5,
+    "show-horse-v60-02": 5, "switch-full-immersion": 5.5, "aiden-batch": 6,
+    "french-press-default": 100, "barista-express-espresso": 15,
+    "oxo-soup-shot": 56,
+    "aeropress-zuppa-lunga": 50,
   };
   for (const [id, setting] of Object.entries(want)) {
     const r = renderTemplate(catalogRecipe(id), mine);
@@ -60,7 +60,7 @@ test("a template renders onto someone else's gear (category match, their grinder
   const r = renderTemplate(catalogRecipe("hoffmann-v60"), theirs);
   assert.equal(r.brewerId, "my-v60"); // matched by category, not by the library V60's id
   assert.equal(r.grinderId, "comandante-c40");
-  assert.equal(r.grindSetting, "23 clicks"); // position 0.3 inside 20–30
+  assert.equal(r.grindSetting, 23); // position 0.3 inside 20–30
   const noRanges = renderTemplate(catalogRecipe("hoffmann-v60"), [theirs[1], { id: "mystery", name: "Mystery grinder", type: "grinder", units: "clicks", grindRanges: null }]);
   assert.equal(noRanges.grinderId, "mystery");
   assert.equal(noRanges.grindSetting, null); // never invented — the user types it
@@ -96,7 +96,7 @@ test("fresh install seeds gear and starters from setup.json; re-running adds not
   assert.equal(n("SELECT COUNT(*) n FROM gear_items WHERE catalogId IS NOT NULL"), 16);
   assert.equal(n("SELECT COUNT(*) n FROM recipes WHERE starter=1"), 20);
   const expected = renderTemplate(catalogRecipe("show-horse-v60-02"), ownedGear(db)).grindSetting;
-  assert.equal(db.prepare("SELECT grindSetting FROM recipes WHERE id=1004").get().grindSetting, expected);
+  assert.equal(Number(db.prepare("SELECT grindSetting FROM recipes WHERE id=1004").get().grindSetting), expected);
   for (const g of ownedGear(db)) assert.deepEqual(g.grindRanges, cat.gear.find((c) => c.id === g.id).grindRanges ?? null, `${g.id} gets the library's ranges`);
   db.close();
 });

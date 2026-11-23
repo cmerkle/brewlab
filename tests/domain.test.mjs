@@ -1,7 +1,7 @@
 // Domain checks for maths that must be exact. Run: npm run build:server && npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { convertSetting, parseSetting, validateRanges, recommend } from "../dist/shared/grind.js";
+import { convertSetting, parseSetting, validateRanges, recommend, toGrindNumber, dialToValue, valueToDial, fmtGrind, doseAdjustedGrind } from "../dist/shared/grind.js";
 import { scaleSteps, applyRatio } from "../dist/shared/brew.js";
 import { applyMatchingRules } from "../dist/server/rules.js";
 import fs from "node:fs";
@@ -17,13 +17,13 @@ const k6 = lib("k6");
 const kul = lib("k-ultra");
 const ode = lib("ode-gen2");
 
-test("worked example: Show Horse ZP6 5.0 → K6 90, K-Ultra 72 (dial 7.2), Ode 5 (~675 µm)", () => {
+test("worked example: Show Horse ZP6 5.0 → K6 90, K-Ultra 72, Ode 5 (~675 µm)", () => {
   const a = convertSetting(5.0, zp6, k6, "pourover");
   assert.ok(a.ok); assert.equal(a.value, 90); assert.equal(a.display, "90 clicks");
   const b = convertSetting(5.0, zp6, kul, "pourover");
-  assert.ok(b.ok); assert.equal(b.value, 72); assert.equal(b.display, "72 clicks (dial 7.2)");
+  assert.ok(b.ok); assert.equal(b.value, 72); assert.equal(b.display, "72 clicks");
   const c = convertSetting(5.0, zp6, ode, "pourover");
-  assert.ok(c.ok); assert.equal(c.value, 5); assert.equal(c.display, "setting 5"); assert.equal(c.microns, 675);
+  assert.ok(c.ok); assert.equal(c.value, 5); assert.equal(c.display, "5"); assert.equal(c.microns, 675);
   // and back
   const d = convertSetting(90, k6, zp6, "pourover");
   assert.ok(d.ok); assert.equal(d.display, "5.0 rotations");
@@ -59,6 +59,43 @@ test("parseSetting handles recorded strings", () => {
   assert.equal(parseSetting("ZP6: 4.5-5", zp6), 4.75);
   assert.equal(parseSetting("72 clicks (dial 7.2)", kul), 72);
   assert.ok(Math.abs(parseSetting("setting 5.1", ode) - (5 + 1 / 3)) < 1e-9);
+});
+
+test("grind settings are plain numbers: the dial reading (Ode thirds 5.1 = 5⅓ on the linear scale)", () => {
+  assert.equal(toGrindNumber("72 clicks (dial 7.2)", kul), 72);
+  assert.equal(toGrindNumber("ZP6: 4.5-5", zp6), 4.8); // midpoint, rounded to the 0.1 step
+  assert.equal(toGrindNumber("setting 5.1", ode), 5.1);
+  assert.equal(toGrindNumber("88"), 88);
+  assert.equal(toGrindNumber(5.5), 5.5);
+  assert.equal(toGrindNumber("fine"), null);
+  assert.equal(toGrindNumber(""), null);
+  assert.ok(Math.abs(dialToValue(ode, 5.2) - (5 + 2 / 3)) < 1e-9);
+  assert.equal(valueToDial(ode, 5 + 2 / 3), 5.2);
+  assert.equal(valueToDial(ode, 5.99), 6);
+  assert.equal(fmtGrind(5, zp6), "5.0 rotations");
+  assert.equal(fmtGrind(88, kul), "88 clicks");
+  assert.equal(fmtGrind(5.1, ode), "5.1");
+  // Ode → ZP6 reads the Ode dial on its linear scale first
+  const t = convertSetting(5.1, ode, zp6, "pourover");
+  assert.ok(t.ok); assert.equal(t.value, 5.2); // 5⅓ is ⅔ through 4–6 → ⅔ through 4.5–5.5 = 5.17 → 5.2
+});
+
+test("dose nudge: drip methods go coarser for a bigger dose, finer for a smaller one", () => {
+  // K-Ultra fixture pour-over 64–80 (16 clicks): doubling the dose → +20% → +3.2 → 3 clicks
+  const up = doseAdjustedGrind(kul, "pourover", 72, 20, 40);
+  assert.deepEqual(up, { dial: 75, delta: 3 });
+  const down = doseAdjustedGrind(kul, "pourover", 72, 20, 10);
+  assert.equal(down.dial, 69);
+  assert.equal(doseAdjustedGrind(kul, "pourover", 72, 20, 20), null); // same dose
+  assert.equal(doseAdjustedGrind(kul, "immersion", 80, 20, 40), null); // immersion isn't nudged
+  assert.equal(doseAdjustedGrind(kul, "espresso", 30, 18, 20), null);
+  assert.equal(doseAdjustedGrind(kul, "pourover", 72, 20, 21), null); // rounds away at a 1-click step
+  // ZP6 fixture 4.5–5.5 rotations: 20 g → 30 g = +0.2 × log2(1.5) ≈ +0.117 → +0.1
+  assert.equal(doseAdjustedGrind(zp6, "pourover", 5.0, 20, 30).dial, 5.1);
+  // Ode thirds: 4–6 range, doubling → +0.4 → lands on the next third
+  assert.equal(doseAdjustedGrind(ode, "pourover", 5, 20, 40).dial, 5.1);
+  // No range for the method → no nudge
+  assert.equal(doseAdjustedGrind(G("x", "X", "clicks"), "pourover", 10, 20, 40), null);
 });
 
 test("Work Horse scaled to 35g / 460g pours ~229g then lands on 460g — not 560g", () => {

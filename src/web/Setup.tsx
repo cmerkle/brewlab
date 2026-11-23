@@ -2,6 +2,7 @@
 // Every step can be skipped; More → Settings → "Run setup again" brings it back (data is kept).
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "./api";
+import { fmtGrind } from "../shared/grind";
 import { AiProvider } from "./AiProvider";
 import { TasteQuiz } from "./discover/Taste";
 import { useData, BackButton, NumInput, SearchInput, Field, useEdgeSwipeBack, useTemp, type Settings } from "./ui";
@@ -12,7 +13,7 @@ interface LibGear {
 }
 interface Template {
   id: string; name: string; method: string; credit: string | null; brewerName: string | null; grinderName: string | null;
-  grindSetting: string | null; doseG: number; waterG: number; tempC: number | null; alreadyAdded: boolean;
+  grindSetting: number | null; grinderId: string | null; doseG: number; waterG: number; tempC: number | null; alreadyAdded: boolean;
 }
 
 export const CATEGORY_LABELS: Record<string, string> = {
@@ -336,7 +337,7 @@ export function PrefsForm() {
 /* ------------------------------ 4 · Starter recipes ------------------------------ */
 
 function RecipesStep({ onAdded }: { onAdded: () => void }) {
-  const { reload, act } = useData();
+  const { reload, act, gear } = useData();
   const temp = useTemp();
   const [list, setList] = useState<Template[] | null>(null);
   const [picked, setPicked] = useState<Set<string>>(new Set());
@@ -378,7 +379,7 @@ function RecipesStep({ onAdded }: { onAdded: () => void }) {
                   <span className="lib-main">
                     <strong>{t.name}</strong>
                     <span className="muted small" data-testid="tpl-detail">
-                      {t.doseG} g : {t.waterG} g{t.tempC != null ? ` · ${temp.fmt(t.tempC)}` : ""} · {t.grinderName ? `${t.grinderName} ${t.grindSetting ?? "— set the grind yourself"}` : "no grinder"}
+                      {t.doseG} g : {t.waterG} g{t.tempC != null ? ` · ${temp.fmt(t.tempC)}` : ""} · {t.grinderName ? `${t.grinderName} ${t.grindSetting != null ? fmtGrind(t.grindSetting, gear.find((g) => g.id === t.grinderId)) : "— set the grind yourself"}` : "no grinder"}
                       {t.alreadyAdded ? " · already in your recipes" : ""}
                     </span>
                   </span>

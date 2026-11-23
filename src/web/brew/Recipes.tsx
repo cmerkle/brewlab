@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { api, ApiError, type Recipe } from "../api";
 import { useData, NumInput, WaterInput, Field, FullScreen, ErrorBox, getPref, setPref, useAction, SearchInput, Glyph, useTemp, TempInput } from "../ui";
-import { GrinderSwitcher, methodOf } from "../grindui";
+import { GrinderSwitcher, grindLabel, methodOf } from "../grindui";
 import { ScaleDialog, planFromRecipe, StepList, type BrewPlan } from "./ScaleDialog";
 import { fmtRatio, ratioOf, type Step } from "../../shared/brew";
 import { METHODS, METHOD_LABELS, type Method } from "../../shared/grind";
@@ -130,7 +130,7 @@ export function RecipeCard({ r, onBrew, onEdit, onEditGrinder, startOpen = false
             <div><dt>{espresso ? "Yield" : "Water"}</dt><dd>{r.waterG} g</dd></div>
             <div><dt>Ratio</dt><dd>{fmtRatio(ratioOf(r.doseG, r.waterG))}</dd></div>
             <div><dt>Temp</dt><dd>{r.tempC != null ? temp.fmt(r.tempC) : "—"}</dd></div>
-            <div><dt>Grind</dt><dd>{r.grinderName ?? "—"}: {r.grindSetting ?? "—"}</dd></div>
+            <div><dt>Grind</dt><dd>{grindLabel(r, gear)}</dd></div>
           </dl>
           {(r.coffee || bag) && <div className="muted">Coffee: {bag ? `${bag.name} (from Stash)` : r.coffee}</div>}
           <GrinderSwitcher recipe={r} value={grinderId} onChange={setGrinderId} idPrefix={`rc${r.id}`} onEditGrinder={onEditGrinder} />
@@ -166,7 +166,7 @@ export function RecipeEditor({ recipe, onClose }: { recipe: Recipe | null; onClo
     tempC: recipe?.tempC ?? 93 as number | null,
     grinderId: (recipe?.grinderId ?? grinders[0]?.id ?? null) as string | null,
     grinderName: recipe?.grinderName ?? null,
-    grindSetting: recipe?.grindSetting ?? "",
+    grindSetting: recipe?.grindSetting ?? null as number | null,
     steps: (recipe?.steps ?? [{ label: "Pour to 320g", targetWaterG: 320, atSec: 0, detail: "" }]) as Step[],
     notes: recipe?.notes ?? "",
     inventoryId: recipe?.inventoryId ?? null as number | null,
@@ -181,7 +181,7 @@ export function RecipeEditor({ recipe, onClose }: { recipe: Recipe | null; onClo
     setError(null);
     setSaving(true);
     try {
-      const body = { ...f, coffee: f.coffee || null, grindSetting: f.grindSetting || null, notes: f.notes || null,
+      const body = { ...f, coffee: f.coffee || null, notes: f.notes || null,
         steps: f.steps.map((s) => ({ ...s, detail: s.detail || null })) };
       if (recipe) await api.put(`/api/recipes/${recipe.id}`, body);
       else await api.post("/api/recipes", body);
@@ -241,8 +241,8 @@ export function RecipeEditor({ recipe, onClose }: { recipe: Recipe | null; onClo
               {grinders.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
             </select>
           </Field>
-          <Field label="Grind setting" htmlFor="re-grind" hint="In the grinder's own units, e.g. 5.0 rotations, 72 clicks, setting 5">
-            <input id="re-grind" value={f.grindSetting} onChange={(e) => set("grindSetting", e.target.value)} />
+          <Field label={`Grind setting${grinders.find((g) => g.id === f.grinderId)?.units ? ` (${grinders.find((g) => g.id === f.grinderId)!.units})` : ""}`} htmlFor="re-grind" hint="Just the number you set on the grinder, e.g. 5.0, 72 or 5.1">
+            <NumInput id="re-grind" value={f.grindSetting} onChange={(n) => set("grindSetting", n)} min={0} max={10000} decimals={2} />
           </Field>
         </div>
         <h3>Steps</h3>

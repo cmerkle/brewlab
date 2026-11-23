@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { Gear, Recipe } from "./api";
 import { useData } from "./ui";
-import { convertSetting, parseSetting, NO_DATA_MESSAGE, type Method, rangeFor } from "../shared/grind";
+import { convertSetting, fmtGrind, NO_DATA_MESSAGE, type Method, rangeFor } from "../shared/grind";
 
 export function useGrinders() {
   const { gear } = useData();
@@ -17,7 +17,8 @@ export function methodOf(r: { method: Method | null; brewerId: string | null }, 
 export interface GrindChoice {
   grinderId: string | null;
   grinderName: string | null;
-  setting: string | null;
+  /** Dial number on the chosen grinder. */
+  setting: number | null;
   converted: boolean;
 }
 
@@ -42,11 +43,11 @@ export function grindFor(
     return { grinderId: target.id, grinderName: target.name, setting: null, converted: false,
       message: `The recipe's grinder (${recipe.grinderName ?? "unknown"}) isn't in your gear, so there's nothing to convert from — type a setting.` };
   }
-  const v = parseSetting(recipe.grindSetting, orig);
+  const v = recipe.grindSetting;
   if (v == null) return { grinderId: target.id, grinderName: target.name, setting: null, converted: false, message: "The recipe's grind setting has no number to convert." };
   const r = convertSetting(v, orig, target, m);
   if (!r.ok) return { grinderId: target.id, grinderName: target.name, setting: null, converted: false, message: r.message };
-  return { grinderId: target.id, grinderName: target.name, setting: r.display, converted: true, microns: r.microns };
+  return { grinderId: target.id, grinderName: target.name, setting: r.value, converted: true, microns: r.microns };
 }
 
 export function GrinderSwitcher({
@@ -65,6 +66,8 @@ export function GrinderSwitcher({
   const id = `${idPrefix}-grinder`;
   const noData = choice.message?.startsWith(NO_DATA_MESSAGE);
   const origMissing = recipe.grinderId && !grinders.some((g) => g.id === recipe.grinderId);
+  const target = grinders.find((g) => g.id === choice.grinderId) ?? null;
+  const orig = grinders.find((g) => g.id === recipe.grinderId) ?? null;
   return (
     <div className="switcher">
       <label htmlFor={id}>Grinder</label>
@@ -81,10 +84,10 @@ export function GrinderSwitcher({
         ))}
       </select>
       <div className="grind-out" data-testid={`${idPrefix}-grind`}>
-        {choice.setting ? (
+        {choice.setting != null ? (
           <>
-            <strong>{choice.setting}</strong>
-            {choice.converted ? <span className="muted"> · converted from {recipe.grindSetting}{choice.microns ? ` · ~${choice.microns} µm` : ""}</span> : <span className="muted"> · original</span>}
+            <strong>{fmtGrind(choice.setting, target)}</strong>
+            {choice.converted ? <span className="muted"> · converted from {fmtGrind(recipe.grindSetting, orig)}{choice.microns ? ` · ~${choice.microns} µm` : ""}</span> : <span className="muted"> · original</span>}
           </>
         ) : (
           <span className="note">
@@ -101,3 +104,15 @@ export function GrinderSwitcher({
     </div>
   );
 }
+
+/** "K-Ultra 88 clicks" / "Ode 5.1" for a recorded brew or recipe (grinder looked up by id). */
+export function grindLabel(r: { grinderId: string | null; grinderName: string | null; grindSetting: number | null }, gear: Gear[], withName = true): string {
+  const g = gear.find((x) => x.id === r.grinderId) ?? null;
+  const n = fmtGrind(r.grindSetting, g);
+  const name = g?.name ?? r.grinderName;
+  if (!withName) return n || "—";
+  return name ? `${name}${n ? ` ${n}` : ""}` : n || "—";
+}
+
+/** Unit word for a grinder's number field ("clicks", "rotations"), or "". */
+export const grindUnits = (g: Gear | null | undefined) => g?.units ?? "";

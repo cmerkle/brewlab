@@ -51,12 +51,12 @@ test("V60 + a custom Comandante (calibrated pour-over range) → Hoffmann in Com
   const hoff = tpls.find((t) => t.id === "hoffmann-v60");
   assert.ok(hoff, "Hoffmann offered for a V60");
   assert.equal(hoff.grinderName, "Comandante C40");
-  assert.equal(hoff.grindSetting, "24 clicks"); // position 0.3 inside 22–28 → 23.8 → 24
+  assert.equal(hoff.grindSetting, 24); // position 0.3 inside 22–28 → 23.8 → 24
   assert.equal(tpls.filter((t) => t.name === "Show Horse" || t.name.startsWith("Show Horse")).length, 1, "one Show Horse per brewer");
   assert.ok(!tpls.some((t) => /aeropress|french/i.test(t.id)), "only recipes this gear can brew");
   const made = (await call("POST", "/api/recipes/from-templates", { ids: ["hoffmann-v60", "kasuya-4-6"] })).body;
   assert.equal(made.created.length, 2);
-  assert.equal(made.created[0].grindSetting, "24 clicks");
+  assert.equal(made.created[0].grindSetting, 24);
   assert.equal((await call("POST", "/api/recipes/from-templates", { ids: ["hoffmann-v60"] })).body.skipped, 1, "no duplicates");
   assert.equal((await call("GET", "/api/setup/templates")).body.find((t) => t.id === "hoffmann-v60").alreadyAdded, true);
   assert.equal((await call("POST", "/api/recipes/from-templates", { ids: ["aeropress-default"] })).status, 400);
@@ -100,5 +100,32 @@ test("an existing install with data is never shown first-run setup", async () =>
   db.close();
   const { server, call } = await start("old.db");
   assert.equal((await call("GET", "/api/setup")).body.onboarded, true);
+  server.closeAllConnections(); server.close();
+});
+
+test("grind settings are numbers: older text is converted at startup; the API takes and returns numbers", async () => {
+  const file = path.join(tmp, "oldgrind.db");
+  const db = openDb(file);
+  const t = new Date().toISOString();
+  db.prepare("INSERT INTO gear_items (id, name, type, units, grindRanges, createdAt, updatedAt) VALUES (?, ?, 'grinder', ?, ?, ?, ?)")
+    .run("acme-thirds", "Acme Thirds", "", JSON.stringify({ step: 1 / 3, notation: "thirds", methods: { pourover: { low: 4, high: 6 } } }), t, t);
+  db.prepare("INSERT INTO gear_items (id, name, type, units, grindRanges, createdAt, updatedAt) VALUES (?, ?, 'grinder', 'clicks', ?, ?, ?)")
+    .run("acme-hand", "Acme Hand 2", JSON.stringify({ step: 1, methods: { pourover: { low: 60, high: 80 } } }), t, t);
+  const ins = db.prepare("INSERT INTO brews (recipeName, grinderId, grindSetting, doseG, waterG, brewedAt) VALUES ('Old', ?, ?, 20, 320, ?)");
+  ins.run("acme-hand", "Acme Hand 2: 72 clicks (dial 7.2)", t);
+  ins.run("acme-thirds", "setting 5.1", t);
+  ins.run(null, "4.5-5 rotations", t);
+  ins.run(null, "fine-ish", t);
+  db.close();
+
+  const { server, call } = await start("oldgrind.db");
+  const brews = (await call("GET", "/api/brews")).body;
+  assert.deepEqual(brews.map((b) => b.grindSetting).sort(), [4.75, 5.1, 72, null].sort());
+  const r = await call("POST", "/api/brews", { recipeName: "New", doseG: 20, waterG: 320, grindSetting: 88.5 });
+  assert.equal(r.status, 200); assert.equal(r.body.grindSetting, 88.5);
+  const legacy = await call("POST", "/api/brews", { recipeName: "Old client", doseG: 20, waterG: 320, grindSetting: "70 clicks" });
+  assert.equal(legacy.body.grindSetting, 70);
+  const bad = await call("POST", "/api/brews", { recipeName: "Bad", doseG: 20, waterG: 320, grindSetting: "medium" });
+  assert.equal(bad.status, 400); assert.match(bad.body.error, /Grind setting must be a number/);
   server.closeAllConnections(); server.close();
 });

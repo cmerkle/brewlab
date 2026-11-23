@@ -81,8 +81,41 @@ try {
   check(true, "setup finished → Recipes, with the starter recipes");
   const recipes = await (await fetch(`${BASE}/api/recipes`)).json();
   const r = recipes.find((x) => x.name === "Hoffmann V60");
-  check(r?.grindSetting === "24 clicks" && r?.grinderName === "Comandante C40", `recipe saved with ${r?.grinderName} ${r?.grindSetting}`);
+  check(r?.grindSetting === 24 && r?.grinderName === "Comandante C40", `recipe saved with ${r?.grinderName} ${r?.grindSetting}`);
   check((await (await fetch(`${BASE}/api/setup`)).json()).onboarded === true, "onboarded");
+
+  // Brew setup: numeric grind, nudged for the dose (drip); temperature editable; timer waits for Start.
+  await p.goto(`${BASE}/#/brew/recipes`);
+  await p.locator(`[data-testid="recipe-${r.id}"] [data-testid="recipe-brew"]`).click();
+  await p.getByRole("heading", { name: "Brew setup" }).waitFor();
+  check(true, "Brew opens “Brew setup”");
+  check((await p.inputValue("#sd-grind")) === "24", `grind is a plain number: ${await p.inputValue("#sd-grind")}`);
+  check((await p.inputValue("#sd-temp")) === "212", `recipe temperature shown in °F: ${await p.inputValue("#sd-temp")}`);
+  await p.fill("#sd-dose", "15");
+  await p.waitForTimeout(200);
+  const nudge = p.locator('[data-testid="grind-dose-nudge"]');
+  check((await p.inputValue("#sd-grind")) === "23" && /Smaller dose.*finer: 23 clicks instead of 24 clicks/.test(await nudge.innerText()),
+    `half the dose on a V60 → a touch finer (${await p.inputValue("#sd-grind")})`);
+  await nudge.getByRole("button", { name: "Use 24 clicks" }).click();
+  check((await p.inputValue("#sd-grind")) === "24" && !(await nudge.count()), "one tap back to the recipe's grind");
+  await p.fill("#sd-grind", "25.5");
+  await p.fill("#sd-temp", "205");
+  await p.getByRole("button", { name: "Ready to brew" }).click();
+  await p.locator('[data-testid="timer-ready"]').waitFor();
+  const clock0 = await p.locator('[data-testid="clock"]').innerText();
+  await p.waitForTimeout(1300);
+  check(clock0 === "0:00" && (await p.locator('[data-testid="clock"]').innerText()) === "0:00", "timer screen waits — it doesn't start on its own");
+  check(!(await p.getByRole("button", { name: "Finish" }).count()), "no Finish before Start");
+  await p.getByRole("button", { name: "Start timer" }).click();
+  await p.waitForTimeout(1300);
+  check((await p.locator('[data-testid="clock"]').innerText()) !== "0:00", "Start timer starts it");
+  await p.getByRole("button", { name: "Finish" }).click();
+  check((await p.inputValue("#lg-temp")) === "205" && (await p.inputValue("#lg-grind")) === "25.5", "log step carries the temperature and grind");
+  await p.fill("#lg-temp", "203");
+  await p.getByRole("button", { name: "Save brew" }).click();
+  await p.getByText("Brew saved to the log").waitFor();
+  const logged = (await (await fetch(`${BASE}/api/brews`)).json())[0];
+  check(logged.grindSetting === 25.5 && Math.round(logged.tempC * 10) / 10 === 95, `brew logged with grind ${logged.grindSetting} and ${logged.tempC} °C (203 °F)`);
 
   // Settings: run setup again keeps data
   await p.goto(`${BASE}/#/more`);
