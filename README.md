@@ -40,7 +40,7 @@ Every step can be skipped and redone from **More → Settings → Run setup agai
 
 ### Network exposure
 
-`docker-compose.yml` publishes port **7642 on every interface**, so devices on your network and a reverse proxy on another machine can reach it. To keep it on the host only, change the mapping to `127.0.0.1:7642:7642`.
+`docker-compose.yml` publishes port **7642 on every interface**, so devices on your network and a reverse proxy on another machine can reach it. Set `BREWLAB_PORT` in `.env` to use another host port. To keep it on the host only, change the mapping to `127.0.0.1:${BREWLAB_PORT:-7642}:7642`.
 
 ### HTTPS and installing the app
 

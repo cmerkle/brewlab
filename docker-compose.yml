@@ -19,7 +19,8 @@ services:
       # reverse proxy on another machine can reach it. Never forward 7642 on your router.
       # If a public hostname points at it, put authentication in front of it in the proxy.
       # Host-only instead: "127.0.0.1:7642:7642"
-      - "7642:7642"
+      # Host port: set BREWLAB_PORT in .env to publish on another port (the app listens on 7642 inside).
+      - "${BREWLAB_PORT:-7642}:7642"
 
 volumes:
   brewlab-data:

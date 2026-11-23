@@ -41,3 +41,4 @@ Thumbs.db
 
 # Maintainer-local files
 CLAUDE.local.md
+docker-compose.override.yml
