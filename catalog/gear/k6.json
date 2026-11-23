@@ -1,12 +1,40 @@
 {
   "id": "k6",
-  "version": 1,
+  "version": 2,
   "name": "Kingrinder K6",
   "brand": "Kingrinder",
   "type": "grinder",
   "category": "hand-grinder",
-  "details": "Hand grinder with external adjustment.",
+  "details": "Hand grinder with external adjustment: 60 clicks per rotation, counted anti-clockwise from zero. KINGrinder: don't grind at zero or below 15 clicks.",
   "units": "clicks",
   "burrs": "Stock K6 burrs",
-  "espressoCapable": true
+  "espressoCapable": true,
+  "grindRanges": {
+    "scale": "clicks from zero (adjustment nut turned clockwise until it stops)",
+    "min": 0,
+    "step": 1,
+    "methods": {
+      "espresso": {
+        "low": 40,
+        "high": 60
+      },
+      "aeropress": {
+        "low": 60,
+        "high": 80
+      },
+      "pourover": {
+        "low": 80,
+        "high": 100
+      }
+    },
+    "notes": {
+      "aeropress": "KINGrinder groups moka pot and AeroPress (60–80).",
+      "immersion": "KINGrinder gives French press as a single setting, 140 clicks, not a range."
+    }
+  },
+  "rangeInfo": {
+    "confidence": "manufacturer",
+    "source": "https://m.media-amazon.com/images/I/C1DrZy5LZUL.pdf",
+    "note": "KINGrinder K4/K6 manual (hosted on Amazon), “Recommended grinder settings”, K6 column: Turkish coffee 28–40 clicks, espresso 40–60, moka pot/AeroPress 60–80, pour-over 80–100, French press 140. “One circle is equivalent to 60 clicks.”"
+  }
 }

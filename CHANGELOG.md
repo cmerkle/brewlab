@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Kingrinder K6 grind ranges** from the KINGrinder K4/K6 manual: espresso 40–60, AeroPress 60–80, pour-over 80–100 clicks. French press is a single setting (140), so the K6 has no immersion range.
 - **More sourced grind ranges.** 12 of the library's grinders now convert out of the box, each from the manufacturer's own chart or manual:
   - 1Zpresso ZP6 Special, K-Ultra, J-Max, JX and Q2 (1Zpresso's grind setting charts);
   - Timemore C2 and C3 (Timemore manual);
@@ -12,7 +13,6 @@
 - **Still without ranges, because no per-method range from the maker was available:**
   - Comandante C40, Timemore S3, DF64, Eureka Mignon: no official per-method chart found;
   - Baratza Encore ESP: no chart found yet;
-  - Kingrinder K6: size bands only, not brew methods;
   - Baratza Virtuoso+: single settings, not ranges;
   - Fellow Opus (original): only the Opus 2 guide was found.
 - **ZP6 settings are dial numbers now**, as 1Zpresso labels them ("setting 4.5"), not rotations. The JX and Q2 use rotations, as their charts do.
