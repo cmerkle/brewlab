@@ -1,6 +1,6 @@
 {
   "id": "k-ultra",
-  "version": 2,
+  "version": 3,
   "name": "1Zpresso K-Ultra",
   "brand": "1Zpresso",
   "type": "grinder",
@@ -15,15 +15,19 @@
     "step": 1,
     "dialDivisor": 10,
     "methods": {
+      "turkish": {
+        "low": 20,
+        "high": 35
+      },
       "espresso": {
         "low": 30,
         "high": 45
       },
-      "aeropress": {
+      "moka": {
         "low": 50,
         "high": 70
       },
-      "batch": {
+      "aeropress": {
         "low": 50,
         "high": 70
       },
@@ -31,20 +35,38 @@
         "low": 80,
         "high": 90
       },
+      "batch": {
+        "low": 50,
+        "high": 70
+      },
       "immersion": {
         "low": 90,
         "high": 100
+      },
+      "coldbrew": {
+        "low": 95,
+        "high": 105
+      },
+      "rapid": {
+        "low": 60,
+        "high": 85
       }
     },
     "notes": {
+      "moka": "1Zpresso groups moka pot with AeroPress and drip coffee maker (5–7).",
       "aeropress": "1Zpresso groups AeroPress, moka pot and drip coffee maker (5–7).",
-      "immersion": "French press 9–10 on the dial.",
-      "pourover": "1Zpresso groups siphon with pour over."
+      "pourover": "1Zpresso groups siphon with pour over.",
+      "immersion": "French press 9–10 on the dial."
     }
   },
   "rangeInfo": {
     "confidence": "manufacturer",
     "source": "https://1zpresso.coffee/grind-setting/",
-    "note": "1Zpresso “Kultra Grind Setting Reference” chart (Kultra-Grind-Setting-Reference-20221031.jpg on that page), in dial points: Turkish 2–3.5, espresso 3–4.5, AeroPress/moka/drip coffee maker 5–7, siphon/pour over 8–9, French press 9–10."
+    "note": "1Zpresso “Kultra Grind Setting Reference” chart (Kultra-Grind-Setting-Reference-20221031.jpg on that page), in dial points: Turkish 2–3.5, espresso 3–4.5, AeroPress/moka/drip coffee maker 5–7, siphon/pour over 8–9, French press 9–10.",
+    "estimated": [
+      "coldbrew",
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: cold brew: the French press range moved half its width coarser; Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
   }
 }

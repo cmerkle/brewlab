@@ -144,6 +144,17 @@ export const GearSchema = z.object({
   variants: z.array(z.string().max(200)).max(20).nullable().optional(),
   grindRanges: GrindRangesSchema,
   defaultMethod: method,
+  /** Where the grind ranges come from (shown and editable in the gear editor). Omit to keep it. */
+  rangeInfo: z
+    .object({
+      confidence: z.enum(["manufacturer", "community"]).nullable().optional(),
+      source: z.string().trim().max(2000).refine((u) => u === "" || /^https?:\/\/\S+$/.test(u), "The source must be a link starting with https://").nullable().optional(),
+      note: z.string().max(2000).nullable().optional(),
+      estimated: z.array(z.enum(METHODS)).max(20).optional(),
+      estimateNote: z.string().max(2000).nullable().optional(),
+    })
+    .nullable()
+    .optional(),
   /** Library category (cone dripper, hand grinder …) — lets recipe templates match custom gear. */
   category: z.enum(CATEGORIES).nullable().optional(),
 });

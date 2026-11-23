@@ -1,0 +1,10 @@
+{
+  "id": "melitta-1x4",
+  "version": 1,
+  "name": "Melitta 1x4 Cone",
+  "brand": "Melitta",
+  "type": "brewer",
+  "category": "cone-dripper",
+  "details": "Classic plastic cone dripper with a small drain hole and #4 paper filters.",
+  "defaultMethod": "pourover"
+}

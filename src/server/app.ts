@@ -4,7 +4,7 @@ import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import cron from "node-cron";
 import { openDb, UPLOAD_DIR, DB_PATH } from "./db.js";
-import { seedIfNeeded, counts, linkGearToCatalog, normalizeGrindSettings } from "./seed.js";
+import { seedIfNeeded, counts, linkGearToCatalog, normalizeGrindSettings, syncGearWithLibrary } from "./seed.js";
 import { loadCatalog } from "./catalog.js";
 import { brewRouter, dedupeRecipes, sweepUploads } from "./routes-brew.js";
 import { backupRouter, createBackup } from "./backup.js";
@@ -24,6 +24,9 @@ export function createApp(db = openDb()) {
   const seeded = seedIfNeeded(db);
   const linked = linkGearToCatalog(db);
   if (linked) console.log(`[catalog] linked ${linked} existing gear item(s) to the library`);
+  const synced = syncGearWithLibrary(db);
+  for (const id of synced.updated) console.log(`[catalog] ${id}: ranges updated from the gear library`);
+  for (const m of synced.merged) console.log(`[catalog] ${m}: methods added from the gear library (your own ranges kept)`);
   const grinds = normalizeGrindSettings(db);
   if (grinds) console.log(`[grind] ${grinds} grind setting(s) converted to plain numbers`);
   if (seeded) console.log("First run — seed imported:", seeded);

@@ -45,8 +45,19 @@ A grinder may include `grindRanges` — the low/high setting **per brew method**
 ```
 
 - `confidence`: `manufacturer` (the maker's manual, chart or site) or `community` (a published community chart). Both **must** cite a `source` URL.
-- Transcribe what the source says per brew method. Don't convert microns or size bands into methods yourself — if the source doesn't name methods, leave the ranges out.
-- Bump `version` when you change an existing entry; installed copies are offered the update, never overwritten.
+- Brew methods, finest to coarsest: `turkish`, `espresso`, `moka`, `aeropress`, `pourover` (V60), `batch` (drip coffee maker), `immersion` (French press), `coldbrew`, plus `rapid` (OXO Rapid Brewer). Give every method the grinder can do a range; for one it can't, add a `notes` entry saying why (`npm test` checks every method has one or the other).
+- Transcribe what the source says per brew method. Don't convert microns or size bands into methods yourself.
+- **Estimates** fill the gaps a source leaves (e.g. a chart without cold brew). List them in `rangeInfo.estimated` and say how they were worked out in `rangeInfo.estimateNote` — extrapolated from the grinder's own cited ranges (cold brew = the French press range moved half its width coarser; Rapid Brewer = middle of AeroPress to middle of pour-over; …), never invented. The app marks them “est.”. At least one range must come from the source.
+
+```json
+"rangeInfo": { "confidence": "manufacturer", "source": "https://…", "note": "…",
+  "estimated": ["coldbrew"], "estimateNote": "Estimated by extrapolating the cited ranges: cold brew = the French press range moved half its width coarser." }
+```
+- Bump `version` when you change an existing entry. Installed copies that still match the library take the new ranges at startup; copies the user edited only gain methods they don't have.
+
+## Brewers need a grind category
+
+Every brewer has a `defaultMethod`: the grind range it uses on the user's grinders (`pourover` for a V60, Chemex or siphon, `immersion` for a French press or Clever, `turkish` for a cezve, `coldbrew` for a cold brew maker …). Recipes can still choose another (a Switch brewed as pour-over).
 
 ## Recipe templates
 
@@ -59,7 +70,8 @@ A grinder may include `grindRanges` — the low/high setting **per brew method**
 - the file is valid JSON matching the format, and its `id` matches the file name (ids are unique);
 - grind ranges have `rangeInfo` with `confidence` `manufacturer` or `community` and an **https** `source` — drafts aren't accepted;
 - each range has low ≤ high and sits inside the grinder's `min`/`max`;
-- `type` and `category` agree (grinder ↔ `*-grinder`), only grinders have ranges, only brewers have `defaultMethod`;
+- `type` and `category` agree (grinder ↔ `*-grinder`), only grinders have ranges, only brewers have `defaultMethod`, and every brewer has one;
+- methods listed in `rangeInfo.estimated` have a range, come with an `estimateNote`, and aren't all of them;
 - recipe templates only refer to gear that exists.
 
 ## Before you open a pull request

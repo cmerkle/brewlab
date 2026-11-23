@@ -432,3 +432,9 @@ a.button.disabled { opacity: .45; pointer-events: none; }
 .picker-buttons button { flex: 1 1 auto; min-width: 0; white-space: normal; }
 .image-picker { border-radius: 12px; }
 .image-picker.drop-over { outline: 2px dashed var(--accent); outline-offset: 4px; }
+.est-badge { margin-left: 6px; padding: 0 5px; border-radius: 6px; font-size: .7rem; font-weight: 600; letter-spacing: .02em; color: var(--muted, #777); border: 1px dashed currentColor; vertical-align: 1px; }
+.rules { display: flex; flex-direction: column; gap: 4px; margin: 6px 0; }
+.rules .rule { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.rules .rule .toggle-row { flex: 1; min-width: 0; }
+.rule-words { overflow-wrap: anywhere; }
+.rule.editing { display: flex; flex-direction: column; gap: 4px; padding: 8px; border: 1px solid var(--line); border-radius: 10px; margin: 4px 0; }

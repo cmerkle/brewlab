@@ -3,7 +3,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { type DB, nowIso, deriveStatus } from "./db.js";
 import { toGrindNumber } from "../shared/grind.js";
-import { loadCatalog, catalogGear, catalogRecipe, gearFromCatalog, renderTemplate, type OwnedGear } from "./catalog.js";
+import { loadCatalog, catalogGear, catalogRecipe, gearFromCatalog, renderTemplate, rangeInfoFromCatalog, type OwnedGear, type GearRangeInfo } from "./catalog.js";
+import type { GrindRanges, Method } from "../shared/grind.js";
 
 export const SEED_DIR = process.env.SEED_DIR || path.resolve("seed-data");
 
@@ -53,11 +54,17 @@ export function runSeed(db: DB, dir = SEED_DIR): SeedReport {
     for (const id of setup.gear ?? []) {
       const c = catalogGear(id);
       if (!c) throw new Error(`setup.json lists gear "${id}", which isn't in the gear library`);
-      const existing = db.prepare("SELECT createdAt, grindRanges FROM gear_items WHERE id=?").get(id) as { createdAt: string; grindRanges: string | null } | undefined;
+      const existing = db.prepare("SELECT createdAt, grindRanges, rangeInfo FROM gear_items WHERE id=?").get(id) as { createdAt: string; grindRanges: string | null; rangeInfo: string | null } | undefined;
       const row = gearFromCatalog(c);
-      // Keep ranges the user has edited; otherwise take the library's.
+      // Keep ranges the user has edited; otherwise take the library's. The install's own ranges
+      // carry no library source.
       const own = setup.grindRanges?.[id];
-      upsert(db, "gear_items", { ...row, units: setup.units?.[id] ?? row.units, grindRanges: existing?.grindRanges ?? (own ? JSON.stringify(own) : row.grindRanges), builtin: 0, createdAt: existing?.createdAt ?? t, updatedAt: t });
+      upsert(db, "gear_items", {
+        ...row, units: setup.units?.[id] ?? row.units,
+        grindRanges: existing?.grindRanges ?? (own ? JSON.stringify(own) : row.grindRanges),
+        rangeInfo: existing ? existing.rangeInfo : own ? null : row.rangeInfo,
+        builtin: 0, createdAt: existing?.createdAt ?? t, updatedAt: t,
+      });
       report.gear++;
     }
 
@@ -246,4 +253,56 @@ export function normalizeGrindSettings(db: DB): number {
     }
   })();
   return changed;
+}
+
+/**
+ * Keep installed library grinders up to date with the library, never overwriting the user's own
+ * ranges. Runs at startup.
+ *  - Library version newer than the installed copy:
+ *      · every saved range still equals the library's → take the library's ranges and source
+ *        (adds the methods the library gained);
+ *      · the user changed something → add only the methods the grinder has neither a range nor a
+ *        note for (a note means "not for this method"), keep everything else.
+ *  - Same version, no source recorded yet (installs from before sources were stored) and the
+ *    ranges equal the library's → record the library's source.
+ */
+export function syncGearWithLibrary(db: DB): { updated: string[]; merged: string[] } {
+  const rows = db.prepare("SELECT id, grindRanges, rangeInfo, catalogId, catalogVersion FROM gear_items WHERE type='grinder' AND catalogId IS NOT NULL").all() as any[];
+  const out = { updated: [] as string[], merged: [] as string[] };
+  const upd = db.prepare("UPDATE gear_items SET grindRanges=?, rangeInfo=?, catalogVersion=?, updatedAt=? WHERE id=?");
+  const t = nowIso();
+  db.transaction(() => {
+    for (const r of rows) {
+      const c = catalogGear(r.catalogId);
+      if (!c?.grindRanges) continue;
+      const lib = c.grindRanges as GrindRanges;
+      const mine: GrindRanges | null = r.grindRanges ? JSON.parse(r.grindRanges) : null;
+      const info: GearRangeInfo | null = r.rangeInfo ? JSON.parse(r.rangeInfo) : null;
+      const same = (m: string) => {
+        const a = mine?.methods?.[m as Method], b = lib.methods?.[m as Method];
+        return a && b && a.low === b.low && a.high === b.high;
+      };
+      const mineMethods = Object.keys(mine?.methods ?? {});
+      const untouched = !mine || mineMethods.every(same);
+      const newer = (r.catalogVersion ?? 0) < c.version;
+      if (newer && untouched) {
+        upd.run(JSON.stringify(lib), JSON.stringify(rangeInfoFromCatalog(c)), c.version, t, r.id);
+        out.updated.push(r.id);
+      } else if (newer) {
+        const add = (Object.keys(lib.methods) as Method[]).filter((m) => !mine!.methods?.[m] && !mine!.notes?.[m]);
+        const methods = { ...mine!.methods };
+        for (const m of add) methods[m] = lib.methods[m];
+        const libEst = c.rangeInfo?.estimated ?? [];
+        const next: GearRangeInfo = { ...(info ?? {}), estimated: [...new Set([...(info?.estimated ?? []), ...add.filter((m) => libEst.includes(m))])] };
+        if (add.length) next.note = [info?.note, `Added from the gear library (v${c.version}): ${add.join(", ")}.`].filter(Boolean).join(" ");
+        upd.run(JSON.stringify({ ...mine, methods }), JSON.stringify(next), c.version, t, r.id);
+        if (add.length) out.merged.push(`${r.id} (+${add.join(", ")})`);
+      } else if (!info && untouched && mine) {
+        const li = rangeInfoFromCatalog(c);
+        if (li) li.estimated = (li.estimated ?? []).filter((m) => mine.methods?.[m]);
+        upd.run(r.grindRanges, li ? JSON.stringify(li) : null, r.catalogVersion, t, r.id);
+      }
+    }
+  })();
+  return out;
 }

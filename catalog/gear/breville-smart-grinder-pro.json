@@ -1,6 +1,6 @@
 {
   "id": "breville-smart-grinder-pro",
-  "version": 2,
+  "version": 3,
   "name": "Breville Smart Grinder Pro",
   "brand": "Breville",
   "type": "grinder",
@@ -19,6 +19,18 @@
         "low": 1,
         "high": 30
       },
+      "moka": {
+        "low": 31,
+        "high": 45
+      },
+      "aeropress": {
+        "low": 30,
+        "high": 46
+      },
+      "pourover": {
+        "low": 46,
+        "high": 54
+      },
       "batch": {
         "low": 46,
         "high": 54
@@ -26,17 +38,33 @@
       "immersion": {
         "low": 55,
         "high": 60
+      },
+      "coldbrew": {
+        "low": 58,
+        "high": 60
+      },
+      "rapid": {
+        "low": 38,
+        "high": 50
       }
     },
     "notes": {
-      "batch": "Breville's “drip filter” range.",
-      "immersion": "Breville's “plunger” (French press) range.",
-      "pourover": "Breville lists drip filter 46–54 and percolator 31–45 but no pour-over range."
+      "turkish": "Breville's chart starts at espresso.",
+      "batch": "Breville's “drip filter” range; it lists no separate pour-over range.",
+      "immersion": "Breville's “plunger” (French press) range."
     }
   },
   "rangeInfo": {
     "confidence": "manufacturer",
     "source": "https://cdn.shopify.com/s/files/1/0487/2015/0691/files/Breville_ANZ-128875062-BCG820_ANZ_IB_B23_LR.pdf",
-    "note": "Breville BCG820 instruction book (ANZ edition, hosted by a retailer), coffee chart: espresso 1–30, percolator 31–45, drip filter 46–54, plunger 55–60."
+    "note": "Breville BCG820 instruction book (ANZ edition, hosted by a retailer), coffee chart: espresso 1–30, percolator 31–45, drip filter 46–54, plunger 55–60.",
+    "estimated": [
+      "moka",
+      "aeropress",
+      "pourover",
+      "coldbrew",
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: moka pot: Breville's “percolator” (stovetop) range, 31–45; AeroPress: between the espresso and pour-over ranges (or one pour-over span finer when there's no espresso range); pour-over: the drip coffee maker range; cold brew: the French press range moved half its width coarser; Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
   }
 }

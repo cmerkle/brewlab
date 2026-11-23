@@ -156,6 +156,9 @@ test("library rules: a well-formed entry passes; each rule rejects what it shoul
     [{ grindRanges: { ...okGrinder.grindRanges, methods: {} } }, /no methods/],
     [{ category: "cone-dripper" }, /needs a grinder category/],
     [{ type: "brewer" }, /for grinders, but type is "brewer"/],
+    [{ grindRanges: { ...okGrinder.grindRanges, methods: { pourover: { low: 20, high: 28 }, coldbrew: { low: 30, high: 38 } } }, rangeInfo: { ...okGrinder.rangeInfo, estimated: ["coldbrew"] } }, /how the estimated ranges were worked out/],
+    [{ rangeInfo: { ...okGrinder.rangeInfo, estimated: ["espresso"], estimateNote: "x" } }, /"espresso" is listed as estimated but has no range/],
+    [{ rangeInfo: { ...okGrinder.rangeInfo, estimated: ["pourover"], estimateNote: "x" } }, /at least one range must come from the cited source/],
   ];
   for (const [patch, re] of cases) {
     const msgs = why({ ...okGrinder, ...patch });
@@ -182,7 +185,8 @@ test("suggest: custom grinder → a new entry that passes the library rules once
 });
 
 test("suggest: custom gear without ranges needs no source; missing Kind and name clashes are explained", () => {
-  assert.deepEqual(libraryEntryFor(row({ name: "Bloom Dripper", type: "brewer", category: "cone-dripper", units: null }), {}).issues, []);
+  assert.deepEqual(libraryEntryFor(row({ name: "Bloom Dripper", type: "brewer", category: "cone-dripper", units: null, defaultMethod: "pourover" }), {}).issues, []);
+  assert.ok(libraryEntryFor(row({ name: "Bloom Dripper", type: "brewer", category: "cone-dripper", units: null }), {}).issues.some((i) => /grind category/.test(i)));
   assert.ok(libraryEntryFor(row({ name: "Mystery", category: null }), {}).issues.some((i) => /Kind/.test(i)));
   const clash = libraryEntryFor(row({ name: "Comandante C40", brand: "Comandante" }), {});
   assert.ok(clash.issues.some((i) => /already has "comandante-c40"/.test(i)), clash.issues.join(" | "));
@@ -217,4 +221,49 @@ test("older installs: linking uses the install's setup.json ranges/units over th
   assert.deepEqual(JSON.parse(zp6.grindRanges), cat.gear.find((g) => g.id === "zp6").grindRanges ?? null, "no override → library");
   assert.equal(zp6.units, "x", "units untouched without an override");
   db.close();
+});
+
+test("every library grinder with ranges covers every method: a range, or a note saying why not", () => {
+  for (const g of cat.gear.filter((x) => x.type === "grinder" && x.grindRanges)) {
+    const missing = METHODS.filter((m) => !g.grindRanges.methods[m] && !g.grindRanges.notes?.[m]);
+    assert.deepEqual(missing, [], `${g.id}: no range and no note for ${missing.join(", ")}`);
+    for (const m of g.rangeInfo.estimated ?? []) assert.ok(g.grindRanges.methods[m], `${g.id}: estimated ${m} has a range`);
+  }
+});
+
+test("library updates reach installed grinders: untouched → the library's new ranges; edited → only new methods added", async () => {
+  const { syncGearWithLibrary } = await import("../dist/server/seed.js");
+  const db = openDb(path.join(tmp, "sync.db"));
+  const t = new Date().toISOString();
+  const lib = cat.gear.find((g) => g.id === "k-ultra");
+  const old = { ...lib.grindRanges, methods: { espresso: lib.grindRanges.methods.espresso, pourover: lib.grindRanges.methods.pourover } };
+  const ins = db.prepare("INSERT INTO gear_items (id, name, type, units, grindRanges, catalogId, catalogVersion, createdAt, updatedAt) VALUES (?, ?, 'grinder', 'clicks', ?, 'k-ultra', ?, ?, ?)");
+  ins.run("k-ultra", "1Zpresso K-Ultra", JSON.stringify(old), lib.version - 1, t, t);
+  const mine = { ...old, methods: { ...old.methods, pourover: { low: 64, high: 80 } }, notes: { turkish: "Not for me." } };
+  ins.run("k-ultra-2", "My K-Ultra", JSON.stringify(mine), lib.version - 1, t, t);
+  const r = syncGearWithLibrary(db);
+  const get = (id) => { const x = db.prepare("SELECT grindRanges, rangeInfo, catalogVersion FROM gear_items WHERE id=?").get(id); return { ...x, grindRanges: JSON.parse(x.grindRanges), rangeInfo: JSON.parse(x.rangeInfo) }; };
+  const a = get("k-ultra");
+  assert.deepEqual(a.grindRanges, lib.grindRanges, "untouched copy takes the library's ranges");
+  assert.equal(a.rangeInfo.source, lib.rangeInfo.source);
+  assert.deepEqual(a.rangeInfo.estimated, lib.rangeInfo.estimated);
+  assert.equal(a.catalogVersion, lib.version);
+  const b = get("k-ultra-2");
+  assert.deepEqual(b.grindRanges.methods.pourover, { low: 64, high: 80 }, "your own range is kept");
+  assert.ok(b.grindRanges.methods.coldbrew && b.grindRanges.methods.moka, "new methods added");
+  assert.ok(!b.grindRanges.methods.turkish, "a method you noted as not for you isn't added");
+  assert.ok(b.rangeInfo.estimated.includes("coldbrew") && !b.rangeInfo.estimated.includes("moka"), "estimates stay marked");
+  assert.match(b.rangeInfo.note, /Added from the gear library/);
+  assert.deepEqual(r.updated, ["k-ultra"]);
+  assert.equal(syncGearWithLibrary(db).merged.length, 0, "runs once per library version");
+  db.close();
+});
+
+test("every brewer has a grind category, every category has brewers, every brewer kind maps to one", async () => {
+  const { CATEGORY_METHOD } = await import("../dist/shared/grind.js");
+  const brewers = cat.gear.filter((g) => g.type === "brewer");
+  for (const b of brewers) assert.ok(METHODS.includes(b.defaultMethod), `${b.id}: grind category ${b.defaultMethod}`);
+  for (const m of METHODS) assert.ok(brewers.some((b) => b.defaultMethod === m), `no library brewer uses ${m}`);
+  for (const c of CATEGORIES.filter((c) => !c.endsWith("grinder") && c !== "other")) assert.ok(CATEGORY_METHOD[c], `kind ${c} has a default grind category`);
+  assert.ok(why({ id: "x-cone", version: 1, name: "X", brand: null, type: "brewer", category: "cone-dripper" }).some((m) => /needs a grind category/.test(m)));
 });

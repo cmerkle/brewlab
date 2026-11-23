@@ -88,7 +88,7 @@ Set a provider in the app under **More → Settings → AI provider**: choose on
 *Discover → Your taste* shows what the board is based on:
 - **Ratings:** your Stash stars, brew ratings and tasting log, summarised by origin, process, roast and tasting notes.
 - **How personal it gets:** popular picks with no ratings, a mix with 1–4 rated coffees, tailored picks from 5.
-- **Always leave out:** cinnamon-forward, co-ferments or flavoured, and intense fermentation funk. All are off by default; the app suggests them from your low ratings and never turns one on by itself.
+- **Always leave out:** hard filters you control. Each rule is a name plus words to look for in a coffee's name, process, roast and tasting notes. Brewlab starts you with suggestions you can turn on (cinnamon-forward, co-ferments or flavoured, fermentation funk, decaf, dark roasts, blends, robusta, smoky). Change their words, delete them, or add your own (say, "Peaberries: peaberry"). All start off; the app suggests one when you rate a few matching coffees low, and never turns one on by itself.
 - **Exactly what the research is told,** shown word for word.
 
 ## Data and backups

@@ -1,0 +1,10 @@
+{
+  "id": "hario-mizudashi",
+  "version": 1,
+  "name": "Hario Mizudashi Cold Brew Pot",
+  "brand": "Hario",
+  "type": "brewer",
+  "category": "cold-brew-maker",
+  "details": "Pitcher with a fine mesh filter for steeping coffee in cold water for 8–24 hours.",
+  "defaultMethod": "coldbrew"
+}

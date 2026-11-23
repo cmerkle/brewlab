@@ -1,6 +1,6 @@
 {
   "id": "baratza-encore",
-  "version": 1,
+  "version": 2,
   "name": "Baratza Encore",
   "brand": "Baratza",
   "type": "grinder",
@@ -19,32 +19,51 @@
         "low": 2,
         "high": 6
       },
-      "pourover": {
-        "low": 13,
-        "high": 14
+      "moka": {
+        "low": 6,
+        "high": 8
       },
       "aeropress": {
         "low": 8,
         "high": 11
       },
-      "immersion": {
-        "low": 30,
-        "high": 32
+      "pourover": {
+        "low": 13,
+        "high": 14
       },
       "batch": {
         "low": 13,
         "high": 14
+      },
+      "immersion": {
+        "low": 30,
+        "high": 32
+      },
+      "coldbrew": {
+        "low": 31,
+        "high": 33
+      },
+      "rapid": {
+        "low": 10,
+        "high": 14
       }
     },
     "notes": {
+      "turkish": "Not fine enough for Turkish coffee.",
+      "espresso": "Baratza lists espresso 2–6, but the Encore isn't designed for espresso machines.",
       "pourover": "Baratza lists V60 13–14 and Chemex 20–21.",
-      "immersion": "Baratza lists French press 30–32 and siphon 14.",
-      "espresso": "Baratza lists espresso 2–6, but the Encore isn't designed for espresso machines."
+      "immersion": "Baratza lists French press 30–32 and siphon 14."
     }
   },
   "rangeInfo": {
     "confidence": "manufacturer",
     "source": "https://cdn.shopify.com/s/files/1/1656/1527/files/Encore-Manual.pdf",
-    "note": "Baratza Encore manual, “Setting the Grind Control”: espresso 2–6; brewer 13–14; V60 13–14; Chemex 20–21; AeroPress 8–11; siphon 14; French press 30–32. A general guideline — your beans and roast shift it."
+    "note": "Baratza Encore manual, “Setting the Grind Control”: espresso 2–6; brewer 13–14; V60 13–14; Chemex 20–21; AeroPress 8–11; siphon 14; French press 30–32. A general guideline — your beans and roast shift it.",
+    "estimated": [
+      "moka",
+      "coldbrew",
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: moka pot: from the top of the espresso range to halfway to the top of the AeroPress range (or one AeroPress span finer when there's no espresso range); cold brew: the French press range moved half its width coarser; Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
   }
 }

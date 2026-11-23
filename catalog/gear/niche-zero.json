@@ -1,6 +1,6 @@
 {
   "id": "niche-zero",
-  "version": 2,
+  "version": 3,
   "name": "Niche Zero",
   "brand": "Niche",
   "type": "grinder",
@@ -14,9 +14,17 @@
     "min": 0,
     "step": 1,
     "methods": {
+      "turkish": {
+        "low": 0,
+        "high": 5
+      },
       "espresso": {
         "low": 5,
         "high": 20
+      },
+      "moka": {
+        "low": 20,
+        "high": 28
       },
       "aeropress": {
         "low": 30,
@@ -25,16 +33,40 @@
       "pourover": {
         "low": 35,
         "high": 45
+      },
+      "batch": {
+        "low": 35,
+        "high": 45
+      },
+      "immersion": {
+        "low": 45,
+        "high": 55
+      },
+      "coldbrew": {
+        "low": 50,
+        "high": 60
+      },
+      "rapid": {
+        "low": 32,
+        "high": 40
       }
     },
     "notes": {
-      "immersion": "Niche lists French press as 45 and up (open-ended), so there's no range for it here.",
       "pourover": "Niche's V60 range."
     }
   },
   "rangeInfo": {
     "confidence": "manufacturer",
     "source": "https://www.nichecoffee.co.uk/blogs/exploring-coffee/the-ultimate-grind-size-guide-for-niche-grinders",
-    "note": "Niche's grind size guide, Niche Zero column: espresso 5–20, moka pot 20–30, AeroPress 30–35, V60 35–45, French press 45+."
+    "note": "Niche's grind size guide, Niche Zero column: espresso 5–20, moka pot 20–30, AeroPress 30–35, V60 35–45, French press 45+.",
+    "estimated": [
+      "turkish",
+      "moka",
+      "batch",
+      "immersion",
+      "coldbrew",
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: French press: 45–55, from Niche's open-ended “45+”; Turkish: from zero to the start of the espresso range; moka pot: from the top of the espresso range to halfway to the top of the AeroPress range (or one AeroPress span finer when there's no espresso range); drip coffee maker: the pour-over range; cold brew: the French press range moved half its width coarser; Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
   }
 }

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { CATEGORY_LABELS } from "../Setup";
-import { api, type Gear as GearT } from "../api";
+import { api, type Gear as GearT, type RangeInfo } from "../api";
 import { useData, Field, FullScreen, ErrorBox, NumInput, useAction, SearchInput } from "../ui";
-import { METHODS, METHOD_LABELS, validateRanges, type Method, type GrindRanges } from "../../shared/grind";
+import { METHODS, METHOD_LABELS, CATEGORY_METHOD, validateRanges, type Method, type GrindRanges } from "../../shared/grind";
 
 const TYPES = [
   { id: "grinder", label: "Grinders" },
@@ -96,12 +96,20 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
     }
     return out;
   });
+  const [info, setInfo] = useState<RangeInfo>(() => ({ ...(item?.rangeInfo ?? {}), estimated: item?.rangeInfo?.estimated ?? [] }));
+  const origSource = item?.rangeInfo?.source ?? "";
+  const setRange = (m: Method, patch: { low?: number | null; high?: number | null }) => {
+    setRanges((r) => ({ ...r, [m]: { low: r[m]?.low ?? null, high: r[m]?.high ?? null, ...patch } }));
+    // A range you type yourself is no longer the library's estimate.
+    setInfo((i) => (i.estimated?.includes(m) ? { ...i, estimated: i.estimated.filter((x) => x !== m) } : i));
+  };
   const [error, setError] = useState<string | null>(null);
   const [suggesting, setSuggesting] = useState(false);
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }));
 
   const save = async () => {
     setError(null);
+    if (f.type === "brewer" && !f.defaultMethod) return setError("Choose a grind category — it says which grind range this brewer uses.");
     let grindRanges: GrindRanges | null = null;
     if (f.type === "grinder") {
       const err = validateRanges(ranges);
@@ -123,6 +131,14 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
       variants: f.type === "brewer" ? f.variants.split(",").map((s) => s.trim()).filter(Boolean) : null,
       defaultMethod: f.type === "brewer" ? f.defaultMethod : null, grindRanges,
       category: f.category || null,
+      ...(f.type === "grinder"
+        ? { rangeInfo: {
+            // A different source is yours, not the library's chart.
+            confidence: (info.source ?? "") === origSource ? info.confidence ?? null : null,
+            source: info.source?.trim() || null, note: info.note?.trim() || null,
+            estimated: info.estimated ?? [], estimateNote: info.estimateNote ?? null,
+          } }
+        : {}),
     };
     try {
       if (item) await api.put(`/api/gear/${item.id}`, body);
@@ -158,7 +174,11 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
           </Field>
         </div>
         <Field label="Kind" htmlFor="ge-cat" hint="Lets Brewlab suggest recipes that fit it.">
-          <select id="ge-cat" value={f.category} onChange={(e) => set("category", e.target.value)}>
+          <select id="ge-cat" value={f.category} onChange={(e) => {
+            const c = e.target.value;
+            // The kind suggests the grind category, unless one was chosen by hand.
+            setF((x) => ({ ...x, category: c, defaultMethod: !x.defaultMethod || x.defaultMethod === CATEGORY_METHOD[x.category] ? CATEGORY_METHOD[c] ?? x.defaultMethod : x.defaultMethod }));
+          }}>
             <option value="">—</option>
             {Object.entries(CATEGORY_LABELS)
               .filter(([c]) => (f.type === "grinder") === c.endsWith("grinder") || c === "other")
@@ -185,10 +205,9 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
             </div>
             <Field label="Burrs" htmlFor="ge-burrs"><input id="ge-burrs" value={f.burrs} onChange={(e) => set("burrs", e.target.value)} /></Field>
             <h3>Grind ranges</h3>
-            {item?.library?.hasRanges && (
+            <RangeSourceNote info={info} fromLibrary={Boolean(item?.library?.hasRanges && !item.library.rangesDiffer)} />
+            {item?.library?.hasRanges && item.library.rangesDiffer && (
               <div className="note small" data-testid="library-ranges">
-                From the gear library ({item.library.confidence}){item.library.note ? ` — ${item.library.note}` : ""}
-                {item.library.source && <> <a href={item.library.source} target="_blank" rel="noreferrer noopener">Source ↗</a></>}
                 {item.library.rangesDiffer && (
                   <div><button className="link" onClick={() => act(async () => {
                     await api.post(`/api/gear/${item.id}/reset-ranges`);
@@ -199,17 +218,26 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
               </div>
             )}
             <p className="hint">Starting low/high for each brew method in this grinder's own units. Optional per method — leave both empty if you don't know yet. The converter maps settings by position inside these ranges.</p>
-            <div className="ranges">
+            <div className="ranges" data-testid="range-table">
               {METHODS.map((m) => (
-                <div key={m} className="range-row">
-                  <span className="rl">{METHOD_LABELS[m]}</span>
+                <div key={m} className="range-row" data-method={m}>
+                  <span className="rl">
+                    {METHOD_LABELS[m]}
+                    {info.estimated?.includes(m) && <span className="est-badge" title="Estimated — extrapolated, not from the source">est.</span>}
+                  </span>
                   <NumInput aria-label={`${METHOD_LABELS[m]} low`} placeholder="low" value={ranges[m]?.low ?? null} decimals={3}
-                    onChange={(n) => setRanges((r) => ({ ...r, [m]: { ...r[m], low: n, high: r[m]?.high ?? null } }))} />
+                    onChange={(n) => setRange(m, { low: n })} />
                   <NumInput aria-label={`${METHOD_LABELS[m]} high`} placeholder="high" value={ranges[m]?.high ?? null} decimals={3}
-                    onChange={(n) => setRanges((r) => ({ ...r, [m]: { ...r[m], high: n, low: r[m]?.low ?? null } }))} />
+                    onChange={(n) => setRange(m, { high: n })} />
                 </div>
               ))}
             </div>
+            <Field label="Source link" htmlFor="ge-source" hint="Where these ranges come from: the maker's manual or chart, or a community chart.">
+              <input id="ge-source" type="url" inputMode="url" placeholder="https://…" value={info.source ?? ""} onChange={(e) => setInfo((i) => ({ ...i, source: e.target.value }))} />
+            </Field>
+            <Field label="Notes about these ranges" htmlFor="ge-source-note">
+              <textarea id="ge-source-note" rows={2} value={info.note ?? ""} onChange={(e) => setInfo((i) => ({ ...i, note: e.target.value }))} />
+            </Field>
             <div className="grid3">
               <Field label="Step (rounding)" htmlFor="ge-step"><NumInput id="ge-step" value={f.step} onChange={(n) => set("step", n)} decimals={3} /></Field>
               <Field label="Physical min" htmlFor="ge-min"><NumInput id="ge-min" value={f.min} onChange={(n) => set("min", n)} decimals={2} /></Field>
@@ -221,9 +249,9 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
         {f.type === "brewer" && (
           <>
             <Field label="Basket sizes / variants (comma-separated)" htmlFor="ge-var"><input id="ge-var" value={f.variants} onChange={(e) => set("variants", e.target.value)} /></Field>
-            <Field label="Default brew method" htmlFor="ge-dm">
+            <Field label="Grind category" htmlFor="ge-dm" hint="Which grind range on your grinders this brewer uses. Recipes can still pick another (e.g. a Switch as pour-over).">
               <select id="ge-dm" value={f.defaultMethod ?? ""} onChange={(e) => set("defaultMethod", (e.target.value || null) as Method | null)}>
-                <option value="">—</option>
+                <option value="" disabled>Choose…</option>
                 {METHODS.map((m) => <option key={m} value={m}>{METHOD_LABELS[m]}</option>)}
               </select>
             </Field>
@@ -243,6 +271,24 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
   );
 }
 
+/** Where this grinder's ranges come from, and which ones are estimates. */
+function RangeSourceNote({ info, fromLibrary }: { info: RangeInfo; fromLibrary: boolean }) {
+  const est = (info.estimated ?? []).map((m) => METHOD_LABELS[m]);
+  const kind = info.confidence === "manufacturer" ? "the maker's chart" : info.confidence === "community" ? "a community chart" : null;
+  const lead = kind ? `${fromLibrary ? "From the gear library — " : ""}${kind}` : info.source || info.note ? "Your ranges" : null;
+  if (!lead && !est.length)
+    return <div className="note small" data-testid="range-source">No source yet. Add a link below to where these ranges come from.</div>;
+  return (
+    <div className="note small" data-testid="range-source">
+      {lead}{info.note ? ` — ${info.note}` : ""}
+      {info.source && /^https?:\/\//.test(info.source) && <> <a href={info.source} target="_blank" rel="noreferrer noopener">Source ↗</a></>}
+      {est.length > 0 && (
+        <div data-testid="range-estimated"><strong>Estimated (est.):</strong> {est.join(", ")}.{info.estimateNote ? ` ${info.estimateNote}` : ""}</div>
+      )}
+    </div>
+  );
+}
+
 /* ------------------------------ Suggest to the library ------------------------------ */
 
 interface LibraryEntry { kind: "new" | "update"; id: string; file: string; json: string; issues: string[]; githubUrl: string; repo: string }
@@ -250,9 +296,9 @@ interface LibraryEntry { kind: "new" | "update"; id: string; file: string; json:
 /** Builds a ready-to-submit library entry from this gear (saved values). Nothing is sent anywhere. */
 function SuggestToLibrary({ item, onClose }: { item: GearT; onClose: () => void }) {
   const { toast } = useData();
-  const [confidence, setConfidence] = useState("manufacturer");
-  const [source, setSource] = useState("");
-  const [note, setNote] = useState("");
+  const [confidence, setConfidence] = useState<string>(item.rangeInfo?.confidence ?? "manufacturer");
+  const [source, setSource] = useState(item.rangeInfo?.source ?? "");
+  const [note, setNote] = useState(item.rangeInfo?.note ?? "");
   const [entry, setEntry] = useState<LibraryEntry | null>(null);
   const hasRanges = item.type === "grinder" && Boolean(item.grindRanges && Object.keys(item.grindRanges.methods ?? {}).length);
   useEffect(() => {

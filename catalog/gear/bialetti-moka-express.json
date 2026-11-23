@@ -1,12 +1,12 @@
 {
   "id": "bialetti-moka-express",
-  "version": 1,
+  "version": 2,
   "name": "Bialetti Moka Express",
   "brand": "Bialetti",
   "type": "brewer",
   "category": "moka-pot",
   "details": "Stovetop moka pot.",
-  "defaultMethod": null,
+  "defaultMethod": "moka",
   "variants": [
     "3-cup",
     "6-cup"

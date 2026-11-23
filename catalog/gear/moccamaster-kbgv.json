@@ -1,0 +1,10 @@
+{
+  "id": "moccamaster-kbgv",
+  "version": 1,
+  "name": "Technivorm Moccamaster KBGV Select",
+  "brand": "Technivorm",
+  "type": "brewer",
+  "category": "batch-brewer",
+  "details": "SCA-certified drip coffee maker, up to 1.25 L, with a half-batch setting.",
+  "defaultMethod": "batch"
+}

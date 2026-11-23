@@ -1,6 +1,6 @@
 {
   "id": "zp6",
-  "version": 2,
+  "version": 3,
   "name": "1Zpresso ZP6",
   "brand": "1Zpresso",
   "type": "grinder",
@@ -14,23 +14,52 @@
     "min": 0,
     "step": 0.1,
     "methods": {
+      "moka": {
+        "low": 2,
+        "high": 3
+      },
+      "aeropress": {
+        "low": 3,
+        "high": 4
+      },
       "pourover": {
+        "low": 4,
+        "high": 5
+      },
+      "batch": {
         "low": 4,
         "high": 5
       },
       "immersion": {
         "low": 5,
         "high": 6
+      },
+      "coldbrew": {
+        "low": 5.5,
+        "high": 6.5
+      },
+      "rapid": {
+        "low": 3.5,
+        "high": 4.5
       }
     },
     "notes": {
-      "pourover": "1Zpresso groups siphon with pour over.",
-      "espresso": "1Zpresso's ZP6 Special chart lists no espresso range."
+      "turkish": "The ZP6 Special is a filter grinder; 1Zpresso lists no Turkish or espresso range.",
+      "espresso": "1Zpresso's ZP6 Special chart lists no espresso range.",
+      "pourover": "1Zpresso groups siphon with pour over."
     }
   },
   "rangeInfo": {
     "confidence": "manufacturer",
     "source": "https://1zpresso.coffee/grind-setting/",
-    "note": "1Zpresso “ZP6 Special Grind Setting Reference” chart (ZP6-special-Grind-Setting-Reference-20221031.jpg on that page): siphon/pour over 4–5, French press 5–6 (points)."
+    "note": "1Zpresso “ZP6 Special Grind Setting Reference” chart (ZP6-special-Grind-Setting-Reference-20221031.jpg on that page): siphon/pour over 4–5, French press 5–6 (points).",
+    "estimated": [
+      "moka",
+      "aeropress",
+      "batch",
+      "coldbrew",
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: moka pot: from the top of the espresso range to halfway to the top of the AeroPress range (or one AeroPress span finer when there's no espresso range); AeroPress: between the espresso and pour-over ranges (or one pour-over span finer when there's no espresso range); drip coffee maker: the pour-over range; cold brew: the French press range moved half its width coarser; Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
   }
 }

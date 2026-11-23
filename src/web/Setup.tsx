@@ -20,7 +20,8 @@ export const CATEGORY_LABELS: Record<string, string> = {
   "hand-grinder": "Hand grinders", "electric-grinder": "Electric grinders", "cone-dripper": "Cone drippers",
   "flat-bottom-dripper": "Flat-bottom drippers", "hybrid-dripper": "Hybrid / switch drippers", "immersion-dripper": "Immersion drippers",
   "aeropress": "AeroPress", "rapid-brewer": "Rapid brewers", "french-press": "French presses", "moka-pot": "Moka pots",
-  "espresso-machine": "Espresso machines", "batch-brewer": "Batch brewers", "other": "Other",
+  "espresso-machine": "Espresso machines", "batch-brewer": "Drip coffee makers", "cezve": "Cezves (Turkish)",
+  "cold-brew-maker": "Cold brew makers", "siphon": "Siphons", "other": "Other",
 };
 const BREWER_CATEGORIES = Object.keys(CATEGORY_LABELS).filter((c) => !c.endsWith("grinder"));
 

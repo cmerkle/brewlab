@@ -31,6 +31,15 @@ export const api = {
 export interface Limit { min: number; max: number; step: number }
 export type Limits = Record<"doseG" | "waterG" | "tempC" | "rating" | "amountG" | "price" | "totalTimeSec" | "targetWaterG" | "atSec", Limit>;
 
+export interface RangeInfo {
+  confidence?: "manufacturer" | "community" | null;
+  source?: string | null;
+  note?: string | null;
+  /** Methods whose range is extrapolated, not from the source. */
+  estimated?: Method[];
+  estimateNote?: string | null;
+}
+
 export interface Gear {
   id: string;
   name: string;
@@ -46,6 +55,8 @@ export interface Gear {
   builtin: boolean;
   category: string | null;
   catalogId: string | null;
+  /** Where the grind ranges come from — copied from the library on install, editable. */
+  rangeInfo: RangeInfo | null;
   /** Library entry this gear was installed from (catalog/gear), if any. */
   library: {
     id: string; name?: string; missing?: boolean; installedVersion?: number | null; latestVersion?: number;

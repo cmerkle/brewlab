@@ -4,15 +4,23 @@ import path from "node:path";
 import { z } from "zod";
 import type { DB } from "./db.js";
 
-export const AVOID_RULE_IDS = ["cinnamon", "coferment", "funk"] as const;
+import { PRESET_RULES, type AvoidRuleDef } from "./rules.js";
+
 const words = z.array(z.string().max(40)).max(30);
+const RuleDef = z.object({
+  id: z.string().regex(/^[a-z0-9-]{1,40}$/),
+  label: z.string().trim().min(1, "Give the rule a name").max(80),
+  keywords: z.array(z.string().trim().min(1).max(40)).min(1, "Add at least one word to look for").max(30),
+});
 export const SettingsSchema = z.object({
   tempUnit: z.enum(["C", "F"]),
   waterUnit: z.enum(["g", "oz"]),
   defaultRatio: z.number().min(1).max(30),
   discoverEnabled: z.boolean(),
-  /** Keyword exclusions for Discover (per-user toggles, off by default). */
-  avoidRules: z.array(z.enum(AVOID_RULE_IDS)),
+  /** "Always leave out" rules: the user's list (starts as the presets; edit, delete, add). */
+  ruleDefs: z.array(RuleDef).max(50),
+  /** Ids of the rules that are switched on (off by default). */
+  avoidRules: z.array(z.string().max(40)),
   /** The drinker's own words about their taste — goes into the research prompt as written. */
   palateNotes: z.string().max(5000),
   /** Optional quick quiz (first-run setup or Discover → Your taste). */
@@ -23,7 +31,7 @@ export const SettingsSchema = z.object({
 export type Settings = z.infer<typeof SettingsSchema>;
 export const DEFAULT_SETTINGS: Settings = {
   tempUnit: "C", waterUnit: "g", defaultRatio: 16, discoverEnabled: true,
-  avoidRules: [], palateNotes: "", tasteQuiz: { loves: [], dislikes: [], processes: [], roasts: [] }, dismissedSuggestions: [],
+  ruleDefs: PRESET_RULES, avoidRules: [], palateNotes: "", tasteQuiz: { loves: [], dislikes: [], processes: [], roasts: [] }, dismissedSuggestions: [],
 };
 
 export function getSettings(db: DB): Settings {
@@ -45,9 +53,14 @@ export function getSettings(db: DB): Settings {
   return fixed as Settings;
 }
 
+/** The rules that are switched on. */
+export const enabledRules = (s: Settings): AvoidRuleDef[] => s.ruleDefs.filter((r) => s.avoidRules.includes(r.id));
+
 export function setSettings(db: DB, patch: unknown): Settings {
   const merged = { ...getSettings(db), ...(patch as object) };
   const s = SettingsSchema.parse(merged);
+  if (new Set(s.ruleDefs.map((r) => r.id)).size !== s.ruleDefs.length) throw new z.ZodError([{ code: "custom", message: "Two rules have the same id", path: ["ruleDefs"], input: s.ruleDefs }]);
+  s.avoidRules = s.avoidRules.filter((id) => s.ruleDefs.some((r) => r.id === id)); // a deleted rule can't stay on
   const up = db.prepare("INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value");
   db.transaction(() => {
     for (const [k, v] of Object.entries(s)) up.run(k, JSON.stringify(v));

@@ -5,16 +5,38 @@
 // method and maps to the same position in the target grinder's range for that
 // method. Microns-per-click is never used for conversion.
 
-export const METHODS = ["espresso", "pourover", "immersion", "aeropress", "rapid", "batch"] as const;
+// Order = finest to coarsest, as grind charts list them. "batch" is a drip coffee maker,
+// "immersion" a French press (or Switch/Clever full immersion). Rapid Brewer last (OXO).
+export const METHODS = ["turkish", "espresso", "moka", "aeropress", "pourover", "batch", "immersion", "coldbrew", "rapid"] as const;
 export type Method = (typeof METHODS)[number];
 
 export const METHOD_LABELS: Record<Method, string> = {
+  turkish: "Turkish",
   espresso: "Espresso",
-  pourover: "Pour over (V60 / Orea)",
-  immersion: "Immersion (Switch / French press)",
+  moka: "Moka pot",
   aeropress: "AeroPress",
+  pourover: "Pour-over (V60)",
+  batch: "Drip coffee maker",
+  immersion: "French press / immersion",
+  coldbrew: "Cold brew",
   rapid: "Rapid Brewer",
-  batch: "Batch (Aiden / drip)",
+};
+
+/** The grind category a kind of brewer uses by default (a brewer's own defaultMethod wins). */
+export const CATEGORY_METHOD: Record<string, Method> = {
+  "cone-dripper": "pourover",
+  "flat-bottom-dripper": "pourover",
+  "hybrid-dripper": "pourover",
+  "immersion-dripper": "immersion",
+  "aeropress": "aeropress",
+  "rapid-brewer": "rapid",
+  "french-press": "immersion",
+  "moka-pot": "moka",
+  "espresso-machine": "espresso",
+  "batch-brewer": "batch",
+  "cezve": "turkish",
+  "cold-brew-maker": "coldbrew",
+  "siphon": "pourover",
 };
 
 export interface GrindRange {
@@ -42,12 +64,15 @@ export interface GrindRanges {
 
 /** Approximate particle size per method (µm), interpolated by the same position. */
 export const METHOD_MICRONS: Record<Method, GrindRange> = {
+  turkish: { low: 100, high: 200 },
   espresso: { low: 200, high: 300 },
+  moka: { low: 350, high: 500 },
   aeropress: { low: 400, high: 550 },
   pourover: { low: 600, high: 750 },
+  batch: { low: 550, high: 750 },
   immersion: { low: 700, high: 900 },
+  coldbrew: { low: 850, high: 1100 },
   rapid: { low: 500, high: 650 },
-  batch: { low: 700, high: 900 },
 };
 
 export const DRAFT_NOTE =

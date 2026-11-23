@@ -147,6 +147,59 @@ try {
   await p.locator('[data-testid="suggest"]').waitFor({ state: "detached" });
   check(await p.locator("#ge-name").isVisible(), "Back closes the suggestion and returns to the gear editor");
 
+  // Grind ranges: the brew-method rows, and an editable source for a custom grinder.
+  const rows = await p.locator('[data-testid="range-table"] .rl').allInnerTexts();
+  check(JSON.stringify(rows.map((x) => x.replace(/est\.$/, "").trim())) === JSON.stringify(["Turkish", "Espresso", "Moka pot", "AeroPress", "Pour-over (V60)", "Drip coffee maker", "French press / immersion", "Cold brew", "Rapid Brewer"]),
+    `range rows follow the grind chart: ${rows.join(" · ")}`);
+  check(/No source yet/.test(await p.locator('[data-testid="range-source"]').innerText()), "a custom grinder starts with no source");
+  await p.fill("#ge-source", "https://example.com/my-c40-chart");
+  await p.fill("#ge-source-note", "Calibrated against my V60.");
+  await p.getByRole("button", { name: "Save", exact: true }).click();
+  await p.locator(`[data-testid="gear-${c40.id}"]`).getByRole("button", { name: "Edit" }).click();
+  const src = p.locator('[data-testid="range-source"]');
+  check(/Your ranges — Calibrated against my V60\./.test(await src.innerText()) && (await src.locator("a").getAttribute("href")) === "https://example.com/my-c40-chart",
+    `source saved and shown: ${(await src.innerText()).replace(/\s+/g, " ")}`);
+  await p.getByRole("button", { name: "Cancel" }).click();
+  // A library grinder brings its source and marks the extrapolated rows.
+  const k6 = await (await fetch(`${BASE}/api/gear/from-catalog`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ catalogId: "k6" }) })).json();
+  await p.reload();
+  await p.locator(`[data-testid="gear-${k6.id}"]`).getByRole("button", { name: "Edit" }).click();
+  const k6src = await p.locator('[data-testid="range-source"]').innerText();
+  check(/From the gear library — the maker's chart/.test(k6src) && /Estimated \(est\.\): Drip coffee maker, French press \/ immersion, Cold brew, Rapid Brewer/.test(k6src), `K6 source + estimates: ${k6src.replace(/\s+/g, " ").slice(0, 160)}`);
+  check((await p.locator('[data-testid="range-table"] .est-badge').count()) === 4, "est. badges on the four estimated rows");
+  check((await p.getByLabel("Turkish low").inputValue()) === "28", "Turkish from the K6 manual (28–40)");
+  await p.getByLabel("Cold brew low").fill("150");
+  check((await p.locator('[data-testid="range-table"] .est-badge').count()) === 3, "typing your own value clears that row's est. badge");
+  await p.getByRole("button", { name: "Cancel" }).click();
+
+  // Discover → Your taste: "always leave out" rules are the user's own.
+  await p.goto(`${BASE}/#/discover/taste`);
+  const rulesCard = p.locator('[data-testid="avoid-rules"]');
+  await rulesCard.waitFor();
+  check(/Hard filters/.test(await rulesCard.innerText()) && /— decaf, decaffeinated/.test(await rulesCard.innerText()), "rules explain themselves and show their words (starter rules incl. Decaf)");
+  check((await rulesCard.locator("input[type=checkbox]:checked").count()) === 0, "starter rules are all off");
+  await rulesCard.getByRole("button", { name: "+ Add a rule" }).click();
+  await p.fill("#rn-label", "Peaberries");
+  await p.fill("#rn-words", "peaberry, pea berry");
+  await rulesCard.getByRole("button", { name: "Add rule" }).click();
+  await p.locator('[data-testid="rule-my-peaberries"] input[type=checkbox]:checked').waitFor();
+  let st = (await (await fetch(`${BASE}/api/setup`)).json()).settings;
+  check(st.avoidRules.includes("my-peaberries") && st.ruleDefs.find((r) => r.id === "my-peaberries")?.keywords.join("|") === "peaberry|pea berry", "a new rule is saved with its words and switched on");
+  await rulesCard.getByRole("button", { name: "Edit rule Cinnamon-forward coffees" }).click();
+  await p.fill("#rw-cinnamon", "cinnamon, clove");
+  await p.locator('[data-testid="rule-cinnamon"]').getByRole("button", { name: "Save" }).click();
+  const edited = await p.locator('[data-testid="rule-cinnamon"] .rule-words', { hasText: "cinnamon, clove" }).waitFor({ timeout: 5000 }).then(() => true, () => false);
+  check(edited, "a starter rule's words can be edited");
+  p.once("dialog", (d) => d.accept());
+  await rulesCard.getByRole("button", { name: "Edit rule Blends" }).click();
+  await p.locator('[data-testid="rule-blends"]').getByRole("button", { name: "Remove rule" }).click();
+  await p.locator('[data-testid="rule-blends"]').waitFor({ state: "detached" });
+  check(await rulesCard.getByRole("button", { name: /Restore starter rules you removed \(Blends\)/ }).isVisible(), "a removed starter rule can be restored");
+  const dropped = await (await fetch(`${BASE}/api/discover/rules/check`, { method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ kind: "pick", name: "Kenya Peaberry", roaster: "R", origin: "Kenya", processMethod: "Washed", tastingNotes: "blackcurrant", roastLevel: "Light", priceAmount: 20, priceText: "$20", url: "", whyFit: "", brewTip: "", funkRisk: "low" }) })).json();
+  check(/peaberries/.test(dropped.dropped?.[0]?.reason ?? ""), `your rule leaves matching coffees out: ${dropped.dropped?.[0]?.reason}`);
+  check(await p.getByRole("group", { name: "Flavours you love" }).getByRole("button", { name: "Apple & pear" }).isVisible(), "quiz covers more of the flavour wheel");
+
   // Bag photos: take / choose / paste (no camera-only), converted to JPEG on the device.
   await p.goto(`${BASE}/#/brew/stash`);
   await p.getByRole("button", { name: "Add a bag" }).click();

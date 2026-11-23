@@ -4,8 +4,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { type DB, nowIso, todayLocal, deriveStatus, UPLOAD_DIR } from "./db.js";
 import { RecipeSchema, BrewSchema, InventorySchema, GearSchema, RecommendationSchema, TastingSchema, LIMITS, firstError } from "./schemas.js";
-import { validateRanges, METHODS, toGrindNumber } from "../shared/grind.js";
-import { loadCatalog, catalogGear, gearFromCatalog, libraryEntryFor } from "./catalog.js";
+import { validateRanges, METHODS, toGrindNumber, CATEGORY_METHOD } from "../shared/grind.js";
+import { loadCatalog, catalogGear, gearFromCatalog, libraryEntryFor, rangeInfoFromCatalog } from "./catalog.js";
 import { importFromLink, importFromPhoto, lookupOnline } from "./imports.js";
 import { sameCoffee } from "./rules.js";
 import type { z } from "zod";
@@ -20,12 +20,26 @@ const parseJ = (v: unknown) => {
   }
 };
 
+/** Saved source info: trimmed, estimated methods limited to ones that still have a range. */
+function cleanRangeInfo(i: z.infer<typeof GearSchema>["rangeInfo"], ranges: { methods?: Record<string, unknown> } | null) {
+  if (!i) return null;
+  const out = {
+    confidence: i.confidence ?? null,
+    source: i.source?.trim() || null,
+    note: i.note?.trim() || null,
+    estimated: (i.estimated ?? []).filter((m) => ranges?.methods?.[m]),
+    estimateNote: i.estimateNote?.trim() || null,
+  };
+  return out.source || out.note || out.estimated.length || out.confidence ? out : null;
+}
+
 export function gearRow(r: any) {
   return {
     ...r,
     espressoCapable: r.espressoCapable == null ? null : Boolean(r.espressoCapable),
     variants: parseJ(r.variants),
     grindRanges: parseJ(r.grindRanges),
+    rangeInfo: parseJ(r.rangeInfo) ?? null,
     builtin: Boolean(r.builtin),
     library: libraryInfo(r),
   };
@@ -197,15 +211,19 @@ export function brewRouter(db: DB) {
     const row = {
       name: g.name, type: g.type, brand: g.brand ?? null, details: g.details ?? null, units: g.units ?? null, burrs: g.burrs ?? null,
       espressoCapable: g.espressoCapable == null ? null : g.espressoCapable ? 1 : 0, variants: j(g.variants ?? null),
-      grindRanges: j(ranges), defaultMethod: g.defaultMethod ?? null, category: g.category ?? null, updatedAt: t,
+      grindRanges: j(ranges),
+      defaultMethod: g.type === "brewer" ? g.defaultMethod ?? (g.category ? CATEGORY_METHOD[g.category] : null) ?? null : null,
+      category: g.category ?? null, updatedAt: t,
+      rangeInfo: g.type === "grinder" && g.rangeInfo !== undefined ? j(cleanRangeInfo(g.rangeInfo, ranges)) : undefined,
     };
     if (id) {
       const ex = db.prepare("SELECT id FROM gear_items WHERE id=?").get(id);
       if (!ex) return bad(res, "Gear not found", 404);
       db.prepare(
         `UPDATE gear_items SET name=@name, type=@type, brand=@brand, details=@details, units=@units, burrs=@burrs, espressoCapable=@espressoCapable,
-         variants=@variants, grindRanges=@grindRanges, defaultMethod=@defaultMethod, category=COALESCE(@category, category), updatedAt=@updatedAt WHERE id=@id`,
-      ).run({ ...row, id });
+         variants=@variants, grindRanges=@grindRanges, defaultMethod=@defaultMethod, category=COALESCE(@category, category), updatedAt=@updatedAt,
+         rangeInfo=CASE WHEN @keepInfo THEN rangeInfo ELSE @rangeInfo END WHERE id=@id`,
+      ).run({ ...row, rangeInfo: row.rangeInfo ?? null, keepInfo: row.rangeInfo === undefined && g.type === "grinder" ? 1 : 0, id });
       // Keep recorded names in sync while the link exists.
       db.prepare("UPDATE recipes SET brewerName=? WHERE brewerId=?").run(g.name, id);
       db.prepare("UPDATE recipes SET grinderName=? WHERE grinderId=?").run(g.name, id);
@@ -215,9 +233,9 @@ export function brewRouter(db: DB) {
       while (db.prepare("SELECT 1 FROM gear_items WHERE id=?").get(newId)) newId = `${base}-${n++}`;
       id = newId;
       db.prepare(
-        `INSERT INTO gear_items (id, name, type, brand, details, units, burrs, espressoCapable, variants, grindRanges, defaultMethod, category, builtin, createdAt, updatedAt)
-         VALUES (@id, @name, @type, @brand, @details, @units, @burrs, @espressoCapable, @variants, @grindRanges, @defaultMethod, @category, 0, @createdAt, @updatedAt)`,
-      ).run({ ...row, id, createdAt: t });
+        `INSERT INTO gear_items (id, name, type, brand, details, units, burrs, espressoCapable, variants, grindRanges, rangeInfo, defaultMethod, category, builtin, createdAt, updatedAt)
+         VALUES (@id, @name, @type, @brand, @details, @units, @burrs, @espressoCapable, @variants, @grindRanges, @rangeInfo, @defaultMethod, @category, 0, @createdAt, @updatedAt)`,
+      ).run({ ...row, rangeInfo: row.rangeInfo ?? null, id, createdAt: t });
     }
     res.json(gearRow(db.prepare("SELECT * FROM gear_items WHERE id=?").get(id)));
   };
@@ -245,8 +263,8 @@ export function brewRouter(db: DB) {
     while (db.prepare("SELECT 1 FROM gear_items WHERE id=?").get(id)) id = `${row.id}-${n++}`;
     const t = nowIso();
     db.prepare(
-      `INSERT INTO gear_items (id, name, type, brand, details, units, burrs, espressoCapable, variants, grindRanges, defaultMethod, builtin, catalogId, catalogVersion, category, createdAt, updatedAt)
-       VALUES (@id, @name, @type, @brand, @details, @units, @burrs, @espressoCapable, @variants, @grindRanges, @defaultMethod, 0, @catalogId, @catalogVersion, @category, @t, @t)`,
+      `INSERT INTO gear_items (id, name, type, brand, details, units, burrs, espressoCapable, variants, grindRanges, rangeInfo, defaultMethod, builtin, catalogId, catalogVersion, category, createdAt, updatedAt)
+       VALUES (@id, @name, @type, @brand, @details, @units, @burrs, @espressoCapable, @variants, @grindRanges, @rangeInfo, @defaultMethod, 0, @catalogId, @catalogVersion, @category, @t, @t)`,
     ).run({ ...row, id, name: id === row.id ? row.name : `${row.name} (${n - 1})`, t });
     res.json(gearRow(db.prepare("SELECT * FROM gear_items WHERE id=?").get(id)));
   });
@@ -264,7 +282,8 @@ export function brewRouter(db: DB) {
     if (!g) return bad(res, "Gear not found", 404);
     const c = g.catalogId ? catalogGear(g.catalogId) : null;
     if (!c?.grindRanges) return bad(res, "The library has no ranges for this gear.");
-    db.prepare("UPDATE gear_items SET grindRanges=?, catalogVersion=?, updatedAt=? WHERE id=?").run(JSON.stringify(c.grindRanges), c.version, nowIso(), g.id);
+    const info = rangeInfoFromCatalog(c);
+    db.prepare("UPDATE gear_items SET grindRanges=?, rangeInfo=?, catalogVersion=?, updatedAt=? WHERE id=?").run(JSON.stringify(c.grindRanges), info ? JSON.stringify(info) : null, c.version, nowIso(), g.id);
     res.json(gearRow(db.prepare("SELECT * FROM gear_items WHERE id=?").get(g.id)));
   });
 

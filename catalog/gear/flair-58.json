@@ -1,0 +1,10 @@
+{
+  "id": "flair-58",
+  "version": 1,
+  "name": "Flair 58",
+  "brand": "Flair",
+  "type": "brewer",
+  "category": "espresso-machine",
+  "details": "Manual lever espresso maker with a 58 mm basket and electric preheat.",
+  "defaultMethod": "espresso"
+}

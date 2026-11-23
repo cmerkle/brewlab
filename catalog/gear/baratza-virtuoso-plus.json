@@ -1,6 +1,6 @@
 {
   "id": "baratza-virtuoso-plus",
-  "version": 1,
+  "version": 2,
   "name": "Baratza Virtuoso+",
   "brand": "Baratza",
   "type": "grinder",
@@ -8,5 +8,57 @@
   "details": "Electric conical burr grinder, 40 settings.",
   "units": "",
   "burrs": null,
-  "espressoCapable": null
+  "espressoCapable": null,
+  "grindRanges": {
+    "scale": "settings 0–40 (0 = finest)",
+    "min": 0,
+    "max": 40,
+    "step": 1,
+    "methods": {
+      "espresso": {
+        "low": 0,
+        "high": 7
+      },
+      "moka": {
+        "low": 7,
+        "high": 18
+      },
+      "aeropress": {
+        "low": 5,
+        "high": 30
+      },
+      "pourover": {
+        "low": 8,
+        "high": 20
+      },
+      "batch": {
+        "low": 4,
+        "high": 28
+      },
+      "immersion": {
+        "low": 20,
+        "high": 40
+      },
+      "coldbrew": {
+        "low": 24,
+        "high": 40
+      },
+      "rapid": {
+        "low": 14,
+        "high": 18
+      }
+    },
+    "notes": {
+      "turkish": "Not fine enough for Turkish coffee."
+    }
+  },
+  "rangeInfo": {
+    "confidence": "community",
+    "source": "https://honestcoffeeguide.com/baratza-virtuoso-plus-grind-settings",
+    "note": "Honest Coffee Guide's chart (community, not the manufacturer's): espresso 0–7, moka pot 7–18, AeroPress 5–30, V60 8–20, filter coffee machine 4–28, French press 20–40, cold brew 24–40. Its V60 row is used for pour-over, “Filter Coffee Machine” for drip, French press for immersion. Baratza doesn't recommend the Virtuoso+ for espresso machines.",
+    "estimated": [
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
+  }
 }

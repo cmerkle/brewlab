@@ -4,9 +4,9 @@ import { TastingSchema, AvoidSchema, CandidateSchema, type Candidate, firstError
 import { addToInventory } from "./routes-brew.js";
 import { applyMatchingRules, type Dropped } from "./rules.js";
 import { llmConfig, researchSupported, researchCandidates } from "./llm.js";
-import { getSettings, setSettings } from "./settings.js";
+import { enabledRules, getSettings, setSettings } from "./settings.js";
 import { tasteSummary, tasteProfileText, scoreCandidate, avoidSuggestions, describe } from "./taste.js";
-import { AVOID_RULES } from "./rules.js";
+import { PRESET_RULES } from "./rules.js";
 
 const PICK_STATUSES = ["new", "saved", "passed", "tried"] as const;
 
@@ -24,7 +24,7 @@ function setRefresh(db: DB, status: string, note: string) {
 
 function ruleContext(db: DB) {
   return {
-    rules: getSettings(db).avoidRules,
+    rules: enabledRules(getSettings(db)),
     tastings: db.prepare("SELECT name, roaster FROM tastings").all() as any[],
     avoids: db.prepare("SELECT name, roaster FROM avoids").all() as any[],
     stash: (db.prepare("SELECT name, roaster, finishedDate, openedDate FROM inventory_items").all() as any[]).map((i) => ({
@@ -263,7 +263,8 @@ export function discoverRouter(db: DB) {
       likes: s.likes.map((a) => ({ ...a, text: describe(a) })),
       dislikes: s.dislikes.map((a) => ({ ...a, text: describe(a) })),
       coffees: s.coffees,
-      rules: AVOID_RULES.map((r) => ({ id: r.id, label: r.label, on: settings.avoidRules.includes(r.id) })),
+      rules: settings.ruleDefs.map((r) => ({ ...r, on: settings.avoidRules.includes(r.id), preset: PRESET_RULES.some((p) => p.id === r.id) })),
+      presets: PRESET_RULES,
       suggestions: avoidSuggestions(db, s, settings),
       palateNotes: settings.palateNotes,
       tasteQuiz: settings.tasteQuiz,
@@ -272,9 +273,9 @@ export function discoverRouter(db: DB) {
   });
   r.post("/suggestions/:id", (req, res) => {
     const id = req.params.id;
-    if (!AVOID_RULES.some((x) => x.id === id)) return bad(res, "Unknown suggestion", 404);
+    if (!getSettings(db).ruleDefs.some((x) => x.id === id)) return bad(res, "Unknown suggestion", 404);
     const s = getSettings(db);
-    if (req.body?.accept) setSettings(db, { avoidRules: [...new Set([...s.avoidRules, id as any])] });
+    if (req.body?.accept) setSettings(db, { avoidRules: [...new Set([...s.avoidRules, id])] });
     else setSettings(db, { dismissedSuggestions: [...new Set([...s.dismissedSuggestions, id])] });
     res.json({ ok: true });
   });

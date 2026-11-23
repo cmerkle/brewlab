@@ -1,6 +1,6 @@
 {
   "id": "1zpresso-jx",
-  "version": 2,
+  "version": 3,
   "name": "1Zpresso JX",
   "brand": "1Zpresso",
   "type": "grinder",
@@ -14,15 +14,19 @@
     "min": 0,
     "step": 0.1,
     "methods": {
+      "turkish": {
+        "low": 0.5,
+        "high": 0.8
+      },
       "espresso": {
         "low": 0.8,
         "high": 1.1
       },
-      "aeropress": {
+      "moka": {
         "low": 1.6,
         "high": 2
       },
-      "batch": {
+      "aeropress": {
         "low": 1.6,
         "high": 2
       },
@@ -30,12 +34,25 @@
         "low": 2.2,
         "high": 3
       },
+      "batch": {
+        "low": 1.6,
+        "high": 2
+      },
       "immersion": {
         "low": 2.8,
         "high": 3.4
+      },
+      "coldbrew": {
+        "low": 3.1,
+        "high": 3.7
+      },
+      "rapid": {
+        "low": 1.8,
+        "high": 2.6
       }
     },
     "notes": {
+      "moka": "1Zpresso groups moka pot with AeroPress and drip coffee maker.",
       "aeropress": "1Zpresso groups AeroPress, moka pot and drip coffee maker.",
       "immersion": "French press."
     }
@@ -43,6 +60,11 @@
   "rangeInfo": {
     "confidence": "manufacturer",
     "source": "https://1zpresso.coffee/grind-setting/",
-    "note": "1Zpresso “Jx Grind Setting Reference” chart (JX-Grind-Setting-Reference-20200909.jpg on that page), in rotations: Turkish 0.5–0.8, espresso 0.8–1.1, AeroPress/moka/drip coffee maker 1.6–2.0, siphon/pour over 2.2–3.0, French press 2.8–3.4."
+    "note": "1Zpresso “Jx Grind Setting Reference” chart (JX-Grind-Setting-Reference-20200909.jpg on that page), in rotations: Turkish 0.5–0.8, espresso 0.8–1.1, AeroPress/moka/drip coffee maker 1.6–2.0, siphon/pour over 2.2–3.0, French press 2.8–3.4.",
+    "estimated": [
+      "coldbrew",
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: cold brew: the French press range moved half its width coarser; Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
   }
 }

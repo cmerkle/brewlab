@@ -22,22 +22,53 @@ export function sameCoffee(a: { name: string; roaster?: string | null }, b: { na
   return nameMatch && roasterMatch;
 }
 
-// Keyword exclusions — per-user toggles in Discover → Your taste (settings.avoidRules).
-export const AVOID_RULES = [
-  { id: "cinnamon", label: "Cinnamon-forward coffees", re: /cinnamon/, reason: "cinnamon-forward" },
-  { id: "coferment", label: "Co-ferments and flavoured / infused coffees", re: /co-?ferment|coferment|fruit[- ]infused|infused|flavou?red/, reason: "co-ferment-led / infused" },
-  { id: "funk", label: "Intense fermentation funk (boozy, winey, barrel-aged)", re: /\bfunk(y)?\b|boozy|winey|solvent|overfermented|fermenty|rum[- ]barrel|whiskey[- ]barrel|barrel[- ]aged/, reason: "intense fermentation funk" },
-] as const;
-export type AvoidRuleId = (typeof AVOID_RULES)[number]["id"];
-const ALL_RULES = AVOID_RULES.map((r) => r.id) as AvoidRuleId[];
+// "Always leave out" — keyword exclusions for Discover. They're data, not code: the user's own
+// list lives in settings.ruleDefs (starts as PRESET_RULES; edit, delete or add any), and
+// settings.avoidRules holds the ids that are switched on. A candidate is left out when its name,
+// process, tasting notes or notes contain one of a rule's words (start of a word, any case).
+export interface AvoidRuleDef {
+  id: string;
+  label: string;
+  keywords: string[];
+}
 
-export const ruleText = (c: { name?: string | null; processMethod?: string | null; tastingNotes?: string | null; notes?: string | null }) =>
-  `${c.name ?? ""} ${c.processMethod ?? ""} ${c.tastingNotes ?? ""} ${c.notes ?? ""}`.toLowerCase();
+export const PRESET_RULES: AvoidRuleDef[] = [
+  { id: "cinnamon", label: "Cinnamon-forward coffees", keywords: ["cinnamon"] },
+  { id: "coferment", label: "Co-ferments and flavoured / infused coffees", keywords: ["co-ferment", "coferment", "infused", "flavoured", "flavored"] },
+  { id: "funk", label: "Intense fermentation funk (boozy, winey, barrel-aged)", keywords: ["funk", "boozy", "winey", "solvent", "overfermented", "fermenty", "rum barrel", "whiskey barrel", "whisky barrel", "barrel-aged", "barrel aged"] },
+  { id: "decaf", label: "Decaf", keywords: ["decaf", "decaffeinated", "swiss water", "sugarcane process", "ea process"] },
+  { id: "dark-roast", label: "Dark roasts", keywords: ["dark roast", "french roast", "italian roast", "vienna roast"] },
+  { id: "blends", label: "Blends", keywords: ["blend"] },
+  { id: "robusta", label: "Robusta and canephora", keywords: ["robusta", "canephora"] },
+  { id: "smoky", label: "Smoky / roasty", keywords: ["smoky", "smokey", "smoke", "ashy", "burnt", "charred"] },
+];
 
-export function profileViolation(c: Pick<Candidate, "name" | "processMethod" | "tastingNotes" | "funkRisk">, rules: readonly AvoidRuleId[] = ALL_RULES): string | null {
+/** Lowercase, accents and punctuation → spaces, so "Co-Fermented" matches "co ferment". */
+const fold = (s: string) => ` ${s.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim()} `;
+
+export const ruleText = (c: { name?: string | null; processMethod?: string | null; tastingNotes?: string | null; notes?: string | null; roastLevel?: string | null }) =>
+  `${c.name ?? ""} ${c.processMethod ?? ""} ${c.tastingNotes ?? ""} ${c.notes ?? ""} ${c.roastLevel ? `${c.roastLevel} roast` : ""}`;
+
+/** The first of a rule's words found at the start of a word in the text, or null. */
+export function ruleMatch(rule: AvoidRuleDef, text: string): string | null {
+  const t = fold(text);
+  for (const k of rule.keywords) {
+    const kw = fold(k).trim();
+    if (kw && t.includes(` ${kw}`)) return k;
+  }
+  return null;
+}
+
+/** Why a candidate breaks one of the enabled rules ("cinnamon-forward coffees: “cinnamon”"), or null. */
+export function profileViolation(c: Pick<Candidate, "name" | "processMethod" | "tastingNotes" | "funkRisk"> & { roastLevel?: string | null }, rules: readonly AvoidRuleDef[] = PRESET_RULES.slice(0, 3)): string | null {
   const text = ruleText(c);
-  for (const r of AVOID_RULES) if (rules.includes(r.id) && r.re.test(text)) return r.reason;
-  if (rules.includes("funk") && /^\s*(high|very high|extreme)/i.test(c.funkRisk ?? "")) return "intense fermentation funk (high funk risk)";
+  for (const r of rules) {
+    const hit = ruleMatch(r, text);
+    if (hit) return `${r.label.toLowerCase()} (“${hit}”)`;
+  }
+  // The research step rates funk separately; the funk rule also honours it.
+  const funk = rules.find((r) => r.id === "funk");
+  if (funk && /^\s*(high|very high|extreme)/i.test(c.funkRisk ?? "")) return `${funk.label.toLowerCase()} (high funk risk)`;
   return null;
 }
 
@@ -45,8 +76,8 @@ export interface RuleContext {
   tastings: { name: string; roaster: string | null }[];
   avoids: { name: string; roaster: string | null }[];
   stash: { name: string; roaster: string | null; status: string }[];
-  /** Enabled keyword exclusions; omitted = all. */
-  rules?: readonly AvoidRuleId[];
+  /** Enabled "always leave out" rules; omitted = the original three presets. */
+  rules?: readonly AvoidRuleDef[];
 }
 
 export interface Dropped {

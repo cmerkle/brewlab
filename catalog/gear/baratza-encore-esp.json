@@ -1,6 +1,6 @@
 {
   "id": "baratza-encore-esp",
-  "version": 1,
+  "version": 2,
   "name": "Baratza Encore ESP",
   "brand": "Baratza",
   "type": "grinder",
@@ -8,5 +8,63 @@
   "details": "Electric conical burr grinder with a finer espresso range.",
   "units": "",
   "burrs": null,
-  "espressoCapable": null
+  "espressoCapable": null,
+  "grindRanges": {
+    "scale": "settings 1–40: 1–20 is the fine-step espresso range, 21–40 the filter range",
+    "min": 1,
+    "max": 40,
+    "step": 1,
+    "methods": {
+      "espresso": {
+        "low": 1,
+        "high": 20
+      },
+      "moka": {
+        "low": 18,
+        "high": 21
+      },
+      "aeropress": {
+        "low": 21,
+        "high": 23
+      },
+      "pourover": {
+        "low": 24,
+        "high": 27
+      },
+      "batch": {
+        "low": 27,
+        "high": 29
+      },
+      "immersion": {
+        "low": 31,
+        "high": 34
+      },
+      "coldbrew": {
+        "low": 34,
+        "high": 40
+      },
+      "rapid": {
+        "low": 22,
+        "high": 26
+      }
+    },
+    "notes": {
+      "turkish": "Not fine enough for Turkish coffee."
+    }
+  },
+  "rangeInfo": {
+    "confidence": "manufacturer",
+    "source": "https://cdn.shopify.com/s/files/1/1656/1527/files/manual-encore-esp-v1-0-en.pdf",
+    "note": "Baratza Encore ESP operations manual (v1.0), “Recommended initial grind settings”: espresso range 1–20 (start at 15 for 18 g of a medium roast), filter range 21–40; suggested settings AeroPress 22, Hario V60 25, automatic brewer 28, Chemex 30, French press 32.",
+    "estimated": [
+      "moka",
+      "aeropress",
+      "pourover",
+      "batch",
+      "immersion",
+      "coldbrew",
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: moka pot: 18–21, between espresso and AeroPress; AeroPress: 21–23 around Baratza's 22; pour-over: 24–27 around Baratza's V60 25 (Chemex 30 is coarser); drip coffee maker: 27–29 around Baratza's automatic brewer 28; French press: 31–34 around Baratza's 32; cold brew: 34–40, the coarse end of the filter range; Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
+  }
 }

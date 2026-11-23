@@ -24,7 +24,7 @@ const GrindRangesSchema = z.object({
 export const CATEGORIES = [
   "hand-grinder", "electric-grinder",
   "cone-dripper", "flat-bottom-dripper", "hybrid-dripper", "immersion-dripper", "aeropress", "rapid-brewer",
-  "french-press", "moka-pot", "espresso-machine", "batch-brewer", "other",
+  "french-press", "moka-pot", "espresso-machine", "batch-brewer", "cezve", "cold-brew-maker", "siphon", "other",
 ] as const;
 
 export const CatalogGear = z.object({
@@ -46,6 +46,10 @@ export const CatalogGear = z.object({
     confidence: z.string() as z.ZodType<"manufacturer" | "community">,
     source: z.string().url().nullable(),
     note: z.string().optional(),
+    /** Methods whose range is extrapolated from the cited ones, not taken from the source. */
+    estimated: z.array(z.enum(METHODS)).optional(),
+    /** How the estimated ranges were derived (required when there are any). */
+    estimateNote: z.string().optional(),
   }).optional(),
 }).superRefine((g, ctx) => {
   const issue = (message: string, path: (string | number)[] = []) => ctx.addIssue({ code: "custom", message, path });
@@ -59,11 +63,18 @@ export const CatalogGear = z.object({
       : 'choose where the ranges come from: "manufacturer" or "community"', ["rangeInfo", "confidence"]);
   if (g.rangeInfo && !g.rangeInfo.source) issue("cite a source URL for the ranges (the manufacturer's manual/chart, or a published community chart)", ["rangeInfo", "source"]);
   if (g.rangeInfo?.source && !/^https:\/\//.test(g.rangeInfo.source)) issue("the source must be an https:// link", ["rangeInfo", "source"]);
+  const est = g.rangeInfo?.estimated ?? [];
+  for (const m of est) if (!g.grindRanges?.methods?.[m]) issue(`"${m}" is listed as estimated but has no range`, ["rangeInfo", "estimated"]);
+  if (est.length && !g.rangeInfo?.estimateNote?.trim()) issue("say how the estimated ranges were worked out (rangeInfo.estimateNote)", ["rangeInfo", "estimateNote"]);
+  if (est.length && g.grindRanges && Object.keys(g.grindRanges.methods).every((m) => est.includes(m as Method)))
+    issue("at least one range must come from the cited source — estimates extrapolate from it", ["rangeInfo", "estimated"]);
   const isGrinderCat = g.category.endsWith("-grinder");
   if (g.type === "grinder" && !isGrinderCat) issue(`a grinder needs a grinder category (hand-grinder or electric-grinder), not "${g.category}"`, ["category"]);
   if (g.type !== "grinder" && isGrinderCat) issue(`category "${g.category}" is for grinders, but type is "${g.type}"`, ["category"]);
   if (g.type !== "grinder" && g.grindRanges) issue("only grinders have grind ranges", ["grindRanges"]);
   if (g.type !== "brewer" && g.defaultMethod) issue("defaultMethod is for brewers", ["defaultMethod"]);
+  if (g.type === "brewer" && !g.defaultMethod)
+    issue("a brewer needs a grind category (defaultMethod): which grinder range it uses — espresso, pourover, immersion …", ["defaultMethod"]);
   const r = g.grindRanges;
   if (r) {
     if (!Object.keys(r.methods).length) issue("grindRanges has no methods — add at least one, or leave grindRanges out", ["grindRanges", "methods"]);
@@ -189,6 +200,23 @@ export interface GearRowForEntry {
   id: string; name: string; type: string; brand: string | null; category: string | null; details: string | null;
   units: string | null; burrs: string | null; espressoCapable: boolean | null; variants: string[] | null;
   defaultMethod: string | null; grindRanges: GrindRanges | null; catalogId: string | null;
+  rangeInfo?: GearRangeInfo | null;
+}
+
+/** Where a gear item's ranges come from — stored on the item, editable (gear_items.rangeInfo). */
+export interface GearRangeInfo {
+  confidence?: "manufacturer" | "community" | null;
+  source?: string | null;
+  note?: string | null;
+  estimated?: Method[];
+  estimateNote?: string | null;
+}
+
+/** The library's rangeInfo as stored on an installed copy. */
+export function rangeInfoFromCatalog(c: CatalogGearT): GearRangeInfo | null {
+  const r = c.rangeInfo;
+  if (!r || !c.grindRanges) return null;
+  return { confidence: r.confidence, source: r.source ?? null, note: r.note ?? null, estimated: r.estimated ?? [], estimateNote: r.estimateNote ?? null };
 }
 
 /**
@@ -199,8 +227,14 @@ export interface GearRowForEntry {
 export function libraryEntryFor(g: GearRowForEntry, info: { confidence?: string; source?: string; note?: string }) {
   const base = g.catalogId ? catalogGear(g.catalogId) : null;
   const ranges = g.type === "grinder" && g.grindRanges && Object.keys(g.grindRanges.methods ?? {}).length ? g.grindRanges : null;
+  const est = (g.rangeInfo?.estimated ?? []).filter((m) => ranges?.methods?.[m]);
+  const source = info.source ?? g.rangeInfo?.source ?? undefined;
+  const note = info.note ?? g.rangeInfo?.note ?? undefined;
   const rangeInfo = ranges
-    ? { confidence: info.confidence || "", source: info.source?.trim() || null, ...(info.note?.trim() ? { note: info.note.trim() } : {}) }
+    ? {
+        confidence: info.confidence ?? g.rangeInfo?.confidence ?? "", source: source?.trim() || null, ...(note?.trim() ? { note: note.trim() } : {}),
+        ...(est.length ? { estimated: est, estimateNote: g.rangeInfo?.estimateNote ?? "" } : {}),
+      }
     : undefined;
   const clean = (o: Record<string, unknown>) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null && !(Array.isArray(v) && !v.length)));
   let kind: "new" | "update";
@@ -265,6 +299,7 @@ export function gearFromCatalog(c: CatalogGearT) {
     espressoCapable: c.espressoCapable == null ? null : c.espressoCapable ? 1 : 0,
     variants: c.variants ? JSON.stringify(c.variants) : null,
     grindRanges: c.grindRanges ? JSON.stringify(c.grindRanges) : null,
+    rangeInfo: rangeInfoFromCatalog(c) ? JSON.stringify(rangeInfoFromCatalog(c)) : null,
     defaultMethod: c.defaultMethod ?? null,
     catalogId: c.id,
     catalogVersion: c.version,

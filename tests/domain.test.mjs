@@ -49,8 +49,8 @@ test("user grinder without ranges → no conversion data yet; with ranges → mi
 });
 
 test("range validation names the method", () => {
-  assert.match(validateRanges({ pourover: { low: 30, high: 20 } }), /Pour over.*above/);
-  assert.match(validateRanges({ immersion: { low: 10, high: null } }), /Immersion.*both/);
+  assert.match(validateRanges({ pourover: { low: 30, high: 20 } }), /Pour-over \(V60\).*above/);
+  assert.match(validateRanges({ immersion: { low: 10, high: null } }), /French press \/ immersion.*both/);
   assert.equal(validateRanges({ pourover: { low: 20, high: 30 }, espresso: {} }), null);
 });
 

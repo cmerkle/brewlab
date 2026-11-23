@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- **Grind categories match a grind chart:** Turkish, espresso, moka pot, AeroPress, pour-over (V60), drip coffee maker, French press, cold brew (plus Rapid Brewer). Every brewer belongs to one ("Grind category" in the gear editor, suggested from its Kind), and the library rules now require it. New library brewers cover the gaps: a cezve (Turkish), Hario Mizudashi and Toddy (cold brew), Hario Technica siphon, Melitta 1x4, Moccamaster KBGV and Flair 58.
+- **Every library grinder now covers every method it can do:**
+  - Ranges taken from the maker's chart are used as given (e.g. 1Zpresso's Turkish and moka ranges).
+  - Gaps are **estimated** by extrapolating the grinder's own charted ranges. They're marked "est." in the gear editor, with a note on how they were worked out.
+  - Methods a grinder can't do say why (e.g. the Ode Gen 2 has no espresso).
+  - New ranges: Comandante C40, DF64 Gen 2, Fellow Opus, Timemore S3 and Baratza Virtuoso+ (from Honest Coffee Guide's community charts), and the Baratza Encore ESP (from Baratza's manual).
+  - The Eureka Mignon Specialità still has none: its published chart uses a dial notation that couldn't be pinned down.
+- **Each grinder has its own editable source.** The box above the ranges now says where they come from (the maker's chart, a community chart, or your own), with a **Source link** and notes you can edit. That's useful for a custom grinder you've calibrated. Typing over an estimated range clears its "est." mark, and "Suggest to the library" starts from this source.
+- **Library updates reach installed grinders at startup.** A grinder whose ranges still match the library gets the new ranges and source. One you've edited keeps your ranges and only gains methods it doesn't have (and none you've written a note against).
+- **"Always leave out" rules are yours:**
+  - They used to be three fixed rules from the original spec. Now each is a name plus words to look for, and you can edit the words, remove a rule, restore the starter rules, or add your own.
+  - Five more starter rules are offered, all off: decaf, dark roasts, blends, robusta, smoky.
+  - The research prompt lists each rule's words.
+- **The taste quiz covers the coffee flavour wheel:** apple & pear, grape & wine-like, dried fruit, herbal, honey, vanilla, brown sugar & molasses, malty & cereal, and funky / boozy as things you can *like*; smoky, herbal / grassy, spice-forward, heavy body and thin / watery as dislikes; co-fermented and wet-hulled processes; medium-light and medium-dark roasts.
+
 - **Grind settings are plain numbers.** You type and see exactly what you set on the grinder: `88`, `5.0` or `5.1`. The grinder's unit word (clicks, rotations) is shown next to the field, and the "(dial 8.8)" readout is gone. Older text settings such as "72 clicks (dial 7.2)", "ZP6: 4.5-5" or "setting 5.1" are converted once at startup, after restoring a backup, and when an older client sends text. A range becomes its midpoint, and text with no number in it is cleared. The Fellow Ode's sub-steps are still typed as on the dial (5.1 = 5⅓).
 - **Brew setup** replaces "Scale it, then brew":
   - **Water temperature** can be changed before brewing, and again in the log step before saving. The Brew Log keeps what you actually used.

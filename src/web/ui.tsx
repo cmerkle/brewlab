@@ -28,9 +28,12 @@ export function usePref<T>(key: string, fallback: T): [T, (v: T) => void] {
   return [v, (n: T) => { setV(n); setPref(key, n); }];
 }
 
+/** An "always leave out" rule for Discover: any of its words in a coffee's details → left out. */
+export interface AvoidRuleDef { id: string; label: string; keywords: string[] }
+
 export interface Settings {
   tempUnit: "C" | "F"; waterUnit: "g" | "oz"; defaultRatio: number; discoverEnabled: boolean;
-  avoidRules: ("cinnamon" | "coferment" | "funk")[]; palateNotes: string;
+  ruleDefs: AvoidRuleDef[]; avoidRules: string[]; palateNotes: string;
   tasteQuiz: { loves: string[]; dislikes: string[]; processes: string[]; roasts: string[] };
   dismissedSuggestions: string[];
 }
@@ -56,7 +59,7 @@ interface Data {
 const Ctx = createContext<Data | null>(null);
 export const DEFAULT_SETTINGS: Settings = {
   tempUnit: "C", waterUnit: "g", defaultRatio: 16, discoverEnabled: true,
-  avoidRules: [], palateNotes: "", tasteQuiz: { loves: [], dislikes: [], processes: [], roasts: [] }, dismissedSuggestions: [],
+  ruleDefs: [], avoidRules: [], palateNotes: "", tasteQuiz: { loves: [], dislikes: [], processes: [], roasts: [] }, dismissedSuggestions: [],
 };
 export const useData = () => useContext(Ctx)!;
 

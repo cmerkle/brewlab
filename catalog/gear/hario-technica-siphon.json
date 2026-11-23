@@ -1,0 +1,10 @@
+{
+  "id": "hario-technica-siphon",
+  "version": 1,
+  "name": "Hario Technica Siphon",
+  "brand": "Hario",
+  "type": "brewer",
+  "category": "siphon",
+  "details": "Vacuum (siphon) brewer. Its grind sits with pour-over — grinder makers chart siphon and pour-over together.",
+  "defaultMethod": "pourover"
+}

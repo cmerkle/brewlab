@@ -1,6 +1,6 @@
 {
   "id": "comandante-c40",
-  "version": 1,
+  "version": 2,
   "name": "Comandante C40",
   "brand": "Comandante",
   "type": "grinder",
@@ -8,5 +8,57 @@
   "details": "Hand grinder; settings counted in clicks from zero (burrs closed).",
   "units": "clicks",
   "burrs": null,
-  "espressoCapable": null
+  "espressoCapable": null,
+  "grindRanges": {
+    "scale": "clicks from zero (burrs closed), standard MK4 axle",
+    "min": 0,
+    "step": 1,
+    "methods": {
+      "turkish": {
+        "low": 2,
+        "high": 8
+      },
+      "espresso": {
+        "low": 7,
+        "high": 13
+      },
+      "moka": {
+        "low": 14,
+        "high": 24
+      },
+      "aeropress": {
+        "low": 12,
+        "high": 35
+      },
+      "pourover": {
+        "low": 15,
+        "high": 25
+      },
+      "batch": {
+        "low": 12,
+        "high": 33
+      },
+      "immersion": {
+        "low": 26,
+        "high": 40
+      },
+      "coldbrew": {
+        "low": 30,
+        "high": 40
+      },
+      "rapid": {
+        "low": 20,
+        "high": 24
+      }
+    }
+  },
+  "rangeInfo": {
+    "confidence": "community",
+    "source": "https://honestcoffeeguide.com/comandante-c40-mk4-grind-settings",
+    "note": "Honest Coffee Guide's chart (community, not the manufacturer's): Turkish 2–8, espresso 7–13, moka pot 14–24, AeroPress 12–35, V60 15–25, filter coffee machine 12–33, French press 26–40, cold brew 30–40. Its V60 row is used for pour-over, “Filter Coffee Machine” for drip, French press for immersion. Red Clix axles count roughly twice the clicks.",
+    "estimated": [
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
+  }
 }

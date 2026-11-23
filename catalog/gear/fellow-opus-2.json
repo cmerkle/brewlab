@@ -1,6 +1,6 @@
 {
   "id": "fellow-opus-2",
-  "version": 1,
+  "version": 2,
   "name": "Fellow Opus 2",
   "brand": "Fellow",
   "type": "grinder",
@@ -18,6 +18,10 @@
         "low": 0,
         "high": 2
       },
+      "moka": {
+        "low": 2,
+        "high": 3.5
+      },
       "aeropress": {
         "low": 3,
         "high": 5
@@ -26,24 +30,39 @@
         "low": 5,
         "high": 9
       },
+      "batch": {
+        "low": 7,
+        "high": 10
+      },
       "immersion": {
         "low": 8,
         "high": 10
       },
-      "batch": {
-        "low": 7,
+      "coldbrew": {
+        "low": 8,
         "high": 10
+      },
+      "rapid": {
+        "low": 4,
+        "high": 7
       }
     },
     "notes": {
+      "turkish": "Espresso is already at the finest end of the dial.",
+      "aeropress": "Prismo attachment: 1–3.",
       "batch": "Fellow's Aiden batch-brew range; Aiden single-serve is 5–7.",
-      "immersion": "French press and cold brew.",
-      "aeropress": "Prismo attachment: 1–3."
+      "immersion": "Fellow lists French press and cold brew together (8–10).",
+      "coldbrew": "Fellow lists French press and cold brew together (8–10)."
     }
   },
   "rangeInfo": {
     "confidence": "manufacturer",
     "source": "https://www.sweetmarias.com/cdn/shop/files/Fellow_Opus_2_Getting_Started_Guide.pdf",
-    "note": "Fellow Opus 2 Getting Started Guide (hosted by a retailer), grind settings chart: espresso 0–2, Prismo 1–3, AeroPress 3–5, pour-over 5–9, French press/cold brew 8–10; Aiden settings: single-serve 5–7, batch brew 7–10. “For darker roasts, select a higher number within the recommended grind range.”"
+    "note": "Fellow Opus 2 Getting Started Guide (hosted by a retailer), grind settings chart: espresso 0–2, Prismo 1–3, AeroPress 3–5, pour-over 5–9, French press/cold brew 8–10; Aiden settings: single-serve 5–7, batch brew 7–10. “For darker roasts, select a higher number within the recommended grind range.”",
+    "estimated": [
+      "moka",
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: moka pot: from the top of the espresso range to halfway to the top of the AeroPress range (or one AeroPress span finer when there's no espresso range); Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
   }
 }

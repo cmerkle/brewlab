@@ -183,6 +183,7 @@ function migrate(db: DB) {
   if (!has("gear_items", "catalogId")) db.exec("ALTER TABLE gear_items ADD COLUMN catalogId TEXT");
   if (!has("gear_items", "catalogVersion")) db.exec("ALTER TABLE gear_items ADD COLUMN catalogVersion INTEGER");
   if (!has("gear_items", "category")) db.exec("ALTER TABLE gear_items ADD COLUMN category TEXT");
+  if (!has("gear_items", "rangeInfo")) db.exec("ALTER TABLE gear_items ADD COLUMN rangeInfo TEXT"); // JSON: where the ranges come from
 }
 
 export const nowIso = () => new Date().toISOString();

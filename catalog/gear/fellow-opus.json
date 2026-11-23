@@ -1,6 +1,6 @@
 {
   "id": "fellow-opus",
-  "version": 1,
+  "version": 2,
   "name": "Fellow Opus",
   "brand": "Fellow",
   "type": "grinder",
@@ -8,5 +8,57 @@
   "details": "Electric conical burr grinder for espresso to cold brew.",
   "units": "",
   "burrs": null,
-  "espressoCapable": null
+  "espressoCapable": null,
+  "grindRanges": {
+    "scale": "dial 1–11 in quarter steps (41 settings)",
+    "min": 1,
+    "max": 11,
+    "step": 0.25,
+    "methods": {
+      "espresso": {
+        "low": 1,
+        "high": 2.5
+      },
+      "moka": {
+        "low": 2.5,
+        "high": 5.5
+      },
+      "aeropress": {
+        "low": 2,
+        "high": 8.75
+      },
+      "pourover": {
+        "low": 3,
+        "high": 6
+      },
+      "batch": {
+        "low": 2,
+        "high": 8
+      },
+      "immersion": {
+        "low": 6,
+        "high": 11
+      },
+      "coldbrew": {
+        "low": 7.25,
+        "high": 11
+      },
+      "rapid": {
+        "low": 4.5,
+        "high": 5.5
+      }
+    },
+    "notes": {
+      "turkish": "Not fine enough for Turkish coffee."
+    }
+  },
+  "rangeInfo": {
+    "confidence": "community",
+    "source": "https://honestcoffeeguide.com/fellow-opus-grind-settings",
+    "note": "Honest Coffee Guide's chart (community, not the manufacturer's): espresso 1–2.5, moka pot 2.5–5.5, AeroPress 2–8.75, V60 3–6, filter coffee machine 2–8, French press 6–11, cold brew 7.25–11. Its V60 row is used for pour-over, “Filter Coffee Machine” for drip, French press for immersion.",
+    "estimated": [
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
+  }
 }

@@ -1,0 +1,10 @@
+{
+  "id": "cezve",
+  "version": 1,
+  "name": "Cezve (ibrik)",
+  "brand": null,
+  "type": "brewer",
+  "category": "cezve",
+  "details": "Small long-handled pot for Turkish coffee: powder-fine coffee simmered with water (and often sugar), served unfiltered.",
+  "defaultMethod": "turkish"
+}

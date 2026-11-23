@@ -1,6 +1,6 @@
 {
   "id": "1zpresso-j-max",
-  "version": 2,
+  "version": 3,
   "name": "1Zpresso J-Max",
   "brand": "1Zpresso",
   "type": "grinder",
@@ -14,15 +14,19 @@
     "min": 0,
     "step": 1,
     "methods": {
+      "turkish": {
+        "low": 70,
+        "high": 110
+      },
       "espresso": {
         "low": 90,
         "high": 150
       },
-      "aeropress": {
+      "moka": {
         "low": 180,
         "high": 240
       },
-      "batch": {
+      "aeropress": {
         "low": 180,
         "high": 240
       },
@@ -30,12 +34,25 @@
         "low": 240,
         "high": 300
       },
+      "batch": {
+        "low": 180,
+        "high": 240
+      },
       "immersion": {
         "low": 360,
         "high": 420
+      },
+      "coldbrew": {
+        "low": 390,
+        "high": 450
+      },
+      "rapid": {
+        "low": 210,
+        "high": 270
       }
     },
     "notes": {
+      "moka": "1Zpresso groups moka pot with AeroPress and drip coffee maker.",
       "aeropress": "1Zpresso groups AeroPress, moka pot and drip coffee maker.",
       "immersion": "French press."
     }
@@ -43,6 +60,11 @@
   "rangeInfo": {
     "confidence": "manufacturer",
     "source": "https://1zpresso.coffee/grind-setting/",
-    "note": "1Zpresso “J-Max Grind Setting Reference” chart (J-Max-Grind-setting-reference-20220721.jpg on that page), in clicks: Turkish 70–110, espresso 90–150, AeroPress/moka/drip coffee maker 180–240, siphon/pour over 240–300, French press 360–420."
+    "note": "1Zpresso “J-Max Grind Setting Reference” chart (J-Max-Grind-setting-reference-20220721.jpg on that page), in clicks: Turkish 70–110, espresso 90–150, AeroPress/moka/drip coffee maker 180–240, siphon/pour over 240–300, French press 360–420.",
+    "estimated": [
+      "coldbrew",
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: cold brew: the French press range moved half its width coarser; Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
   }
 }

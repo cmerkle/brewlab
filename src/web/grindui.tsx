@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { Gear, Recipe } from "./api";
 import { useData } from "./ui";
-import { convertSetting, fmtGrind, NO_DATA_MESSAGE, type Method, rangeFor } from "../shared/grind";
+import { convertSetting, fmtGrind, NO_DATA_MESSAGE, CATEGORY_METHOD, type Method, rangeFor } from "../shared/grind";
 
 export function useGrinders() {
   const { gear } = useData();
@@ -11,7 +11,7 @@ export function useGrinders() {
 export function methodOf(r: { method: Method | null; brewerId: string | null }, gear: Gear[]): Method {
   if (r.method) return r.method;
   const b = gear.find((g) => g.id === r.brewerId);
-  return (b?.defaultMethod as Method) || "pourover";
+  return (b?.defaultMethod as Method) || (b?.category ? CATEGORY_METHOD[b.category] : undefined) || "pourover";
 }
 
 export interface GrindChoice {

@@ -1,0 +1,10 @@
+{
+  "id": "toddy-cold-brew",
+  "version": 1,
+  "name": "Toddy Cold Brew System",
+  "brand": "Toddy",
+  "type": "brewer",
+  "category": "cold-brew-maker",
+  "details": "Large-batch cold brew steeper with a felt filter; makes concentrate.",
+  "defaultMethod": "coldbrew"
+}

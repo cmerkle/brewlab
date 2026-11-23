@@ -4,8 +4,8 @@
 // of entered candidates. Nothing here is guessed: every line cites the ratings behind it.
 import type { DB } from "./db.js";
 import type { Candidate } from "./schemas.js";
-import { sameCoffee, ruleText, AVOID_RULES } from "./rules.js";
-import { getSettings, type Settings } from "./settings.js";
+import { sameCoffee, ruleText, ruleMatch } from "./rules.js";
+import { getSettings, enabledRules, type Settings } from "./settings.js";
 
 const VERDICT_SCORE: Record<string, number> = { loved: 5, liked: 4, not_for_me: 2, disliked: 1 };
 
@@ -144,8 +144,10 @@ export function tasteProfileText(s: TasteSummary, settings: Settings): string {
   const quiz = (Object.keys(QUIZ_LABELS) as (keyof typeof QUIZ_LABELS)[]).filter((k) => q[k].length).map((k) => `- ${QUIZ_LABELS[k]}: ${q[k].join(", ")}`);
   if (quiz.length) lines.push("", "From their taste quiz:", ...quiz);
   if (settings.palateNotes.trim()) lines.push("", "In their own words:", settings.palateNotes.trim());
-  const rules = AVOID_RULES.filter((r) => settings.avoidRules.includes(r.id));
-  if (rules.length) lines.push("", `They exclude: ${rules.map((r) => r.label.toLowerCase()).join("; ")}.`);
+  const rules = enabledRules(settings);
+  if (rules.length)
+    lines.push("", "Never pick (their “always leave out” rules — any of these words in the name, process or tasting notes):",
+      ...rules.map((r) => `- ${r.label}: ${r.keywords.join(", ")}`));
   lines.push(
     "",
     "In whyFit, when a pick relates to their ratings, say so concretely using the numbers above (e.g. \"you rated two natural Ethiopians 5★\").",
@@ -174,9 +176,9 @@ export interface Suggestion { id: string; ruleId: string; text: string; coffees:
 /** "Avoid cinnamon? You rated 2 cinnamon-forward coffees ≤2★" — offered, never applied silently. */
 export function avoidSuggestions(db: DB, s: TasteSummary = tasteSummary(db), settings = getSettings(db)): Suggestion[] {
   const out: Suggestion[] = [];
-  for (const r of AVOID_RULES) {
+  for (const r of settings.ruleDefs) {
     if (settings.avoidRules.includes(r.id) || settings.dismissedSuggestions.includes(r.id)) continue;
-    const low = s.coffees.filter((c) => c.score <= 2 && r.re.test(ruleText(c)));
+    const low = s.coffees.filter((c) => c.score <= 2 && ruleMatch(r, ruleText(c)));
     if (low.length >= 2)
       out.push({ id: r.id, ruleId: r.id, coffees: low.map((c) => c.name), text: `Avoid ${r.label.toLowerCase()}? You rated ${low.length} of them 2★ or lower (${low.map((c) => c.name).join(", ")}).` });
   }

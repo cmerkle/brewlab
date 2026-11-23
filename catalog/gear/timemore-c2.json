@@ -1,6 +1,6 @@
 {
   "id": "timemore-c2",
-  "version": 2,
+  "version": 3,
   "name": "Timemore Chestnut C2",
   "brand": "Timemore",
   "type": "grinder",
@@ -18,22 +18,51 @@
         "low": 10,
         "high": 14
       },
+      "moka": {
+        "low": 14,
+        "high": 16
+      },
+      "aeropress": {
+        "low": 14,
+        "high": 18
+      },
       "pourover": {
+        "low": 18,
+        "high": 24
+      },
+      "batch": {
         "low": 18,
         "high": 24
       },
       "immersion": {
         "low": 25,
         "high": 27
+      },
+      "coldbrew": {
+        "low": 26,
+        "high": 28
+      },
+      "rapid": {
+        "low": 16,
+        "high": 21
       }
     },
     "notes": {
+      "turkish": "Timemore lists no Turkish setting.",
       "immersion": "French press."
     }
   },
   "rangeInfo": {
     "confidence": "manufacturer",
     "source": "https://cdn.shopify.com/s/files/1/0406/3343/4269/files/Timemore_C2_C3_Bedienungsanleitung.pdf",
-    "note": "Timemore C2/C3 manual (multilingual, hosted by a retailer), table for C2/C2 Max: espresso 10–14 clicks, pour over 18–24, French press 25–27. “For your reference only.”"
+    "note": "Timemore C2/C3 manual (multilingual, hosted by a retailer), table for C2/C2 Max: espresso 10–14 clicks, pour over 18–24, French press 25–27. “For your reference only.”",
+    "estimated": [
+      "moka",
+      "aeropress",
+      "batch",
+      "coldbrew",
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: moka pot: from the top of the espresso range to halfway to the top of the AeroPress range (or one AeroPress span finer when there's no espresso range); AeroPress: between the espresso and pour-over ranges (or one pour-over span finer when there's no espresso range); drip coffee maker: the pour-over range; cold brew: the French press range moved half its width coarser; Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
   }
 }

@@ -106,8 +106,32 @@ test("avoid rules are toggles (off on a new install) and suggestions are offered
   await call("POST", "/api/discover/suggestions/cinnamon", { accept: true });
   assert.deepEqual(getSettings(db).avoidRules, ["cinnamon"]);
   check = (await call("POST", "/api/discover/rules/check", cand("Cinnamon Thing", "Colombia", "Washed", "cinnamon"))).body;
-  assert.equal(check.dropped[0].reason, "profile: cinnamon-forward");
+  assert.equal(check.dropped[0].reason, "profile: cinnamon-forward coffees (“cinnamon”)");
   assert.ok(!(await call("GET", "/api/discover/taste")).body.suggestions.some((x) => x.id === "cinnamon"));
+  stop();
+});
+
+test("always-leave-out rules are the user's own: add one, edit a preset's words, delete one", async () => {
+  const { db, call, stop } = await start("own-rules.db");
+  const s0 = getSettings(db);
+  assert.ok(s0.ruleDefs.some((r) => r.id === "decaf") && s0.ruleDefs.some((r) => r.id === "funk"), "starts with the presets, all off");
+  const defs = [
+    ...s0.ruleDefs.filter((r) => r.id !== "blends").map((r) => (r.id === "cinnamon" ? { ...r, keywords: ["cinnamon", "cardamom"] } : r)),
+    { id: "my-peaberry", label: "Peaberries", keywords: ["peaberry"] },
+  ];
+  let r = await call("PUT", "/api/settings", { ruleDefs: defs, avoidRules: ["cinnamon", "my-peaberry", "blends"] });
+  assert.equal(r.status, 200, r.text);
+  assert.deepEqual(getSettings(db).avoidRules, ["cinnamon", "my-peaberry"], "a deleted rule can't stay switched on");
+  const drop = async (...a) => (await call("POST", "/api/discover/rules/check", cand(...a))).body;
+  assert.match((await drop("Kenya AA Peaberry", "Kenya", "Washed", "blackcurrant")).dropped[0].reason, /peaberries \(“peaberry”\)/);
+  assert.match((await drop("Spice Route", "Guatemala", "Washed", "Cardamom, orange")).dropped[0].reason, /cardamom/);
+  assert.equal((await drop("House Blend", "Brazil", "Natural", "chocolate")).kept.length, 1, "deleted rule no longer applies");
+  assert.equal((await drop("Co-Fermented Lychee", "Colombia", "Co-Fermented", "lychee")).kept.length, 1, "rules that are off don't apply");
+  r = await call("PUT", "/api/settings", { ruleDefs: [...defs, { id: "x", label: "", keywords: [] }] });
+  assert.equal(r.status, 400, "a rule needs a name and words");
+  const prompt = (await call("GET", "/api/discover/taste")).body.prompt;
+  assert.match(prompt, /Peaberries: peaberry/);
+  assert.match(prompt, /Cinnamon-forward coffees: cinnamon, cardamom/);
   stop();
 });
 

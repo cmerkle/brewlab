@@ -42,6 +42,7 @@ const PAGES = [
   { name: "Avoid list", hash: "discover/avoid" },
   { name: "Refresh", hash: "discover/refresh" },
   { name: "Your taste", hash: "discover/taste" },
+  { name: "Your taste (editing a rule)", hash: "discover/taste", act: async (p) => { await p.getByRole("button", { name: "Edit rule Cinnamon-forward coffees" }).click(); await p.getByRole("button", { name: "+ Add a rule" }).click(); } },
   { name: "Your taste (research prompt open)", hash: "discover/taste", act: async (p) => p.getByRole("button", { name: /Show what the weekly research is told/ }).click() },
   { name: "More", hash: "more" },
   { name: "dialog: Brew setup", hash: "brew/recipes", dialog: true, act: async (p) => p.locator('[data-testid="recipe-1001"] [data-testid="recipe-brew"]').click() },

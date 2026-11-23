@@ -54,7 +54,11 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   recipes/brews (name kept, link nulled). Same for gear.
 - Add-to-inventory dedupes on name + roaster.
 - Discover refresh drops tried, avoided and already-stashed coffees, plus whatever the user's
-  keyword rules exclude (`settings.avoidRules`: cinnamon / co-ferment / funk — off by default).
+  "always leave out" rules exclude. Rules are user data: `settings.ruleDefs` ({id, label, keywords})
+  starts as `PRESET_RULES` (rules.ts: cinnamon, co-ferment, funk, decaf, dark roast, blends,
+  robusta, smoky) and can be edited, deleted, restored or added to; `settings.avoidRules` = ids
+  switched on (all off by default). Match = a keyword at the start of a word in name / process /
+  tasting notes / notes / "<roast> roast", case and accents folded (`ruleMatch`).
 
 ## Commands
 
@@ -117,8 +121,13 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   with `rangeInfo` confidence/source) and `catalog/recipes/<id>.json` (templates; grind = position
   0–1 inside the method range, rendered by `renderTemplate`; optional `family` = one per brewer,
   `genericName` = name on a category-matched brewer). Validated by zod in `src/server/catalog.ts`.
-  **Ranges need a cited source** (`manufacturer` or `community`); transcribe per-method values
-  only — never map size bands or microns to methods. Converter tests use
+  **Ranges need a cited source** (`manufacturer` or `community`); transcribe per-method values.
+  Owner decision 2026-11-23: every method a grinder can do has a range — gaps are filled with
+  **estimates** extrapolated from the grinder's own cited ranges, listed in `rangeInfo.estimated`
+  with `estimateNote` (shown as "est."); methods it can't do get a `notes` entry. Never invent
+  ranges without a cited anchor. Installed gear keeps its own copy of `rangeInfo` (source/notes
+  editable in the gear editor); `syncGearWithLibrary` (startup) brings untouched copies up to a
+  newer library version and only adds missing methods to edited ones. Converter tests use
   `tests/fixtures/spec-grinders.json`, not library values.
 - Older installs are linked to the library at startup (`linkGearToCatalog`).
 - **Contribution rules live in `CatalogGear`'s superRefine** (catalog.ts) — one set of rules for
@@ -126,6 +135,9 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   (`libraryEntryFor` → `POST /api/gear/:id/library-entry`: new entry for custom gear, version-bumped
   update with the user's ranges for library gear; nothing is sent — the user opens GitHub's
   new-file/edit page, repo from `LIBRARY_REPO`, default `cmerkle/brewlab`).
+- Methods (grind categories), finest → coarsest: turkish, espresso, moka, aeropress, pourover,
+  batch (drip coffee maker), immersion (French press), coldbrew, rapid (OXO). Every brewer has
+  one (`defaultMethod`; library rule; kinds suggest one via `CATEGORY_METHOD`).
 - `recipes.method` / `gear_items.defaultMethod`: conversion needs to know which method range a
   setting sits in (e.g. a Switch as pour-over vs immersion).
 - **First-run setup** (`src/web/Setup.tsx`, `src/server/routes-setup.ts`): shown while
