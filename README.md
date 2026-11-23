@@ -94,7 +94,13 @@ On **More** you can *Back up now*, download a snapshot, or *Export all data (JSO
 docker compose cp brewlab:/data ./brewlab-data-copy
 ```
 
-To restore a snapshot: stop the app, copy it over `/data/brewlab.db` (delete any `brewlab.db-wal` / `-shm` beside it), start again.
+To restore a snapshot: stop the app, copy it over `/data/brewlab.db` (delete any `brewlab.db-wal` / `-shm` beside it), make sure it's owned by the app user (uid 1000), and start again:
+
+```bash
+docker compose stop
+docker run --rm -v brewlab_brewlab-data:/data alpine sh -c 'cp /data/backups/<snapshot>.db /data/brewlab.db && chown 1000:1000 /data/brewlab.db && rm -f /data/brewlab.db-wal /data/brewlab.db-shm'
+docker compose start
+```
 
 ## Configuration
 
