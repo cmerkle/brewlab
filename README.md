@@ -78,6 +78,13 @@ Set a provider in the app under **More → Settings → AI provider**: choose on
 - **Environment variables work too** (see [`.env.example`](.env.example)), and they take precedence when `LLM_API_KEY` or `LLM_BASE_URL` is set.
 - **Without a provider everything still works:** bag photos use local OCR (Tesseract), and on *Discover → Refresh* you add candidates yourself (paste or import a roaster link).
 
+**Adding a bag from a photo:** take a photo, choose one from your photos or files, paste an image, or drop it in (desktop). The image is converted to a JPEG on your device first, so iPhone HEIC photos and screenshots work. With a provider that has web search, Brewlab then looks the coffee up on the **roaster's own site**:
+- it reads the product page with the same importer as a pasted link, falling back to what the search reported from that page;
+- it fills only fields that are still empty, so the label and anything you typed always win;
+- it shows which fields came from the web, and never guesses. If the coffee isn't found, the form says so.
+
+"Look it up online" also works on a name and roaster you've typed in.
+
 *Discover → Your taste* shows what the board is based on:
 - **Ratings:** your Stash stars, brew ratings and tasting log, summarised by origin, process, roast and tasting notes.
 - **How personal it gets:** popular picks with no ratings, a mix with 1–4 rated coffees, tailored picks from 5.

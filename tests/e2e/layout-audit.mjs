@@ -204,8 +204,15 @@ for (const v of VIEWPORTS.filter((x) => !ONLY || ONLY.test(x.name))) {
     const p = await ctx.newPage();
     p.on("dialog", (d) => d.dismiss().catch(() => {}));
     p.on("pageerror", (e) => errs.push(e.message));
+    // A running brew left by an earlier screen would reopen its timer over this one. Clear it
+    // before the app's scripts run: clearing after load races the timer, which re-saves itself
+    // when the page is hidden (that's how a brew survives iOS killing the app).
+    await p.addInitScript(() => {
+      try {
+        localStorage.removeItem("brewlab.activeBrew");
+      } catch {}
+    });
     await p.goto(`${BASE}/#/${pg.hash}`);
-    await p.evaluate(() => localStorage.removeItem("brewlab.activeBrew"));
     if (pg.setup) await p.evaluate(() => fetch("/api/setup/restart", { method: "POST" }));
     await p.reload();
     await p.waitForLoadState("networkidle");

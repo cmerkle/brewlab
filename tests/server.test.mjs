@@ -66,3 +66,41 @@ test("backups are valid SQLite copies and rotate to BACKUP_KEEP", async () => {
   assert.equal(ex.tastings.length, 1);
   db.close();
 });
+
+/* ---------- look a bag up online after reading the label ---------- */
+import { lookupOnline } from "../dist/server/imports.js";
+
+test("lookup: product page beats the search summary; empty stays empty; only fields with a source", async () => {
+  const saved = { ...process.env };
+  process.env.LLM_API_KEY = "k"; delete process.env.LLM_PROVIDER; delete process.env.LLM_BASE_URL; // anthropic default → search supported
+  try {
+    const search = async () => ({ found: true, url: "https://roaster.example/products/hillside", name: "Hillside", roaster: "Sample Roasters", origin: "Ethiopia (search)", processMethod: "Natural", roastLevel: "", tastingNotes: "blueberry", details: "", amountG: null, price: 25 });
+    const fetchPage = async (url) => ({ found: true, source: "link", message: "", fields: ["origin", "price"], draft: { origin: "Ethiopia, Guji", price: 22, url } });
+    const r = await lookupOnline({ name: "Hillside", roaster: "Sample Roasters" }, { search, fetchPage });
+    assert.equal(r.found, true);
+    assert.equal(r.url, "https://roaster.example/products/hillside");
+    assert.equal(r.draft.origin, "Ethiopia, Guji"); assert.equal(r.sources.origin, "page");
+    assert.equal(r.draft.price, 22); assert.equal(r.sources.price, "page");
+    assert.equal(r.draft.tastingNotes, "blueberry"); assert.equal(r.sources.tastingNotes, "search");
+    assert.ok(!("roastLevel" in r.draft) && !("amountG" in r.draft), "nothing invented for fields the page didn't state");
+
+    const blocked = await lookupOnline({ name: "Hillside" }, { search, fetchPage: async () => { throw new Error("429"); } });
+    assert.equal(blocked.draft.origin, "Ethiopia (search)", "a rate-limited page falls back to what search reported");
+
+    const miss = await lookupOnline({ name: "Nope" }, { search: async () => ({ found: false, url: "", name: "", roaster: "", origin: "", processMethod: "", roastLevel: "", tastingNotes: "", details: "", amountG: null, price: null }), fetchPage });
+    assert.equal(miss.found, false);
+    assert.match(miss.message, /Couldn't find this coffee/);
+    assert.match((await lookupOnline({}, { search, fetchPage })).message, /at least the coffee or roaster/);
+  } finally {
+    for (const k of ["LLM_API_KEY", "LLM_PROVIDER", "LLM_BASE_URL"]) { if (saved[k] === undefined) delete process.env[k]; else process.env[k] = saved[k]; }
+  }
+});
+
+test("lookup: without a search-capable provider it says so instead of guessing", async () => {
+  const saved = process.env.LLM_API_KEY; delete process.env.LLM_API_KEY;
+  try {
+    const r = await lookupOnline({ name: "X" }, { search: async () => { throw new Error("should not be called"); }, fetchPage: async () => ({ found: false }) });
+    assert.equal(r.found, false);
+    assert.match(r.message, /needs an AI provider with web search/);
+  } finally { if (saved !== undefined) process.env.LLM_API_KEY = saved; }
+});

@@ -111,6 +111,38 @@ export interface ResearchInput {
   previous: string[];
 }
 
+/* ---------- bag lookup: find a coffee from its label on the roaster's own site ---------- */
+
+const BagLookup = z.object({
+  found: z.boolean().describe("true only if you found THIS coffee on the roaster's own website (or the roaster's official shop)"),
+  url: z.string().describe("The product page URL on the roaster's own site, or empty"),
+  name: z.string(),
+  roaster: z.string(),
+  origin: z.string(),
+  processMethod: z.string(),
+  roastLevel: z.string(),
+  tastingNotes: z.string(),
+  details: z.string().describe("Other stated details: region, producer/farm, variety, altitude — or empty"),
+  amountG: z.number().nullable().describe("Bag size in grams as sold on that page (convert oz to g), else null"),
+  price: z.number().nullable().describe("Price in USD for that bag size, else null"),
+});
+export type BagLookupT = z.infer<typeof BagLookup>;
+export interface LookupInput { name?: string; roaster?: string; origin?: string; processMethod?: string; roastLevel?: string }
+
+export function lookupPrompt(o: LookupInput): string {
+  const known = (["name", "roaster", "origin", "processMethod", "roastLevel"] as const)
+    .filter((k) => o[k]?.trim()).map((k) => `- ${k}: ${o[k]!.trim()}`).join("\n");
+  return [
+    "A coffee bag's label says:",
+    known,
+    "",
+    "Use web search to find THIS coffee on the roaster's own website (or the roaster's official shop). Return the product page URL and what that page states:",
+    "origin, process, roast level, tasting notes, other details (region, producer/farm, variety, altitude), bag size and price.",
+    "Rules: only use the roaster's own page — not retailers, reviews or roundups. If the roaster has several similar coffees, only match the one the label describes.",
+    "Copy what the page says; never guess. Leave a field empty (or null) if the page doesn't state it. If you can't find the coffee on the roaster's site, set found=false and leave everything empty.",
+  ].join("\n");
+}
+
 export function researchPrompt(o: ResearchInput): string {
   return [
     `Research this week's coffee board (${o.weekLabel}).`,
@@ -171,6 +203,8 @@ function validated<T>(schema: z.ZodType<T>, data: unknown, what: string): T {
 interface Adapter {
   readLabel(image: Buffer, mediaType: "image/jpeg" | "image/png"): Promise<LabelDraftT>;
   research(o: ResearchInput): Promise<ResearchOutT>;
+  /** Web search + structured answer (bag lookup). */
+  lookup(o: LookupInput): Promise<BagLookupT>;
   /** Smallest possible call, for More → Settings → AI provider → Test. */
   ping(): Promise<string>;
 }
@@ -182,6 +216,28 @@ function anthropicAdapter(c: LlmConfig): Adapter {
   const client = new Anthropic({ apiKey: apiKey(), baseURL: c.baseUrl ?? undefined, timeout: TIMEOUT_MS });
   // Server-side refusal fallback: on a policy decline the API re-runs the request on a fallback model.
   const FALLBACK = { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const };
+  /** Web search + structured output; server-tool turns can pause, so resume until the model finishes. */
+  async function search<T>(schema: z.ZodType<T>, prompt: string, effort: "medium" | "high", maxUses: number, what: string): Promise<T> {
+    const params = {
+      ...FALLBACK,
+      model: c.model!,
+      max_tokens: 32000,
+      output_config: { effort, format: betaZodOutputFormat(schema as any) },
+      tools: [{ type: "web_search_20260209" as const, name: "web_search" as const, max_uses: maxUses }],
+      messages: [{ role: "user" as const, content: prompt }] as Anthropic.Beta.BetaMessageParam[],
+    };
+    for (let i = 0; i < 5; i++) {
+      const msg = await client.beta.messages.stream(params as any).finalMessage();
+      if (msg.stop_reason === "pause_turn") {
+        params.messages = [...params.messages, { role: "assistant", content: msg.content }];
+        continue;
+      }
+      if (msg.stop_reason === "refusal") throw new Error(`The ${what.toLowerCase()} request was declined by the model.`);
+      const text = msg.content.map((b: any) => (b.type === "text" ? b.text : "")).join("");
+      return validated(schema, parseJsonLoose(text), `${what} output`);
+    }
+    throw new Error(`${what} did not finish after several resumes.`);
+  }
   return {
     async readLabel(image, mediaType) {
       const res = await client.beta.messages.parse({
@@ -198,27 +254,12 @@ function anthropicAdapter(c: LlmConfig): Adapter {
       return res.parsed_output;
     },
     async research(o) {
-      const params = {
-        ...FALLBACK,
-        model: c.model!,
-        max_tokens: 32000,
-        output_config: { effort: "high" as const, format: betaZodOutputFormat(ResearchOut) },
-        tools: [{ type: "web_search_20260209" as const, name: "web_search" as const, max_uses: 20 }],
-        messages: [{ role: "user" as const, content: researchPrompt(o) }] as Anthropic.Beta.BetaMessageParam[],
-      };
-      // Server-tool turns can pause; resume until the model finishes.
-      for (let i = 0; i < 5; i++) {
-        const msg = await client.beta.messages.stream(params).finalMessage();
-        if (msg.stop_reason === "pause_turn") {
-          params.messages = [...params.messages, { role: "assistant", content: msg.content }];
-          continue;
-        }
-        if (msg.stop_reason === "refusal") throw new Error("The research request was declined by the model.");
-        const text = msg.content.map((b) => (b.type === "text" ? b.text : "")).join("");
-        return validated(ResearchOut, parseJsonLoose(text), "Research output");
-      }
-      throw new Error("Research did not finish after several resumes.");
+      return search(ResearchOut, researchPrompt(o), "high", 20, "Research");
     },
+    async lookup(o) {
+      return search(BagLookup, lookupPrompt(o), "medium", 6, "Lookup");
+    },
+
     async ping() {
       const msg = await client.messages.create({ model: c.model!, max_tokens: 16, messages: [{ role: "user", content: PING }] });
       return msg.content.map((b) => (b.type === "text" ? b.text : "")).join("").trim();
@@ -251,6 +292,16 @@ function openaiAdapter(c: LlmConfig): Adapter {
       if (!res.output_parsed) throw new Error("Research output was empty or declined.");
       return validated(ResearchOut, res.output_parsed, "Research output");
     },
+    async lookup(o) {
+      const res = await client.responses.parse({
+        model: c.model!,
+        tools: [{ type: "web_search" }],
+        input: lookupPrompt(o),
+        text: { format: zodTextFormat(BagLookup, "coffee_lookup") },
+      });
+      if (!res.output_parsed) throw new Error("The lookup came back empty or was declined.");
+      return validated(BagLookup, res.output_parsed, "Lookup output");
+    },
     async ping() {
       const res = await client.responses.create({ model: c.model!, input: PING, max_output_tokens: 16 });
       return (res.output_text ?? "").trim();
@@ -279,6 +330,14 @@ function geminiAdapter(c: LlmConfig): Adapter {
       });
       return validated(ResearchOut, parseJsonLoose(res.text), "Research output");
     },
+    async lookup(o) {
+      const res = await ai.models.generateContent({
+        model: c.model!,
+        contents: lookupPrompt(o) + jsonInstruction(BagLookup),
+        config: { tools: [{ googleSearch: {} }] },
+      });
+      return validated(BagLookup, parseJsonLoose(res.text), "Lookup output");
+    },
     async ping() {
       const res = await ai.models.generateContent({ model: c.model!, contents: PING });
       return (res.text ?? "").trim();
@@ -302,6 +361,9 @@ function openaiCompatibleAdapter(c: LlmConfig): Adapter {
     },
     async research() {
       throw new Error("openai-compatible endpoints have no built-in web search, so weekly research stays manual.");
+    },
+    async lookup() {
+      throw new Error("openai-compatible endpoints have no built-in web search, so coffees can't be looked up online.");
     },
     async ping() {
       const res = await client.chat.completions.create({ model: c.model!, max_tokens: 16, messages: [{ role: "user", content: PING }] });
@@ -329,3 +391,4 @@ function adapter(): Adapter {
 export const readLabelWithVision = async (image: Buffer, mediaType: "image/jpeg" | "image/png") => adapter().readLabel(image, mediaType);
 export const researchCandidates = async (o: ResearchInput) => adapter().research(o);
 export const pingLlm = async () => adapter().ping();
+export const lookupBagOnline = async (o: LookupInput) => adapter().lookup(o);

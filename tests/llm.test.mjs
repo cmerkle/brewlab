@@ -4,12 +4,14 @@
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import http from "node:http";
-import { llmConfig, readLabelWithVision, researchCandidates, parseJsonLoose } from "../dist/server/llm.js";
+import { llmConfig, readLabelWithVision, researchCandidates, parseJsonLoose, lookupBagOnline } from "../dist/server/llm.js";
 
 const LABEL = { name: "Southern Weather", roaster: "Onyx Coffee Lab", origin: "Colombia", processMethod: "Washed", roastLevel: "Medium", roastDate: "2026-11-10", amountG: 340 };
 const cand = (o) => ({ kind: "pick", name: "Hambela", roaster: "Onyx", origin: "Ethiopia", processMethod: "Washed", tastingNotes: "jasmine, peach", roastLevel: "Light", priceAmount: 24, priceText: "$24 / 12 oz", url: "https://onyx.example/hambela", whyFit: "w", brewTip: "b", funkRisk: "Low", ...o });
 const RESEARCH = { weekLabel: "Week of Nov 23, 2026", seasonNote: "Holiday releases.", candidates: [cand({}), cand({ kind: "wildcard", name: "Gesha" })] };
 const IMG = Buffer.from("fake-png-bytes");
+const LOOKUP = { found: true, url: "https://roaster.example/products/hillside", name: "Hillside", roaster: "Sample Roasters", origin: "Ethiopia", processMethod: "Natural", roastLevel: "Light", tastingNotes: "blueberry, jasmine", details: "Guji; 74110", amountG: 340, price: 22 };
+const LOOK_IN = { name: "Hillside", roaster: "Sample Roasters" };
 const INPUT = { weekLabel: "Week of Nov 23, 2026", palate: "clean naturals", tried: ["A (B)"], avoid: [], stash: [], previous: [] };
 
 let server, base;
@@ -36,7 +38,8 @@ before(async () => {
       seen.push({ url: req.url, headers: req.headers, body: json });
       const send = (o) => { res.writeHead(200, { "content-type": "application/json" }); res.end(JSON.stringify(o)); };
       const isResearch = JSON.stringify(json).includes("Research this week");
-      const payload = JSON.stringify(isResearch ? RESEARCH : LABEL);
+      const isLookup = JSON.stringify(json).includes("A coffee bag's label says");
+      const payload = JSON.stringify(isResearch ? RESEARCH : isLookup ? LOOKUP : LABEL);
       if (req.url.startsWith("/v1/messages")) {
         if (json.stream) return anthropicSSE(res, payload);
         return send({ id: "msg_1", type: "message", role: "assistant", model: json.model, content: [{ type: "text", text: payload }], stop_reason: "end_turn", stop_sequence: null, usage: { input_tokens: 1, output_tokens: 1 } });
@@ -137,4 +140,26 @@ test("openai-compatible: chat completions with image_url; research refuses (no w
 test("disabled: calls fail clearly rather than half-working", async () => {
   setEnv({ LLM_PROVIDER: "gemini", LLM_API_KEY: "k" }); // missing model
   await assert.rejects(readLabelWithVision(IMG, "image/png"), /needs LLM_MODEL/);
+});
+
+test("bag lookup: web search with structured output on every provider that has search", async () => {
+  setEnv({ LLM_API_KEY: "test", LLM_BASE_URL: base });
+  assert.deepEqual(await lookupBagOnline(LOOK_IN), LOOKUP);
+  const a = last((x) => x.url.startsWith("/v1/messages") && x.body.stream);
+  assert.deepEqual([a.body.tools[0].type, a.body.tools[0].max_uses, a.body.output_config.effort], ["web_search_20260209", 6, "medium"]);
+  assert.match(a.body.messages[0].content, /roaster's own website/);
+  assert.match(a.body.messages[0].content, /- name: Hillside/);
+
+  setEnv({ LLM_PROVIDER: "openai", LLM_API_KEY: "test", LLM_MODEL: "gpt-test", LLM_BASE_URL: `${base}/v1` });
+  assert.deepEqual(await lookupBagOnline(LOOK_IN), LOOKUP);
+  const o = last((x) => x.url.startsWith("/v1/responses"));
+  assert.deepEqual(o.body.tools, [{ type: "web_search" }]);
+  assert.equal(o.body.text.format.name, "coffee_lookup");
+
+  setEnv({ LLM_PROVIDER: "gemini", LLM_API_KEY: "test", LLM_MODEL: "gemini-test", LLM_BASE_URL: base });
+  assert.deepEqual(await lookupBagOnline(LOOK_IN), LOOKUP);
+  assert.deepEqual(last((x) => x.url.includes(":generateContent")).body.tools, [{ googleSearch: {} }]);
+
+  setEnv({ LLM_PROVIDER: "openai-compatible", LLM_MODEL: "llava", LLM_BASE_URL: `${base}/v1` });
+  await assert.rejects(lookupBagOnline(LOOK_IN), /can't be looked up online/);
 });

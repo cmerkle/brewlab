@@ -6,7 +6,7 @@ import { type DB, nowIso, todayLocal, deriveStatus, UPLOAD_DIR } from "./db.js";
 import { RecipeSchema, BrewSchema, InventorySchema, GearSchema, RecommendationSchema, TastingSchema, LIMITS, firstError } from "./schemas.js";
 import { validateRanges, METHODS } from "../shared/grind.js";
 import { loadCatalog, catalogGear, gearFromCatalog, libraryEntryFor } from "./catalog.js";
-import { importFromLink, importFromPhoto } from "./imports.js";
+import { importFromLink, importFromPhoto, lookupOnline } from "./imports.js";
 import { sameCoffee } from "./rules.js";
 import type { z } from "zod";
 
@@ -583,6 +583,12 @@ export function brewRouter(db: DB) {
       const result = await importFromPhoto({ path: req.file.path, buffer, mimetype: req.file.mimetype });
       res.json({ ...result, photo });
     });
+  });
+  /** After a label read (or typed name/roaster): find the coffee on the roaster's site. */
+  r.post("/import/lookup", async (req, res) => {
+    const b = req.body ?? {};
+    const str = (v: unknown) => (typeof v === "string" ? v.slice(0, 200) : undefined);
+    res.json(await lookupOnline({ name: str(b.name), roaster: str(b.roaster), origin: str(b.origin), processMethod: str(b.processMethod), roastLevel: str(b.roastLevel) }));
   });
   r.post("/import/link", async (req, res) => {
     const url = String(req.body?.url ?? "").trim();

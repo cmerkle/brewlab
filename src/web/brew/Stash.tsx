@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, type Bag, type Brew, type Recipe } from "../api";
 import { useData, Field, FullScreen, ErrorBox, NumInput, Stars, Menu, fmtDate, daysSince, useAction } from "../ui";
 import { RecipeCard } from "./Recipes";
@@ -195,6 +195,108 @@ function FinishDialog({ bag, onClose }: { bag: Bag; onClose: () => void }) {
 
 type Draft = Record<string, string | number | undefined>;
 interface ImportRes { found: boolean; message: string; draft?: Draft; fields?: string[]; rawText?: string; photo?: string }
+interface LookupRes { found: boolean; message: string; draft?: Draft; sources?: Record<string, "page" | "search">; url?: string }
+
+const FIELD_LABELS: Record<string, string> = {
+  name: "name", roaster: "roaster", origin: "origin", processMethod: "process", roastLevel: "roast level", roastDate: "roast date",
+  amountG: "bag size", price: "price", url: "link", tastingNotes: "tasting notes", details: "details",
+};
+
+/**
+ * Any image the browser can show → a JPEG (longest side ≤ 2048 px). Handles iPhone HEIC photos,
+ * large screenshots and pasted PNGs, and keeps uploads small.
+ */
+async function toJpeg(blob: Blob, name = "bag.jpg"): Promise<File> {
+  const url = URL.createObjectURL(blob);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = () => reject(new Error("decode"));
+      i.src = url;
+    });
+    const scale = Math.min(1, 2048 / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement("canvas");
+    c.width = Math.round(img.naturalWidth * scale);
+    c.height = Math.round(img.naturalHeight * scale);
+    c.getContext("2d")!.drawImage(img, 0, 0, c.width, c.height);
+    const out = await new Promise<Blob | null>((r) => c.toBlob(r, "image/jpeg", 0.88));
+    if (!out) throw new Error("encode");
+    return new File([out], name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+  } catch {
+    if (blob.type === "image/jpeg" || blob.type === "image/png") return new File([blob], name, { type: blob.type });
+    throw new Error("That image format can't be read here — try a JPEG or PNG, or take a photo.");
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+/** Take a photo, choose one (Photos / Files), paste from the clipboard, or drop a file (desktop). */
+function ImagePicker({ id, label, onImage, disabled }: { id: string; label: string; onImage: (f: File) => void; disabled?: boolean }) {
+  const camera = useRef<HTMLInputElement>(null);
+  const choose = useRef<HTMLInputElement>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [over, setOver] = useState(false);
+  const take = async (blob: Blob | null | undefined, name?: string) => {
+    if (!blob) return;
+    setMsg(null);
+    try {
+      onImage(await toJpeg(blob, name));
+    } catch (e: any) {
+      setMsg(e.message);
+    }
+  };
+  // ⌘V / Ctrl+V anywhere in the form (not while typing in a field).
+  useEffect(() => {
+    if (disabled) return;
+    const onPaste = (e: ClipboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
+      const file = [...(e.clipboardData?.files ?? [])].find((f) => f.type.startsWith("image/"));
+      if (file) {
+        e.preventDefault();
+        take(file, "pasted.png");
+      }
+    };
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+  });
+  const paste = async () => {
+    setMsg(null);
+    try {
+      const items = await (navigator.clipboard as any).read();
+      for (const it of items) {
+        const type = it.types.find((t: string) => t.startsWith("image/"));
+        if (type) return take(await it.getType(type), "pasted.png");
+      }
+      setMsg("There's no image on the clipboard — copy a photo first.");
+    } catch {
+      setMsg("Couldn't read the clipboard here. Copy the image, then press ⌘V / Ctrl+V — or use Choose.");
+    }
+  };
+  const pick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (f) take(f, f.name);
+  };
+  return (
+    <div className={`field image-picker ${over ? "drop-over" : ""}`} data-testid={`${id}-picker`}
+      onDragOver={(e) => { if (!disabled) { e.preventDefault(); setOver(true); } }}
+      onDragLeave={() => setOver(false)}
+      onDrop={(e) => { e.preventDefault(); setOver(false); if (!disabled) take([...e.dataTransfer.files].find((f) => f.type.startsWith("image/")), "dropped.jpg"); }}>
+      <label htmlFor={`${id}-choose`}>{label}</label>
+      <div className="picker-buttons">
+        <button type="button" onClick={() => camera.current?.click()} disabled={disabled}>Take photo</button>
+        <button type="button" onClick={() => choose.current?.click()} disabled={disabled}>Choose photo or file</button>
+        <button type="button" onClick={paste} disabled={disabled}>Paste image</button>
+      </div>
+      <input ref={camera} id={`${id}-camera`} type="file" accept="image/*" capture="environment" hidden onChange={pick} aria-label="Take a photo" />
+      <input ref={choose} id={`${id}-choose`} type="file" accept="image/*" hidden onChange={pick} aria-label="Choose a photo or file" />
+      <span className="hint">Or drop an image here, or paste it with ⌘V / Ctrl+V.</span>
+      {msg && <p className="error small" role="status">{msg}</p>}
+    </div>
+  );
+}
 
 function BagForm({ bag, onClose }: { bag: Bag | null; onClose: () => void }) {
   const { limits, reload, toast } = useData();
@@ -207,7 +309,12 @@ function BagForm({ bag, onClose }: { bag: Bag | null; onClose: () => void }) {
   });
   const [error, setError] = useState<string | null>(null);
   const [imp, setImp] = useState<ImportRes | null>(null);
-  const [busy, setBusy] = useState<"" | "photo" | "link">("");
+  const [busy, setBusy] = useState<"" | "photo" | "link" | "lookup">("");
+  const [canLookup, setCanLookup] = useState(false);
+  const [look, setLook] = useState<(LookupRes & { filled: string[] }) | null>(null);
+  useEffect(() => {
+    api.get<{ researchSupported: boolean }>("/api/ai").then((a) => setCanLookup(Boolean(a.researchSupported))).catch(() => {});
+  }, []);
   const [link, setLink] = useState("");
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }));
 
@@ -227,17 +334,55 @@ function BagForm({ bag, onClose }: { bag: Bag | null; onClose: () => void }) {
       return n;
     });
   };
+  /** Fill only fields that are still empty — the label and anything typed always win. */
+  const lookup = async (known: { name?: string; roaster?: string; origin?: string; processMethod?: string; roastLevel?: string }) => {
+    setBusy("lookup");
+    setLook(null);
+    try {
+      const r = await api.post<LookupRes>("/api/import/lookup", known);
+      const filled: string[] = [];
+      if (r.found && r.draft) {
+        const d = r.draft;
+        setF((x) => {
+          const n = { ...x };
+          for (const k of ["name", "roaster", "origin", "processMethod", "roastLevel"] as const)
+            if (d[k] && !n[k]) { n[k] = String(d[k]); filled.push(k); }
+          if (d.amountG != null && n.amountG == null) { n.amountG = Number(d.amountG); filled.push("amountG"); }
+          if (d.price != null && n.price == null) { n.price = Number(d.price); filled.push("price"); }
+          if (d.url && !n.url) { n.url = String(d.url); filled.push("url"); }
+          if (d.tastingNotes && !/tasting notes/i.test(n.notes)) { n.notes = [n.notes, `Tasting notes: ${d.tastingNotes}`].filter(Boolean).join(" · "); filled.push("tastingNotes"); }
+          if (d.details && !n.notes.includes(String(d.details))) { n.notes = [n.notes, String(d.details)].filter(Boolean).join(" · "); filled.push("details"); }
+          return n;
+        });
+      }
+      setLook({ ...r, filled });
+    } catch (e: any) {
+      setLook({ found: false, message: e.message, filled: [] });
+    } finally {
+      setBusy("");
+    }
+  };
   const fromPhoto = async (file: File, read = true) => {
     setBusy("photo");
     setImp(null);
+    setLook(null);
+    let r: ImportRes | null = null;
     try {
       const fd = new FormData();
       fd.append("photo", file);
-      applyDraft(await api.post<ImportRes>(`/api/import/photo${read ? "" : "?read=0"}`, fd));
+      r = await api.post<ImportRes>(`/api/import/photo${read ? "" : "?read=0"}`, fd);
+      applyDraft(r);
     } catch (e: any) {
       setImp({ found: false, message: e.message });
     } finally {
       setBusy("");
+    }
+    // Then look the coffee up on the roaster's site to fill what the label doesn't say.
+    if (read && r?.found && canLookup) {
+      const d = r.draft ?? {};
+      const v = (k: string) => (d[k] ? String(d[k]) : (f as any)[k] || undefined);
+      if (v("name") || v("roaster"))
+        await lookup({ name: v("name"), roaster: v("roaster"), origin: v("origin"), processMethod: v("processMethod"), roastLevel: v("roastLevel") });
     }
   };
   const fromLink = async () => {
@@ -279,11 +424,7 @@ function BagForm({ bag, onClose }: { bag: Bag | null; onClose: () => void }) {
           <section className="import">
             <h3>Import the details</h3>
             <p className="hint">Both only pre-fill the form — check and edit before saving.</p>
-            <div className="field">
-              <label htmlFor="bf-photo">Photo of the bag</label>
-              <input id="bf-photo" type="file" accept="image/jpeg,image/png" capture="environment" disabled={!!busy}
-                onChange={(e) => e.target.files?.[0] && fromPhoto(e.target.files[0])} />
-            </div>
+            <ImagePicker id="bf-photo" label="Photo of the bag" disabled={!!busy} onImage={(file) => fromPhoto(file)} />
             <div className="field">
               <label htmlFor="bf-link">Roaster product link</label>
               <div className="row">
@@ -291,13 +432,34 @@ function BagForm({ bag, onClose }: { bag: Bag | null; onClose: () => void }) {
                 <button onClick={fromLink} disabled={!link || !!busy}>{busy === "link" ? "Fetching…" : "Fetch"}</button>
               </div>
             </div>
-            {busy === "photo" && <p className="muted">Reading the label…</p>}
+            {busy === "photo" && <p className="muted" role="status">Reading the label…</p>}
+            {busy === "lookup" && <p className="muted" role="status">Looking it up on the roaster's site…</p>}
             {imp && (
               <div className={imp.found ? "ok-box" : "note"} role="status" data-testid="import-result">
                 {imp.message}
                 {imp.found && imp.fields && <div className="small">Filled: {imp.fields.join(", ")}</div>}
                 {imp.rawText && <details><summary>Text read from the photo</summary><pre>{imp.rawText}</pre></details>}
               </div>
+            )}
+            {look && (
+              <div className={look.found ? "ok-box" : "note"} role="status" data-testid="lookup-result">
+                {look.message}
+                {look.found && (
+                  <div className="small">
+                    {look.filled.length
+                      ? <>Filled from the web: {look.filled.map((k) => `${FIELD_LABELS[k] ?? k}${look.sources?.[k] === "search" ? "*" : ""}`).join(", ")}.</>
+                      : "Nothing new — the form already had those details."}
+                    {look.url && <> <a href={look.url} target="_blank" rel="noreferrer noopener">Roaster's page ↗</a></>}
+                    {look.filled.some((k) => look.sources?.[k] === "search") && <div className="muted">* from the AI's read of that page — worth a quick check.</div>}
+                  </div>
+                )}
+              </div>
+            )}
+            {canLookup && (f.name || f.roaster) && !busy && (
+              <button type="button" className="link" data-testid="lookup-online"
+                onClick={() => lookup({ name: f.name || undefined, roaster: f.roaster || undefined, origin: f.origin || undefined, processMethod: f.processMethod || undefined, roastLevel: f.roastLevel || undefined })}>
+                Look it up online — fill empty fields from the roaster's site
+              </button>
             )}
           </section>
         )}
@@ -307,11 +469,7 @@ function BagForm({ bag, onClose }: { bag: Bag | null; onClose: () => void }) {
             <button className="link danger" onClick={() => set("photo", null)}>Remove photo</button>
           </div>
         ) : bag ? (
-          <div className="field">
-            <label htmlFor="bf-attach">Photo (optional)</label>
-            <input id="bf-attach" type="file" accept="image/jpeg,image/png" capture="environment" disabled={!!busy}
-              onChange={(e) => e.target.files?.[0] && fromPhoto(e.target.files[0], false)} />
-          </div>
+          <ImagePicker id="bf-attach" label="Photo (optional)" disabled={!!busy} onImage={(file) => fromPhoto(file, false)} />
         ) : null}
         <div className="grid2">{text("name", "Coffee / bean name")}{text("roaster", "Roaster")}</div>
         <div className="grid3">{text("origin", "Origin")}{text("processMethod", "Process")}{text("roastLevel", "Roast level")}</div>

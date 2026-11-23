@@ -113,6 +113,37 @@ try {
   await p.getByRole("button", { name: "Back" }).last().click(); // the top dialog's Back
   await p.locator('[data-testid="suggest"]').waitFor({ state: "detached" });
   check(await p.locator("#ge-name").isVisible(), "Back closes the suggestion and returns to the gear editor");
+
+  // Bag photos: take / choose / paste (no camera-only), converted to JPEG on the device.
+  await p.goto(`${BASE}/#/brew/stash`);
+  await p.getByRole("button", { name: "Add a bag" }).click();
+  const picker = p.locator('[data-testid="bf-photo-picker"]');
+  for (const b of ["Take photo", "Choose photo or file", "Paste image"]) check(await picker.getByRole("button", { name: b }).isVisible(), `photo option: ${b}`);
+  check((await p.locator("#bf-photo-choose").getAttribute("capture")) === null, "Choose doesn't force the camera");
+  const png = await p.evaluate(() => {
+    const c = document.createElement("canvas"); c.width = 900; c.height = 600;
+    const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, 900, 600); g.fillStyle = "#000"; g.font = "64px sans-serif"; g.fillText("TEST ROASTERS", 80, 300);
+    return c.toDataURL("image/png").split(",")[1];
+  });
+  const uploads = [];
+  p.on("request", (r) => { if (r.url().includes("/api/import/photo")) uploads.push(r.headers()["content-type"] ?? ""); });
+  await p.setInputFiles("#bf-photo-choose", { name: "screenshot.png", mimeType: "image/png", buffer: Buffer.from(png, "base64") });
+  await p.locator('[data-testid="import-result"]').waitFor({ timeout: 90000 });
+  check(uploads.length === 1, "a chosen image is uploaded and read");
+  check(await p.locator("img.bag-photo").isVisible(), "the photo is attached to the bag");
+  check((await p.locator("img.bag-photo").getAttribute("src")).endsWith(".jpg"), "converted to JPEG on the device");
+  check(!(await p.locator('[data-testid="lookup-online"]').count()), "no “look it up online” without a search-capable AI provider");
+  // Paste (⌘V): an image on the clipboard goes through the same path.
+  await p.getByRole("button", { name: "Remove photo" }).click();
+  await p.evaluate((b64) => {
+    const bytes = Uint8Array.from(atob(b64), (ch) => ch.charCodeAt(0));
+    const dt = new DataTransfer();
+    dt.items.add(new File([bytes], "pasted.png", { type: "image/png" }));
+    window.dispatchEvent(new ClipboardEvent("paste", { clipboardData: dt, bubbles: true }));
+  }, png);
+  await p.locator("img.bag-photo").waitFor({ timeout: 90000 });
+  check(uploads.length === 2, "pasting an image (⌘V) reads it too");
+  await p.getByRole("button", { name: "Back" }).last().click();
 } catch (e) {
   check(false, `crashed: ${e.message}`);
   await p.screenshot({ path: "onboarding-fail.png" }).catch(() => {});

@@ -5,7 +5,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import dns from "node:dns/promises";
 import net from "node:net";
-import { llmEnabled, readLabelWithVision } from "./llm.js";
+import { llmEnabled, readLabelWithVision, researchSupported, lookupBagOnline, type BagLookupT, type LookupInput } from "./llm.js";
 
 const execFileP = promisify(execFile);
 
@@ -479,4 +479,57 @@ export async function importFromPhoto(file: { path: string; buffer: Buffer; mime
   const r = finalize(draftFromOcrText(text), "ocr", text.trim());
   if (r.found) r.message += " (read with local OCR — bean and roaster names may need typing in; the raw text is shown below)";
   return r;
+}
+
+/* ------------------------------ Look it up online (after a label read) ------------------------------ */
+
+export interface LookupResult {
+  found: boolean;
+  message: string;
+  /** Fields found online, each with where it came from. The client fills only fields that are still empty. */
+  draft?: BagDraft;
+  sources?: Partial<Record<keyof BagDraft, "page" | "search">>;
+  url?: string;
+}
+
+/**
+ * Find the coffee on the roaster's own site with the AI provider's web search, then read that
+ * product page with the normal link importer (deterministic, SSRF-guarded). Page values win over
+ * the model's summary of the page; nothing is invented — missing stays missing.
+ */
+export async function lookupOnline(known: LookupInput, deps = { search: lookupBagOnline, fetchPage: importFromLink }): Promise<LookupResult> {
+  if (!researchSupported())
+    return { found: false, message: "Looking coffees up online needs an AI provider with web search (More → Settings → AI provider)." };
+  if (!known.name?.trim() && !known.roaster?.trim()) return { found: false, message: "Add at least the coffee or roaster name to look it up." };
+  let hit: BagLookupT;
+  try {
+    hit = await deps.search(known);
+  } catch (e: any) {
+    return { found: false, message: `Couldn't look it up online: ${String(e?.message ?? e).slice(0, 200)}` };
+  }
+  const url = hit.found && /^https?:\/\//i.test(hit.url) ? hit.url.trim() : "";
+  if (!hit.found || !url) return { found: false, message: "Couldn't find this coffee on the roaster's site — fill in the rest by hand, or paste the product link above." };
+
+  const draft: BagDraft = {};
+  const sources: LookupResult["sources"] = {};
+  const put = (k: keyof BagDraft, v: unknown, src: "page" | "search") => {
+    if (v === undefined || v === null || (typeof v === "string" && !v.trim()) || (typeof v === "number" && !Number.isFinite(v)) || (draft as any)[k] != null) return;
+    (draft as any)[k] = typeof v === "string" ? v.trim() : v;
+    sources[k] = src;
+  };
+  // 1. The product page itself, read by the link importer (a 429 or odd page just falls through).
+  try {
+    const page = await deps.fetchPage(url);
+    if (page.found) for (const [k, v] of Object.entries(page.draft)) if (k !== "url") put(k as keyof BagDraft, v, "page");
+  } catch {
+    /* the search result below still helps */
+  }
+  // 2. What the search reported from that page fills the gaps.
+  for (const k of ["name", "roaster", "origin", "processMethod", "roastLevel", "tastingNotes", "details", "amountG", "price"] as const) put(k, (hit as any)[k], "search");
+  draft.url = url;
+  const n = Object.keys(sources).length;
+  return {
+    found: true, url, draft, sources,
+    message: n ? `Found it on the roaster's site — ${n} detail${n === 1 ? "" : "s"} available.` : "Found the roaster's page, but it didn't state any extra details.",
+  };
 }

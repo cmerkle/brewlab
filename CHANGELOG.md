@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **Bag photos from anywhere:** take a photo, choose one from Photos or Files, paste an image (button or ⌘V/Ctrl+V), or drag and drop it on a desktop. It was camera-only before. Images are converted to a JPEG (longest side 2048 px) on the device, so HEIC photos, screenshots and pasted PNGs all work and upload faster. Attaching a photo to an existing bag gets the same options.
+- **Look it up online:** after reading the label, a provider with web search finds the coffee on the roaster's own site.
+  - The product page is read by the link importer; the AI's own read of the page only fills gaps.
+  - It fills only empty fields, shows which fields came from the web, and adds the roaster's link.
+  - It works with Anthropic, OpenAI and Gemini. There's a manual "Look it up online" button too.
+- **Layout audit fix:** a timer left running by an earlier screen could cover the next one. The audit now clears the running brew before the app starts, which removes the long-standing "Save to Brew Log" flake.
+
 - **Kingrinder K6 grind ranges** from the KINGrinder K4/K6 manual: espresso 40–60, AeroPress 60–80, pour-over 80–100 clicks. French press is a single setting (140), so the K6 has no immersion range.
 - **More sourced grind ranges.** 12 of the library's grinders now convert out of the box, each from the manufacturer's own chart or manual:
   - 1Zpresso ZP6 Special, K-Ultra, J-Max, JX and Q2 (1Zpresso's grind setting charts);
