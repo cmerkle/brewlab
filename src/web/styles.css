@@ -72,7 +72,14 @@ a { color: var(--accent); }
   padding-right: max(16px, env(safe-area-inset-right));
 }
 .offline { background: var(--warn-soft); color: var(--warn); text-align: center; font-size: .85rem; font-weight: 600; padding: 6px 16px; }
-.brand { font-weight: 800; font-size: 1.1rem; color: var(--accent); text-decoration: none; letter-spacing: -.01em; }
+.brand { display: inline-flex; align-items: center; text-decoration: none; }
+/* Brewlab wordmark (Logo.tsx): colours follow the theme. */
+.wordmark { display: block; width: auto; max-width: 100%; }
+.wordmark .lg-ink { fill: var(--text); }
+.wordmark .lg-tan { fill: var(--accent); }
+.wordmark .lg-coffee { fill: #75401f; }
+.wordmark .lg-led { fill: var(--ok); }
+.welcome-logo { margin: 4px 0 8px; }
 
 /* Page title bar: large title + the page's actions (icon buttons). */
 .pagebar { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; }

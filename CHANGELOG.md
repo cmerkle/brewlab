@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Refined logo:** the dripper over a carafe whose base is a small server, as the app icon (optically centred, with a safe-zone version for Android round icons and a tab icon), and a "brewlab" wordmark — in the desktop title bar, on the first-run Welcome screen and at the top of the README. The wordmark's text is outlines (Nunito ExtraBold, OFL), so it's identical on every device, and in the app its colours follow light/dark mode. Sources and the generator are in `brand/`.
 - **New app icon:** a pour-over dripper over a lab carafe, in front of a small server rack. Vector sources in `brand/`; a simplified version for browser tabs (`favicon.svg`). On iPhone, remove and re-add the home-screen app to see it (iOS keeps the old icon until then).
 - **Rapid Brewer sits between AeroPress and pour-over** in every table, list and picker (finest → coarsest), and in the library files.
 - **Can't-do shows as "—"** in the grind guide and converter instead of a yellow warning (hover or a screen reader still gives the reason). Rows with no range yet keep "No conversion data yet — add starting ranges for this grinder · Edit grinder", in plain text. The guide's stale "K-Ultra ranges are from the original guide" line is gone.

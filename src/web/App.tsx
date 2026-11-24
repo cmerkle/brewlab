@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Wordmark } from "./Logo";
 import { DataProvider, BackButton, IconButton, fireAction, useEdgeSwipeBack, anyDialogOpen, useData } from "./ui";
 import { Setup } from "./Setup";
 import { RatioCalculator } from "./brew/RatioCalculator";
@@ -192,7 +193,7 @@ export function App() {
       ) : (
         <>
           <header className="top">
-            <a className="brand" href="#/brew/recipes">☕ Brewlab</a>
+            <a className="brand" href="#/brew/recipes" aria-label="Brewlab"><Wordmark height={30} /></a>
             {nav}
           </header>
           <div className="desk-pagebar">{pagebar}</div>

@@ -1,4 +1,9 @@
-# Brewlab
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="brand/brewlab-refined-header.svg">
+    <img src="brand/brewlab-refined-header-light.svg" alt="Brewlab" height="64">
+  </picture>
+</h1>
 
 A self-hosted coffee app for home brewers: one Docker container, one SQLite database, no account.
 

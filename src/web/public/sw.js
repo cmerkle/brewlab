@@ -2,7 +2,7 @@
 // Data is never cached: /api/* and /uploads/* always go to the network, so the app can't
 // show stale stash / brew data. Hashed build assets are cache-first (their URLs change
 // every build); the page itself is network-first with the cached copy as offline fallback.
-const CACHE = "brewlab-shell-v3"; // bump when shell files (icons, manifest) change
+const CACHE = "brewlab-shell-v4"; // bump when shell files (icons, manifest) change
 const SHELL = ["/", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png", "/apple-touch-icon.png", "/favicon.png", "/favicon.svg"];
 
 self.addEventListener("install", (event) => {

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "./api";
 import { fmtGrind } from "../shared/grind";
 import { AiProvider } from "./AiProvider";
+import { Wordmark } from "./Logo";
 import { TasteQuiz } from "./discover/Taste";
 import { useData, BackButton, NumInput, SearchInput, Field, useEdgeSwipeBack, useTemp, type Settings } from "./ui";
 
@@ -116,6 +117,7 @@ function Welcome({ empty, onFresh, onDone }: { empty: boolean; onFresh: () => vo
     );
   return (
     <>
+      <Wordmark height={64} className="welcome-logo" />
       <p>Brewlab keeps your recipes, grind settings, beans and brews in one place, and converts grind settings between your grinders.</p>
       <p className="muted small">A few quick steps set it up around your gear. Every step can be skipped and changed later.</p>
       <div className="choice-list">
