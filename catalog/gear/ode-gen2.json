@@ -1,6 +1,6 @@
 {
   "id": "ode-gen2",
-  "version": 3,
+  "version": 4,
   "name": "Fellow Ode Gen 2",
   "brand": "Fellow",
   "type": "grinder",
@@ -8,7 +8,6 @@
   "details": "Electric flat-burr filter grinder; settings 1–11 with sub-steps.",
   "units": "",
   "burrs": "Gen 2 brew burrs",
-  "espressoCapable": false,
   "grindRanges": {
     "scale": "numbered settings 1–11, with two sub-steps between numbers (5.1 = 5⅓, 5.2 = 5⅔)",
     "min": 1,
@@ -50,7 +49,11 @@
       "espresso": "The Ode Gen 2 is a filter-only grinder and doesn't grind fine enough for espresso.",
       "immersion": "Fellow's French press range.",
       "coldbrew": "Fellow's cold brew range."
-    }
+    },
+    "unsupported": [
+      "turkish",
+      "espresso"
+    ]
   },
   "rangeInfo": {
     "confidence": "manufacturer",

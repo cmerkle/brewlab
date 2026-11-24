@@ -1,7 +1,7 @@
 // Domain checks for maths that must be exact. Run: npm run build:server && npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { convertSetting, parseSetting, validateRanges, recommend, toGrindNumber, dialToValue, valueToDial, fmtGrind, doseAdjustedGrind } from "../dist/shared/grind.js";
+import { convertSetting, parseSetting, validateRanges, recommend, canGrind, rangeFor, toGrindNumber, dialToValue, valueToDial, fmtGrind, doseAdjustedGrind } from "../dist/shared/grind.js";
 import { scaleSteps, applyRatio } from "../dist/shared/brew.js";
 import { applyMatchingRules } from "../dist/server/rules.js";
 import fs from "node:fs";
@@ -241,4 +241,18 @@ test("non-product page with an infobox table (label/value cells) stays an honest
   const r = extractFromHtml('<html><head><meta property="og:type" content="website"><meta property="og:title" content="Espresso"></head><body><main><h1>Espresso</h1><table class="infobox"><tr><th>Country of origin</th><td>Italy</td></tr><tr><th>Process</th><td>Pressurised brewing</td></tr><tr><th>Notes</th><td>Strong coffee</td></tr></table><p>Espresso is a concentrated form of coffee.</p></main></body></html>', "https://en.wikipedia.org/wiki/Espresso");
   assert.equal(r.found, false, JSON.stringify(r.draft));
   assert.equal(r.message, "No coffee details were found on that page.");
+});
+
+test("can-do: a method the grinder can't do has no range and says so in conversions", () => {
+  const filter = { id: "f", name: "Filter Mill", units: "clicks", grindRanges: { methods: { pourover: { low: 20, high: 30 }, espresso: { low: 1, high: 2 } }, unsupported: ["espresso"], notes: { espresso: "Burrs too coarse." } } };
+  const any = { id: "a", name: "Any Mill", units: "clicks", grindRanges: { methods: { pourover: { low: 60, high: 80 }, espresso: { low: 10, high: 20 } } } };
+  assert.equal(canGrind(filter, "espresso"), false);
+  assert.equal(canGrind(filter, "pourover"), true);
+  assert.equal(rangeFor(filter, "espresso"), null); // a stray range is ignored
+  const r = convertSetting(15, any, filter, "espresso");
+  assert.equal(r.ok, false);
+  assert.equal(r.reason, "unsupported");
+  assert.equal(r.message, "Filter Mill can't grind for Espresso. Burrs too coarse.");
+  assert.equal(recommend(filter, "espresso").reason, "unsupported");
+  assert.equal(convertSetting(70, any, filter, "pourover").ok, true);
 });

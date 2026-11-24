@@ -8,7 +8,6 @@
   "details": "Single-dose conical burr grinder, stepless.",
   "units": "",
   "burrs": null,
-  "espressoCapable": null,
   "grindRanges": {
     "scale": "dial numbers",
     "min": 0,

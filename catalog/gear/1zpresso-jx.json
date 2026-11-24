@@ -8,7 +8,6 @@
   "details": "Hand grinder with internal adjustment: 10 numbers per rotation, 3 clicks per number (2.2 = 2 rotations and 2 numbers).",
   "units": "rotations",
   "burrs": null,
-  "espressoCapable": null,
   "grindRanges": {
     "scale": "rotations from zero (burrs closed); 2.2 = 2 rotations and 2 numbers",
     "min": 0,

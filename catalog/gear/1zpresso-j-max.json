@@ -8,7 +8,6 @@
   "details": "Hand grinder with external adjustment: 90 clicks per rotation (9 numbers × 10 clicks).",
   "units": "clicks",
   "burrs": null,
-  "espressoCapable": null,
   "grindRanges": {
     "scale": "clicks from zero (burrs closed)",
     "min": 0,

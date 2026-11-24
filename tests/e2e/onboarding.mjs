@@ -154,7 +154,10 @@ try {
   const rows = await p.locator('[data-testid="range-table"] .rl').allInnerTexts();
   check(JSON.stringify(rows.map((x) => x.replace(/est\.$/, "").trim())) === JSON.stringify(["Turkish", "Espresso", "Moka pot", "AeroPress", "Pour-over (V60)", "Drip coffee maker", "French press / immersion", "Cold brew", "Rapid Brewer"]),
     `range rows follow the grind chart: ${rows.join(" · ")}`);
-  check(/No source yet/.test(await p.locator('[data-testid="range-source"]').innerText()), "a custom grinder starts with no source");
+  check(!(await p.locator('[data-testid="range-source"]').count()) && (await p.inputValue("#ge-source")) === "", "no summary box; a custom grinder starts with an empty source");
+  check((await p.locator('[data-testid="range-table"] input[type=checkbox]:checked').count()) === 9, "a new grinder can do every brew method until you untick one");
+  await p.getByLabel("Can do Turkish").uncheck();
+  check((await p.getByLabel("Turkish low").count()) === 0 && /Can't do/.test(await p.locator('[data-testid="range-table"] [data-method="turkish"]').innerText()), "unticking a method hides its range");
   await p.fill("#ge-source", "https://example.com/my-c40-chart");
   await p.fill("#ge-source-note", "Calibrated against my V60.");
   // Custom gear has every field library gear has: per-method notes, dial notation, divisor.
@@ -164,28 +167,23 @@ try {
   await p.getByRole("button", { name: "Save", exact: true }).click();
   await p.locator(`[data-testid="gear-${c40.id}"]`).waitFor();
   const c40r = (await (await fetch(`${BASE}/api/gear`)).json()).find((g) => g.id === c40.id).grindRanges;
-  check(c40r.notes?.espresso === "Too slow to dial in for espresso." && c40r.notation === "thirds" && c40r.dialDivisor === 10,
-    `custom grinder saves notes, notation and divisor: ${JSON.stringify({ n: c40r.notes, t: c40r.notation, d: c40r.dialDivisor })}`);
+  check(c40r.notes?.espresso === "Too slow to dial in for espresso." && c40r.notation === "thirds" && c40r.dialDivisor === 10 && c40r.unsupported?.join() === "turkish",
+    `custom grinder saves notes, notation, divisor and what it can't do: ${JSON.stringify({ n: c40r.notes, t: c40r.notation, d: c40r.dialDivisor, u: c40r.unsupported })}`);
   await p.locator(`[data-testid="gear-${c40.id}"]`).getByRole("button", { name: "Edit" }).click();
   // (put the C40 back on a decimal dial for the rest of the run)
   await p.selectOption("#ge-notation", "decimal");
   await p.fill("#ge-divisor", "");
-  const src = p.locator('[data-testid="range-source"]');
-  await src.locator("details").evaluate((d) => { d.open = true; });
-  check(/Your ranges[\s\S]*Calibrated against my V60\./.test(await src.innerText()) && (await src.locator("a").getAttribute("href")) === "https://example.com/my-c40-chart",
-    `source saved and shown: ${(await src.innerText()).replace(/\s+/g, " ")}`);
+  check((await p.inputValue("#ge-source")) === "https://example.com/my-c40-chart" && (await p.inputValue("#ge-source-note")) === "Calibrated against my V60." && (await p.inputValue("#ge-confidence")) === "",
+    "source, note and 'my own' saved");
+  await p.getByLabel("Can do Turkish").check();
   await p.getByRole("button", { name: "Save", exact: true }).click();
   await p.locator(`[data-testid="gear-${c40.id}"]`).waitFor();
   // A library grinder brings its source and marks the extrapolated rows.
   const k6 = await (await fetch(`${BASE}/api/gear/from-catalog`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ catalogId: "k6" }) })).json();
   await p.reload();
   await p.locator(`[data-testid="gear-${k6.id}"]`).getByRole("button", { name: "Edit" }).click();
-  const k6box = p.locator('[data-testid="range-source"]');
-  check(/est\.: Drip coffee maker/.test(await k6box.innerText()) && !/Fellow|1Zpresso|manual/i.test(await k6box.locator("summary").innerText()) && (await k6box.innerText()).length < 200,
-    `the source box is short until opened: ${(await k6box.innerText()).replace(/\s+/g, " ").slice(0, 120)}`);
-  await k6box.locator("details").evaluate((d) => { d.open = true; });
-  const k6src = await k6box.innerText();
-  check(/From the gear library — the maker's chart/.test(k6src) && /Estimated \(est\.\): Drip coffee maker, French press \/ immersion, Cold brew, Rapid Brewer/.test(k6src), `K6 source + estimates: ${k6src.replace(/\s+/g, " ").slice(0, 160)}`);
+  check((await p.inputValue("#ge-confidence")) === "manufacturer" && /^https:/.test(await p.inputValue("#ge-source")) && (await p.locator('[data-testid="library-same"]').count()) === 1,
+    "a library grinder brings where its ranges come from, in the fields");
   check((await p.locator('[data-testid="range-table"] .est-badge').count()) === 4, "est. badges on the four estimated rows");
   check((await p.getByLabel("Turkish low").inputValue()) === "28", "Turkish from the K6 manual (28–40)");
   check(!(await p.locator('[data-testid="library-ranges"]').count()), "an untouched library grinder doesn't claim to differ from the library");
@@ -197,7 +195,7 @@ try {
   // and every field matches.
   const LABEL = { turkish: "Turkish", espresso: "Espresso", moka: "Moka pot", aeropress: "AeroPress", pourover: "Pour-over (V60)",
     batch: "Drip coffee maker", immersion: "French press / immersion", coldbrew: "Cold brew", rapid: "Rapid Brewer" };
-  const FIELDS = ["brand", "type", "category", "details", "units", "burrs", "espressoCapable", "variants", "defaultMethod", "grindRanges", "rangeInfo"];
+  const FIELDS = ["brand", "type", "category", "details", "units", "burrs", "variants", "defaultMethod", "grindRanges", "rangeInfo"];
   const norm = (v) => Array.isArray(v) ? (v.length ? v.map(norm) : undefined)
     : v && typeof v === "object" ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, norm(v[k])]).filter(([, x]) => x !== undefined))
     : v === null || v === "" ? undefined : typeof v === "number" ? Math.round(v * 1e9) / 1e9 : v;
@@ -216,7 +214,7 @@ try {
     if (lib.type === "grinder") {
       const r = lib.grindRanges, i = lib.rangeInfo;
       await p.selectOption("#ge-units", lib.units ?? "");
-      await p.selectOption("#ge-esp", lib.espressoCapable == null ? "" : lib.espressoCapable ? "yes" : "no");
+      for (const m of r.unsupported ?? []) await p.getByLabel(`Can do ${LABEL[m]}`).uncheck();
       await p.fill("#ge-burrs", lib.burrs ?? "");
       for (const [m, v] of Object.entries(r.methods)) {
         await p.getByLabel(`${LABEL[m]} low`).fill(numText(v.low));

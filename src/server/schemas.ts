@@ -129,6 +129,7 @@ export const GrindRangesSchema = z
     dialDivisor: z.number().positive().nullable().optional(),
     methods: z.partialRecord(z.enum(METHODS), z.object({ low: rangeVal, high: rangeVal })).default({}),
     notes: z.partialRecord(z.enum(METHODS), z.string().max(500)).optional(),
+    unsupported: z.array(z.enum(METHODS)).max(METHODS.length).optional(),
   })
   .nullable()
   .optional();

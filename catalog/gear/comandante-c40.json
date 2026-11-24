@@ -8,7 +8,6 @@
   "details": "Hand grinder; settings counted in clicks from zero (burrs closed).",
   "units": "clicks",
   "burrs": null,
-  "espressoCapable": null,
   "grindRanges": {
     "scale": "clicks from zero (burrs closed), standard MK4 axle",
     "min": 0,

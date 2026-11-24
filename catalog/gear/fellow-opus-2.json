@@ -1,6 +1,6 @@
 {
   "id": "fellow-opus-2",
-  "version": 2,
+  "version": 3,
   "name": "Fellow Opus 2",
   "brand": "Fellow",
   "type": "grinder",
@@ -8,7 +8,6 @@
   "details": "Electric conical burr grinder; dial 0–10 with fine adjustment for espresso.",
   "units": "",
   "burrs": null,
-  "espressoCapable": true,
   "grindRanges": {
     "scale": "dial 0–10",
     "min": 0,
@@ -53,7 +52,10 @@
       "batch": "Fellow's Aiden batch-brew range; Aiden single-serve is 5–7.",
       "immersion": "Fellow lists French press and cold brew together (8–10).",
       "coldbrew": "Fellow lists French press and cold brew together (8–10)."
-    }
+    },
+    "unsupported": [
+      "turkish"
+    ]
   },
   "rangeInfo": {
     "confidence": "manufacturer",

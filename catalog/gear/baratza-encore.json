@@ -1,6 +1,6 @@
 {
   "id": "baratza-encore",
-  "version": 2,
+  "version": 3,
   "name": "Baratza Encore",
   "brand": "Baratza",
   "type": "grinder",
@@ -8,7 +8,6 @@
   "details": "Electric conical burr grinder, 40 settings (1 = finest).",
   "units": "",
   "burrs": "40 mm conical",
-  "espressoCapable": false,
   "grindRanges": {
     "scale": "settings 1–40",
     "min": 1,
@@ -53,7 +52,10 @@
       "espresso": "Baratza lists espresso 2–6, but the Encore isn't designed for espresso machines.",
       "pourover": "Baratza lists V60 13–14 and Chemex 20–21.",
       "immersion": "Baratza lists French press 30–32 and siphon 14."
-    }
+    },
+    "unsupported": [
+      "turkish"
+    ]
   },
   "rangeInfo": {
     "confidence": "manufacturer",

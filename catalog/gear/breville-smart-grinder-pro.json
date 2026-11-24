@@ -1,6 +1,6 @@
 {
   "id": "breville-smart-grinder-pro",
-  "version": 3,
+  "version": 4,
   "name": "Breville Smart Grinder Pro",
   "brand": "Breville",
   "type": "grinder",
@@ -8,7 +8,6 @@
   "details": "Electric conical burr grinder, 60 settings.",
   "units": "",
   "burrs": null,
-  "espressoCapable": null,
   "grindRanges": {
     "scale": "settings 1–60",
     "min": 1,
@@ -52,7 +51,10 @@
       "turkish": "Breville's chart starts at espresso.",
       "batch": "Breville's “drip filter” range; it lists no separate pour-over range.",
       "immersion": "Breville's “plunger” (French press) range."
-    }
+    },
+    "unsupported": [
+      "turkish"
+    ]
   },
   "rangeInfo": {
     "confidence": "manufacturer",

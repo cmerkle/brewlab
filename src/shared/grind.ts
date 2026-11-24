@@ -60,6 +60,8 @@ export interface GrindRanges {
   methods: Partial<Record<Method, GrindRange>>;
   /** Per-method notes, e.g. why a combination doesn't work. */
   notes?: Partial<Record<Method, string>>;
+  /** Brew methods this grinder can't do (unticked "can do" in the gear editor). Never have a range. */
+  unsupported?: Method[];
 }
 
 /** Approximate particle size per method (µm), interpolated by the same position. */
@@ -91,8 +93,21 @@ export function effectiveRanges(g: GrinderLike): GrindRanges | null {
   return g.grindRanges ?? null;
 }
 
+/** Whether the grinder can be used for this brew method (all can, unless marked otherwise). */
+export function canGrind(g: GrinderLike, m: Method): boolean {
+  return !effectiveRanges(g)?.unsupported?.includes(m);
+}
+
 export function rangeFor(g: GrinderLike, m: Method): GrindRange | null {
-  return effectiveRanges(g)?.methods?.[m] ?? null;
+  return canGrind(g, m) ? effectiveRanges(g)?.methods?.[m] ?? null : null;
+}
+
+/** Why a grinder has no range for a method: it can't do it, a note, or no data yet. */
+export function missingRange(g: GrinderLike, m: Method): { reason: "unsupported" | "no-data"; message: string } {
+  const note = noteFor(g, m);
+  if (!canGrind(g, m)) return { reason: "unsupported", message: `${g.name} can't grind for ${METHOD_LABELS[m]}.${note ? ` ${note}` : ""}` };
+  if (note) return { reason: "unsupported", message: note };
+  return { reason: "no-data", message: `${g.name}: ${NO_DATA_MESSAGE}` };
 }
 
 export function noteFor(g: GrinderLike, m: Method): string | null {
@@ -212,17 +227,13 @@ export function convertSetting(dial: number, from: GrinderLike, to: GrinderLike,
   const value = dialToValue(from, dial);
   const src = rangeFor(from, m);
   if (!src) {
-    const note = noteFor(from, m);
-    return note
-      ? { ok: false, reason: "unsupported", message: note, grinderId: from.id }
-      : { ok: false, reason: "no-source", message: `${from.name}: ${NO_DATA_MESSAGE}`, grinderId: from.id };
+    const why = missingRange(from, m);
+    return { ok: false, reason: why.reason === "no-data" ? "no-source" : "unsupported", message: why.message, grinderId: from.id };
   }
   const dst = rangeFor(to, m);
   if (!dst) {
-    const note = noteFor(to, m);
-    return note
-      ? { ok: false, reason: "unsupported", message: note, grinderId: to.id }
-      : { ok: false, reason: "no-data", message: NO_DATA_MESSAGE, grinderId: to.id };
+    const why = missingRange(to, m);
+    return { ok: false, reason: why.reason, message: why.reason === "no-data" ? NO_DATA_MESSAGE : why.message, grinderId: to.id };
   }
   const span = src.high - src.low;
   const position = span === 0 ? 0.5 : (value - src.low) / span;
@@ -243,8 +254,8 @@ export function recommend(g: GrinderLike, m: Method):
   | { ok: false; message: string; reason: "unsupported" | "no-data" } {
   const r = rangeFor(g, m);
   if (!r) {
-    const note = noteFor(g, m);
-    return note ? { ok: false, reason: "unsupported", message: note } : { ok: false, reason: "no-data", message: NO_DATA_MESSAGE };
+    const why = missingRange(g, m);
+    return { ok: false, reason: why.reason, message: why.reason === "no-data" ? NO_DATA_MESSAGE : why.message };
   }
   const mid = valueToDial(g, (r.low + r.high) / 2);
   return {

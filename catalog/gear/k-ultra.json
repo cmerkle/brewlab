@@ -8,7 +8,6 @@
   "details": "External numbered dial, 100 clicks per rotation, 20 microns per click (dial reading = clicks ÷ 10). All-rounder, espresso-capable.",
   "units": "clicks",
   "burrs": "Stock K-Ultra burrs",
-  "espressoCapable": true,
   "grindRanges": {
     "scale": "clicks from zero (burrs closed); dial number = clicks ÷ 10",
     "min": 0,

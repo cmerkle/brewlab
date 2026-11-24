@@ -1,6 +1,6 @@
 {
   "id": "zp6",
-  "version": 3,
+  "version": 4,
   "name": "1Zpresso ZP6",
   "brand": "1Zpresso",
   "type": "grinder",
@@ -8,7 +8,6 @@
   "details": "Hand grinder for filter coffee. External dial read in numbers (“points”): 10 clicks per number, 9 numbers per rotation; 4.5 = #4 and 5 clicks.",
   "units": "",
   "burrs": "Stock ZP6 burrs (clarity-focused)",
-  "espressoCapable": false,
   "grindRanges": {
     "scale": "dial numbers from zero (burrs closed); 4.5 = #4 and 5 clicks",
     "min": 0,
@@ -47,7 +46,11 @@
       "turkish": "The ZP6 Special is a filter grinder; 1Zpresso lists no Turkish or espresso range.",
       "espresso": "1Zpresso's ZP6 Special chart lists no espresso range.",
       "pourover": "1Zpresso groups siphon with pour over."
-    }
+    },
+    "unsupported": [
+      "turkish",
+      "espresso"
+    ]
   },
   "rangeInfo": {
     "confidence": "manufacturer",

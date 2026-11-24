@@ -19,6 +19,8 @@ const GrindRangesSchema = z.object({
   dialDivisor: z.number().positive().nullable().optional(),
   methods: z.partialRecord(z.enum(METHODS), Range),
   notes: z.partialRecord(z.enum(METHODS), z.string()).optional(),
+  /** Brew methods this grinder can't do. */
+  unsupported: z.array(z.enum(METHODS)).optional(),
 });
 
 export const CATEGORIES = [
@@ -37,7 +39,6 @@ export const CatalogGear = z.object({
   details: z.string().nullable().optional(),
   units: z.string().nullable().optional(),
   burrs: z.string().nullable().optional(),
-  espressoCapable: z.boolean().nullable().optional(),
   variants: z.array(z.string()).nullable().optional(),
   defaultMethod: z.enum(METHODS).nullable().optional(),
   grindRanges: GrindRangesSchema.optional(),
@@ -77,7 +78,11 @@ export const CatalogGear = z.object({
     issue("a brewer needs a grind category (defaultMethod): which grinder range it uses — espresso, pourover, immersion …", ["defaultMethod"]);
   const r = g.grindRanges;
   if (r) {
-    if (!Object.keys(r.methods).length) issue("grindRanges has no methods — add at least one, or leave grindRanges out", ["grindRanges", "methods"]);
+    if (!Object.keys(r.methods).length && !r.unsupported?.length) issue("grindRanges has no methods — add at least one, or leave grindRanges out", ["grindRanges", "methods"]);
+    for (const m of r.unsupported ?? []) {
+      if (r.methods[m]) issue(`"${m}" is marked as one this grinder can't do, but has a range — remove one or the other`, ["grindRanges", "unsupported"]);
+      if (g.rangeInfo?.estimated?.includes(m)) issue(`"${m}" is marked as one this grinder can't do, so it can't be estimated`, ["rangeInfo", "estimated"]);
+    }
     if (r.min != null && r.max != null && r.min > r.max) issue("grindRanges.min is above max", ["grindRanges"]);
     for (const [m, v] of Object.entries(r.methods)) {
       if (!v) continue;
@@ -198,7 +203,7 @@ export const slugify = (s: string) =>
 
 export interface GearRowForEntry {
   id: string; name: string; type: string; brand: string | null; category: string | null; details: string | null;
-  units: string | null; burrs: string | null; espressoCapable: boolean | null; variants: string[] | null;
+  units: string | null; burrs: string | null; variants: string[] | null;
   defaultMethod: string | null; grindRanges: GrindRanges | null; catalogId: string | null;
   rangeInfo?: GearRangeInfo | null;
 }
@@ -226,7 +231,7 @@ export function rangeInfoFromCatalog(c: CatalogGearT): GearRangeInfo | null {
  */
 export function libraryEntryFor(g: GearRowForEntry, info: { confidence?: string; source?: string; note?: string }) {
   const base = g.catalogId ? catalogGear(g.catalogId) : null;
-  const ranges = g.type === "grinder" && g.grindRanges && Object.keys(g.grindRanges.methods ?? {}).length ? g.grindRanges : null;
+  const ranges = g.type === "grinder" && g.grindRanges && (Object.keys(g.grindRanges.methods ?? {}).length || g.grindRanges.unsupported?.length) ? g.grindRanges : null;
   const est = (g.rangeInfo?.estimated ?? []).filter((m) => ranges?.methods?.[m]);
   const source = info.source ?? g.rangeInfo?.source ?? undefined;
   const note = info.note ?? g.rangeInfo?.note ?? undefined;
@@ -249,12 +254,12 @@ export function libraryEntryFor(g: GearRowForEntry, info: { confidence?: string;
     entry = clean({
       id, version: 1, name: g.name, brand: g.brand ?? null, type: g.type, category: g.category ?? undefined,
       details: g.details, units: g.type === "grinder" ? g.units : undefined, burrs: g.type === "grinder" ? g.burrs : undefined,
-      espressoCapable: g.type === "grinder" ? g.espressoCapable : undefined, variants: g.variants,
+      variants: g.variants,
       defaultMethod: g.type === "brewer" ? g.defaultMethod : undefined, grindRanges: ranges ?? undefined, rangeInfo,
     });
     if (!("brand" in entry)) entry = { ...entry, brand: null };
     // Keep the library's key order (id, version, name, brand, …).
-    entry = Object.fromEntries(["id", "version", "name", "brand", "type", "category", "details", "units", "burrs", "espressoCapable", "variants", "defaultMethod", "grindRanges", "rangeInfo"].filter((k) => k in entry).map((k) => [k, entry[k]]));
+    entry = Object.fromEntries(["id", "version", "name", "brand", "type", "category", "details", "units", "burrs", "variants", "defaultMethod", "grindRanges", "rangeInfo"].filter((k) => k in entry).map((k) => [k, entry[k]]));
   }
   const id = String(entry.id);
   const issues: string[] = [];
@@ -296,7 +301,7 @@ export function gearFromCatalog(c: CatalogGearT) {
     details: c.details ?? null,
     units: c.units ?? null,
     burrs: c.burrs ?? null,
-    espressoCapable: c.espressoCapable == null ? null : c.espressoCapable ? 1 : 0,
+    espressoCapable: null, // retired: "can do" per method is grindRanges.unsupported
     variants: c.variants ? JSON.stringify(c.variants) : null,
     grindRanges: c.grindRanges ? JSON.stringify(c.grindRanges) : null,
     rangeInfo: rangeInfoFromCatalog(c) ? JSON.stringify(rangeInfoFromCatalog(c)) : null,

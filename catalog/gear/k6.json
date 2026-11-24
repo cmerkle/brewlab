@@ -8,7 +8,6 @@
   "details": "Hand grinder with external adjustment: 60 clicks per rotation, counted anti-clockwise from zero. KINGrinder: don't grind at zero or below 15 clicks.",
   "units": "clicks",
   "burrs": "Stock K6 burrs",
-  "espressoCapable": true,
   "grindRanges": {
     "scale": "clicks from zero (adjustment nut turned clockwise until it stops)",
     "min": 0,

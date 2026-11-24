@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { Gear, Recipe } from "./api";
 import { useData } from "./ui";
-import { convertSetting, fmtGrind, NO_DATA_MESSAGE, CATEGORY_METHOD, type Method, rangeFor } from "../shared/grind";
+import { convertSetting, fmtGrind, NO_DATA_MESSAGE, CATEGORY_METHOD, METHOD_LABELS, canGrind, type Method, rangeFor } from "../shared/grind";
 
 export function useGrinders() {
   const { gear } = useData();
@@ -79,7 +79,7 @@ export function GrinderSwitcher({
           <option key={g.id} value={g.id}>
             {g.name}
             {g.id === recipe.grinderId ? " (original)" : ""}
-            {!rangeFor(g, m) ? " — no data" : ""}
+            {!rangeFor(g, m) ? (canGrind(g, m) ? " — no data" : ` — can't do ${METHOD_LABELS[m]}`) : ""}
           </option>
         ))}
       </select>

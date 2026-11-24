@@ -45,7 +45,7 @@ export function Gear({ editId, onEditDone }: { editId: string | null; onEditDone
                     {g.type === "grinder" && (
                       <div className="muted small">
                         {g.units ? `Units: ${g.units}` : "Units: numbered settings"}{g.burrs ? ` · ${g.burrs}` : ""}
-                        {g.espressoCapable != null ? ` · ${g.espressoCapable ? "espresso-capable" : "filter only"}` : ""}
+                        {g.grindRanges?.unsupported?.length ? ` · can't do ${g.grindRanges.unsupported.map((m) => METHOD_LABELS[m]).join(", ")}` : ""}
                         {" · "}
                         {g.grindRanges && Object.keys(g.grindRanges.methods ?? {}).length
                           ? `${Object.keys(g.grindRanges.methods).length} method ranges${g.library?.confidence ? ` (library: ${g.library.confidence})` : ""}`
@@ -81,7 +81,6 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
     details: item?.details ?? "",
     units: item?.units ?? "clicks",
     burrs: item?.burrs ?? "",
-    espressoCapable: item?.espressoCapable ?? null as boolean | null,
     variants: (item?.variants ?? []).join(", "),
     defaultMethod: (item?.defaultMethod ?? null) as Method | null,
     category: (item?.category ?? "") as string,
@@ -92,6 +91,8 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
     notation: (base?.notation ?? "decimal") as "decimal" | "thirds",
     dialDivisor: base?.dialDivisor ?? null as number | null,
   });
+  // Brew methods this grinder can do (unticked = can't; its range is dropped on save).
+  const [cannot, setCannot] = useState<Method[]>(() => [...(base?.unsupported ?? [])]);
   // Per-method notes (e.g. "can't do espresso", "the maker groups moka with AeroPress").
   const [notes, setNotes] = useState<Partial<Record<Method, string>>>(() => ({ ...(base?.notes ?? {}) }));
   const [ranges, setRanges] = useState<RangeForm>(() => {
@@ -122,12 +123,13 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
       const methods: GrindRanges["methods"] = {};
       for (const m of METHODS) {
         const r = ranges[m];
-        if (r && r.low != null && r.high != null) methods[m] = { low: r.low, high: r.high };
+        if (r && r.low != null && r.high != null && !cannot.includes(m)) methods[m] = { low: r.low, high: r.high };
       }
       const cleanNotes: GrindRanges["notes"] = {};
       for (const m of METHODS) if (notes[m]?.trim()) cleanNotes[m] = notes[m]!.trim();
-      grindRanges = Object.keys(methods).length
-        ? { methods, step: f.step, min: f.min, max: f.max, scale: f.scale || undefined,
+      const unsupported = METHODS.filter((m) => cannot.includes(m));
+      grindRanges = Object.keys(methods).length || unsupported.length
+        ? { methods, ...(unsupported.length ? { unsupported } : {}), step: f.step, min: f.min, max: f.max, scale: f.scale || undefined,
             notation: f.notation === "thirds" ? "thirds" : undefined, dialDivisor: f.dialDivisor,
             notes: Object.keys(cleanNotes).length ? cleanNotes : undefined }
         : null;
@@ -135,7 +137,6 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
     const body = {
       name: f.name, type: f.type, brand: f.brand || null, details: f.details || null,
       units: f.type === "grinder" ? f.units || null : null, burrs: f.type === "grinder" ? f.burrs || null : null,
-      espressoCapable: f.type === "grinder" ? f.espressoCapable : null,
       variants: f.type === "brewer" ? f.variants.split(",").map((s) => s.trim()).filter(Boolean) : null,
       defaultMethod: f.type === "brewer" ? f.defaultMethod : null, grindRanges,
       category: f.category || null,
@@ -143,7 +144,7 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
         ? { rangeInfo: {
             confidence: info.confidence ?? null,
             source: info.source?.trim() || null, note: info.note?.trim() || null,
-            estimated: info.estimated ?? [], estimateNote: info.estimateNote ?? null,
+            estimated: (info.estimated ?? []).filter((m) => !cannot.includes(m)), estimateNote: info.estimateNote ?? null,
           } }
         : {}),
     };
@@ -198,21 +199,14 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
         </Field>
         {f.type === "grinder" && (
           <>
-            <div className="grid2">
-              <Field label="Adjustment units" htmlFor="ge-units">
-                <select id="ge-units" value={f.units} onChange={(e) => set("units", e.target.value)}>
-                  <option value="clicks">clicks</option><option value="rotations">rotations</option><option value="">numbered settings</option>
-                </select>
-              </Field>
-              <Field label="Espresso-capable" htmlFor="ge-esp">
-                <select id="ge-esp" value={f.espressoCapable == null ? "" : f.espressoCapable ? "yes" : "no"} onChange={(e) => set("espressoCapable", e.target.value === "" ? null : e.target.value === "yes")}>
-                  <option value="">—</option><option value="yes">Yes</option><option value="no">No</option>
-                </select>
-              </Field>
-            </div>
+            <Field label="Adjustment units" htmlFor="ge-units">
+              <select id="ge-units" value={f.units} onChange={(e) => set("units", e.target.value)}>
+                <option value="clicks">clicks</option><option value="rotations">rotations</option><option value="">numbered settings</option>
+              </select>
+            </Field>
             <Field label="Burrs" htmlFor="ge-burrs"><input id="ge-burrs" value={f.burrs} onChange={(e) => set("burrs", e.target.value)} /></Field>
             <h3>Grind ranges</h3>
-            <RangeSourceNote info={info} fromLibrary={Boolean(item?.library?.hasRanges && !item.library.rangesDiffer)} />
+            {item?.library?.hasRanges && !item.library.rangesDiffer && <p className="hint" data-testid="library-same">Same as the gear library's entry.</p>}
             {item?.library?.hasRanges && item.library.rangesDiffer && (
               <div className="note small" data-testid="library-ranges">
                 {item.library.rangesDiffer && (
@@ -224,18 +218,28 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
                 )}
               </div>
             )}
-            <p className="hint">Starting low/high for each brew method in this grinder's own units. Optional per method — leave both empty if you don't know yet. The converter maps settings by position inside these ranges.</p>
+            <p className="hint">Tick the brew methods this grinder can do, with a starting low/high in its own units (leave both empty if you don't know yet). The converter maps settings by position inside these ranges.</p>
             <div className="ranges" data-testid="range-table">
               {METHODS.map((m) => (
                 <div key={m} className="range-row" data-method={m}>
-                  <span className="rl">
-                    {METHOD_LABELS[m]}
-                    {info.estimated?.includes(m) && <span className="est-badge" title="Estimated — extrapolated, not from the source">est.</span>}
-                  </span>
-                  <NumInput aria-label={`${METHOD_LABELS[m]} low`} placeholder="low" value={ranges[m]?.low ?? null} decimals={3}
-                    onChange={(n) => setRange(m, { low: n })} />
-                  <NumInput aria-label={`${METHOD_LABELS[m]} high`} placeholder="high" value={ranges[m]?.high ?? null} decimals={3}
-                    onChange={(n) => setRange(m, { high: n })} />
+                  <label className="rl">
+                    <input type="checkbox" aria-label={`Can do ${METHOD_LABELS[m]}`} checked={!cannot.includes(m)}
+                      onChange={(e) => setCannot((c) => (e.target.checked ? c.filter((x) => x !== m) : [...c, m]))} />
+                    <span>
+                      {METHOD_LABELS[m]}
+                      {info.estimated?.includes(m) && !cannot.includes(m) && <span className="est-badge" title="Estimated — extrapolated, not from the source">est.</span>}
+                    </span>
+                  </label>
+                  {cannot.includes(m) ? (
+                    <span className="muted small cant">Can't do</span>
+                  ) : (
+                    <>
+                      <NumInput aria-label={`${METHOD_LABELS[m]} low`} placeholder="low" value={ranges[m]?.low ?? null} decimals={3}
+                        onChange={(n) => setRange(m, { low: n })} />
+                      <NumInput aria-label={`${METHOD_LABELS[m]} high`} placeholder="high" value={ranges[m]?.high ?? null} decimals={3}
+                        onChange={(n) => setRange(m, { high: n })} />
+                    </>
+                  )}
                   <textarea className="range-note" aria-label={`${METHOD_LABELS[m]} note`} placeholder="+ note" value={notes[m] ?? ""}
                     rows={Math.max(1, Math.ceil((notes[m]?.length ?? 0) / 42))}
                     onChange={(e) => setNotes((x) => ({ ...x, [m]: e.target.value }))} />
@@ -257,7 +261,7 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
             </Field>
             <fieldset className="checks" data-testid="estimated-rows">
               <legend>Estimated rows <span className="muted small">(worked out from the others, not from the source — shown as “est.”)</span></legend>
-              {METHODS.filter((m) => ranges[m]?.low != null && ranges[m]?.high != null).map((m) => (
+              {METHODS.filter((m) => !cannot.includes(m) && ranges[m]?.low != null && ranges[m]?.high != null).map((m) => (
                 <label key={m} className="check">
                   <input type="checkbox" aria-label={`${METHOD_LABELS[m]} is estimated`} checked={Boolean(info.estimated?.includes(m))}
                     onChange={(e) => setInfo((i) => ({ ...i, estimated: e.target.checked ? METHODS.filter((x) => x === m || i.estimated?.includes(x)) : (i.estimated ?? []).filter((x) => x !== m) }))} />
@@ -310,36 +314,6 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
       </div>
       {suggesting && item && <SuggestToLibrary item={item} onClose={() => setSuggesting(false)} />}
     </FullScreen>
-  );
-}
-
-/** Where this grinder's ranges come from, and which ones are estimates. */
-function RangeSourceNote({ info, fromLibrary }: { info: RangeInfo; fromLibrary: boolean }) {
-  const est = (info.estimated ?? []).map((m) => METHOD_LABELS[m]);
-  const kind = info.confidence === "manufacturer" ? "the maker's chart" : info.confidence === "community" ? "a community chart" : null;
-  const lead = kind ? `${fromLibrary ? "From the gear library — " : ""}${kind}` : info.source || info.note ? "Your ranges" : null;
-  if (!lead && !est.length)
-    return <div className="note small" data-testid="range-source">No source yet. Add a link below to where these ranges come from.</div>;
-  const href = info.source && /^https?:\/\//.test(info.source) ? info.source : null;
-  const link = href && <a href={href} target="_blank" rel="noreferrer noopener">Source ↗</a>;
-  const summary = `${lead ?? "Ranges"}${est.length > 0 ? ` · est.: ${est.join(", ")}` : ""}`;
-  return (
-    <div className="note small" data-testid="range-source">
-      {info.note || info.estimateNote ? (
-        // Short by default (the notes can run long on a phone); tap for the details. The link
-        // stays outside the tap target.
-        <details>
-          <summary>{summary}</summary>
-          {info.note && <p>{info.note}</p>}
-          {est.length > 0 && (
-            <div data-testid="range-estimated"><strong>Estimated (est.):</strong> {est.join(", ")}.{info.estimateNote ? ` ${info.estimateNote}` : ""}</div>
-          )}
-        </details>
-      ) : (
-        <div>{summary}</div>
-      )}
-      {link && <div>{link}</div>}
-    </div>
   );
 }
 

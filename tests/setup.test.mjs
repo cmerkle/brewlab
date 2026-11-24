@@ -140,7 +140,7 @@ test("every library entry can be rebuilt as custom gear with the same fields (no
   const { server, call } = await start("replicate.db");
   try {
     const { loadCatalog } = await import("../dist/server/catalog.js");
-    const FIELDS = ["name", "brand", "type", "category", "details", "units", "burrs", "espressoCapable", "variants", "defaultMethod", "grindRanges", "rangeInfo"];
+    const FIELDS = ["name", "brand", "type", "category", "details", "units", "burrs", "variants", "defaultMethod", "grindRanges", "rangeInfo"];
     const norm = (v) => Array.isArray(v) ? (v.length ? v.map(norm) : undefined)
       : v && typeof v === "object" ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, norm(v[k])]).filter(([, x]) => x !== undefined))
       : v === null || v === "" ? undefined : v;
@@ -159,4 +159,39 @@ test("every library entry can be rebuilt as custom gear with the same fields (no
   } finally {
     server.close();
   }
+});
+
+test("can-do per method: unticked methods drop their range; the old espresso flag migrates", async () => {
+  const { server, call } = await start("cando.db");
+  try {
+    const made = (await call("POST", "/api/gear", { name: "Filter Mill", type: "grinder", category: "hand-grinder", units: "clicks",
+      grindRanges: { methods: { espresso: { low: 1, high: 2 }, pourover: { low: 20, high: 30 } }, unsupported: ["espresso", "turkish"] } })).body;
+    const g = (await call("GET", "/api/gear")).body.find((x) => x.id === made.id);
+    assert.deepEqual(g.grindRanges.methods, { pourover: { low: 20, high: 30 } });
+    assert.deepEqual(g.grindRanges.unsupported, ["turkish", "espresso"]);
+    assert.equal("espressoCapable" in g, false);
+    // An older client's "not espresso-capable" means the same thing.
+    const old = (await call("POST", "/api/gear", { name: "Old Client Mill", type: "grinder", espressoCapable: false,
+      grindRanges: { methods: { pourover: { low: 20, high: 30 } } } })).body;
+    assert.deepEqual((await call("GET", "/api/gear")).body.find((x) => x.id === old.id).grindRanges.unsupported, ["espresso"]);
+  } finally {
+    server.close();
+  }
+  const { openDb } = await import("../dist/server/db.js");
+  const { migrateEspressoCapable } = await import("../dist/server/seed.js");
+  const db = openDb(path.join(tmp, "cando-migrate.db"));
+  const t = new Date().toISOString();
+  const ins = db.prepare("INSERT INTO gear_items (id, name, type, espressoCapable, grindRanges, createdAt, updatedAt) VALUES (?, ?, 'grinder', ?, ?, ?, ?)");
+  ins.run("a", "A", 0, JSON.stringify({ methods: { pourover: { low: 1, high: 2 } } }), t, t);
+  ins.run("b", "B", 0, null, t, t);
+  ins.run("c", "C", 1, JSON.stringify({ methods: { espresso: { low: 1, high: 2 } } }), t, t);
+  ins.run("d", "D", 0, JSON.stringify({ methods: { espresso: { low: 1, high: 2 } } }), t, t); // has a range: keep it usable
+  assert.deepEqual(migrateEspressoCapable(db).sort(), ["a", "b"]);
+  const gr = (id) => JSON.parse(db.prepare("SELECT grindRanges FROM gear_items WHERE id=?").get(id).grindRanges ?? "null");
+  assert.deepEqual(gr("a").unsupported, ["espresso"]);
+  assert.deepEqual(gr("b"), { methods: {}, unsupported: ["espresso"] });
+  assert.equal(gr("c").unsupported, undefined);
+  assert.equal(gr("d").unsupported, undefined);
+  assert.equal(db.prepare("SELECT COUNT(*) n FROM gear_items WHERE espressoCapable IS NOT NULL").get().n, 0);
+  assert.deepEqual(migrateEspressoCapable(db), []); // runs once
 });

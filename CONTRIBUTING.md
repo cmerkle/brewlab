@@ -45,7 +45,7 @@ A grinder may include `grindRanges` — the low/high setting **per brew method**
 ```
 
 - `confidence`: `manufacturer` (the maker's manual, chart or site) or `community` (a published community chart). Both **must** cite a `source` URL.
-- Brew methods, finest to coarsest: `turkish`, `espresso`, `moka`, `aeropress`, `pourover` (V60), `batch` (drip coffee maker), `immersion` (French press), `coldbrew`, plus `rapid` (OXO Rapid Brewer). Give every method the grinder can do a range; for one it can't, add a `notes` entry saying why (`npm test` checks every method has one or the other).
+- Brew methods, finest to coarsest: `turkish`, `espresso`, `moka`, `aeropress`, `pourover` (V60), `batch` (drip coffee maker), `immersion` (French press), `coldbrew`, plus `rapid` (OXO Rapid Brewer). Give every method the grinder can do a range; list the ones it can't do in `grindRanges.unsupported` (e.g. `["turkish", "espresso"]` for a filter grinder) and say why in a `notes` entry (`npm test` checks every method is one or the other). There's no `espressoCapable` field any more: that's `"espresso"` in `unsupported`.
 - Transcribe what the source says per brew method. Don't convert microns or size bands into methods yourself.
 - **Estimates** fill the gaps a source leaves (e.g. a chart without cold brew). List them in `rangeInfo.estimated` and say how they were worked out in `rangeInfo.estimateNote` — extrapolated from the grinder's own cited ranges (cold brew = the French press range moved half its width coarser; Rapid Brewer = middle of AeroPress to middle of pour-over; …), never invented. The app marks them “est.”. At least one range must come from the source.
 

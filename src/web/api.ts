@@ -48,7 +48,6 @@ export interface Gear {
   details: string | null;
   units: string | null;
   burrs: string | null;
-  espressoCapable: boolean | null;
   variants: string[] | null;
   grindRanges: GrindRanges | null;
   defaultMethod: Method | null;

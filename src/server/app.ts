@@ -4,7 +4,7 @@ import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import cron from "node-cron";
 import { openDb, UPLOAD_DIR, DB_PATH } from "./db.js";
-import { seedIfNeeded, counts, linkGearToCatalog, normalizeGrindSettings, syncGearWithLibrary } from "./seed.js";
+import { seedIfNeeded, counts, linkGearToCatalog, normalizeGrindSettings, syncGearWithLibrary, migrateEspressoCapable } from "./seed.js";
 import { loadCatalog } from "./catalog.js";
 import { brewRouter, dedupeRecipes, sweepUploads } from "./routes-brew.js";
 import { backupRouter, createBackup } from "./backup.js";
@@ -27,6 +27,7 @@ export function createApp(db = openDb()) {
   const synced = syncGearWithLibrary(db);
   for (const id of synced.updated) console.log(`[catalog] ${id}: ranges updated from the gear library`);
   for (const m of synced.merged) console.log(`[catalog] ${m}: methods added from the gear library (your own ranges kept)`);
+  for (const id of migrateEspressoCapable(db)) console.log(`[gear] ${id}: "not espresso-capable" is now "can't do espresso"`);
   const grinds = normalizeGrindSettings(db);
   if (grinds) console.log(`[grind] ${grinds} grind setting(s) converted to plain numbers`);
   if (seeded) console.log("First run — seed imported:", seeded);

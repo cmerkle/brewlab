@@ -292,10 +292,12 @@ export function syncGearWithLibrary(db: DB): { updated: string[]; merged: string
         const add = (Object.keys(lib.methods) as Method[]).filter((m) => !mine!.methods?.[m] && !mine!.notes?.[m]);
         const methods = { ...mine!.methods };
         for (const m of add) methods[m] = lib.methods[m];
+        // What the library says the grinder can't do, unless you've given it a range.
+        const unsupported = [...new Set([...(mine!.unsupported ?? []), ...(lib.unsupported ?? []).filter((m) => !methods[m])])];
         const libEst = c.rangeInfo?.estimated ?? [];
         const next: GearRangeInfo = { ...(info ?? {}), estimated: [...new Set([...(info?.estimated ?? []), ...add.filter((m) => libEst.includes(m))])] };
         if (add.length) next.note = [info?.note, `Added from the gear library (v${c.version}): ${add.join(", ")}.`].filter(Boolean).join(" ");
-        upd.run(JSON.stringify({ ...mine, methods }), JSON.stringify(next), c.version, t, r.id);
+        upd.run(JSON.stringify({ ...mine, methods, ...(unsupported.length ? { unsupported } : {}) }), JSON.stringify(next), c.version, t, r.id);
         if (add.length) out.merged.push(`${r.id} (+${add.join(", ")})`);
       } else if (!info && untouched && mine) {
         const li = rangeInfoFromCatalog(c);
@@ -305,4 +307,26 @@ export function syncGearWithLibrary(db: DB): { updated: string[]; merged: string
     }
   })();
   return out;
+}
+
+/**
+ * The retired "espresso-capable" flag becomes the per-method "can do" list: a grinder marked not
+ * espresso-capable (and with no espresso range) gets espresso in grindRanges.unsupported. Runs at
+ * startup after syncGearWithLibrary; clears the old column so it runs once per row.
+ */
+export function migrateEspressoCapable(db: DB): string[] {
+  const rows = db.prepare("SELECT id, espressoCapable, grindRanges FROM gear_items WHERE espressoCapable IS NOT NULL").all() as { id: string; espressoCapable: number; grindRanges: string | null }[];
+  const changed: string[] = [];
+  const upd = db.prepare("UPDATE gear_items SET grindRanges=?, espressoCapable=NULL WHERE id=?");
+  db.transaction(() => {
+    for (const r of rows) {
+      let gr: GrindRanges | null = r.grindRanges ? JSON.parse(r.grindRanges) : null;
+      if (r.espressoCapable === 0 && !gr?.methods?.espresso && !gr?.unsupported?.includes("espresso")) {
+        gr = { ...(gr ?? { methods: {} }), unsupported: [...(gr?.unsupported ?? []), "espresso"] };
+        changed.push(r.id);
+      }
+      upd.run(gr ? JSON.stringify(gr) : null, r.id);
+    }
+  })();
+  return changed;
 }

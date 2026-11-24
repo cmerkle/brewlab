@@ -1,6 +1,6 @@
 {
   "id": "timemore-s3",
-  "version": 2,
+  "version": 3,
   "name": "Timemore Chestnut S3",
   "brand": "Timemore",
   "type": "grinder",
@@ -8,7 +8,6 @@
   "details": "Hand grinder with external stepless-feel adjustment.",
   "units": "",
   "burrs": null,
-  "espressoCapable": null,
   "grindRanges": {
     "scale": "dial numbers from zero, 0–9",
     "min": 0,
@@ -50,7 +49,10 @@
     },
     "notes": {
       "turkish": "Not fine enough for Turkish coffee."
-    }
+    },
+    "unsupported": [
+      "turkish"
+    ]
   },
   "rangeInfo": {
     "confidence": "community",

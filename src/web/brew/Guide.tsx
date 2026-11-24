@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useData, NumInput, usePref } from "../ui";
 import { useGrinders } from "../grindui";
-import { METHODS, METHOD_LABELS, recommend, convertSetting, valueToDial, effectiveRanges, rangeFor, NO_DATA_MESSAGE, DRAFT_NOTE, type Method } from "../../shared/grind";
+import { METHODS, METHOD_LABELS, recommend, convertSetting, valueToDial, effectiveRanges, rangeFor, missingRange, NO_DATA_MESSAGE, DRAFT_NOTE, type Method } from "../../shared/grind";
 
 export function Guide({ onEditGrinder }: { onEditGrinder: (id: string) => void }) {
   const grinders = useGrinders();
@@ -90,8 +90,8 @@ function Converter({ onEditGrinder }: { onEditGrinder: (id: string) => void }) {
       </div>
       {from && !fromRange && (
         <div className="note">
-          {effectiveRanges(from)?.notes?.[method] ?? `${from.name}: ${NO_DATA_MESSAGE}`}{" "}
-          {!effectiveRanges(from)?.notes?.[method] && <button className="link" onClick={() => onEditGrinder(from.id)}>Edit grinder</button>}
+          {missingRange(from, method).message}{" "}
+          {missingRange(from, method).reason === "no-data" && <button className="link" onClick={() => onEditGrinder(from.id)}>Edit grinder</button>}
         </div>
       )}
       {from && fromRange && value != null && (

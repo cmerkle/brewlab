@@ -8,7 +8,6 @@
   "details": "Single-dose flat-burr grinder, used for espresso.",
   "units": "",
   "burrs": "Stock 64mm flat burrs",
-  "espressoCapable": true,
   "grindRanges": {
     "scale": "numbered dial 0–90 (stepless), stock burrs",
     "min": 0,

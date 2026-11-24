@@ -1,6 +1,6 @@
 {
   "id": "1zpresso-q2",
-  "version": 3,
+  "version": 4,
   "name": "1Zpresso Q2",
   "brand": "1Zpresso",
   "type": "grinder",
@@ -8,7 +8,6 @@
   "details": "Compact hand grinder with internal adjustment: 10 numbers per rotation, 3 clicks per number.",
   "units": "rotations",
   "burrs": null,
-  "espressoCapable": null,
   "grindRanges": {
     "scale": "rotations from zero (burrs closed); 1.8 = 1 rotation and 8 numbers",
     "min": 0,
@@ -48,7 +47,11 @@
       "espresso": "1Zpresso's Q chart lists no espresso range.",
       "moka": "1Zpresso groups moka pot with AeroPress and drip coffee maker.",
       "aeropress": "1Zpresso groups AeroPress, moka pot and drip coffee maker."
-    }
+    },
+    "unsupported": [
+      "turkish",
+      "espresso"
+    ]
   },
   "rangeInfo": {
     "confidence": "manufacturer",

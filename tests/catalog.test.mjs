@@ -167,7 +167,7 @@ test("library rules: a well-formed entry passes; each rule rejects what it shoul
   assert.ok(why({ id: "x-dripper", version: 1, name: "X", brand: null, type: "brewer", category: "cone-dripper", grindRanges: okGrinder.grindRanges, rangeInfo: okGrinder.rangeInfo }).some((m) => /only grinders/.test(m)));
 });
 
-const row = (o) => ({ id: "x", name: "X", type: "grinder", brand: null, category: "hand-grinder", details: null, units: "clicks", burrs: null, espressoCapable: null, variants: null, defaultMethod: null, grindRanges: null, catalogId: null, ...o });
+const row = (o) => ({ id: "x", name: "X", type: "grinder", brand: null, category: "hand-grinder", details: null, units: "clicks", burrs: null, variants: null, defaultMethod: null, grindRanges: null, catalogId: null, ...o });
 
 test("suggest: custom grinder → a new entry that passes the library rules once a source is given", () => {
   const g = row({ id: "my-comandante", name: "Comandante C41", brand: "Comandante", grindRanges: { step: 1, methods: { pourover: { low: 22, high: 28 } } } });
@@ -223,10 +223,11 @@ test("older installs: linking uses the install's setup.json ranges/units over th
   db.close();
 });
 
-test("every library grinder with ranges covers every method: a range, or a note saying why not", () => {
+test("every library grinder with ranges covers every method: a range, or marked as one it can't do", () => {
   for (const g of cat.gear.filter((x) => x.type === "grinder" && x.grindRanges)) {
-    const missing = METHODS.filter((m) => !g.grindRanges.methods[m] && !g.grindRanges.notes?.[m]);
-    assert.deepEqual(missing, [], `${g.id}: no range and no note for ${missing.join(", ")}`);
+    const missing = METHODS.filter((m) => !g.grindRanges.methods[m] && !g.grindRanges.unsupported?.includes(m));
+    assert.deepEqual(missing, [], `${g.id}: no range and not marked "can't do" for ${missing.join(", ")}`);
+    assert.ok(!("espressoCapable" in JSON.parse(fs.readFileSync(`catalog/gear/${g.id}.json`, "utf8"))), `${g.id}: espressoCapable is retired (use grindRanges.unsupported)`);
     for (const m of g.rangeInfo.estimated ?? []) assert.ok(g.grindRanges.methods[m], `${g.id}: estimated ${m} has a range`);
   }
 });

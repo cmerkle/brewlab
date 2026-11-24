@@ -4,7 +4,7 @@ import path from "node:path";
 import { type DB, nowIso } from "./db.js";
 import { getSettings, setSettings, isOnboarded, setOnboarded } from "./settings.js";
 import { compatibleTemplates, renderTemplate, catalogRecipe } from "./catalog.js";
-import { ownedGear, runSeed, linkGearToCatalog, normalizeGrindSettings } from "./seed.js";
+import { ownedGear, runSeed, linkGearToCatalog, normalizeGrindSettings, migrateEspressoCapable } from "./seed.js";
 import { recipeRow } from "./routes-brew.js";
 import { llmConfig, pingLlm, PROVIDERS } from "./llm.js";
 import { readSecrets, writeSecrets } from "./secrets.js";
@@ -173,6 +173,7 @@ export function setupRouter(db: DB) {
       })();
       linkGearToCatalog(db); // exports from before the gear library
       normalizeGrindSettings(db); // exports from before numeric grind settings
+      migrateEspressoCapable(db); // … and from before per-method "can do"
       setOnboarded(db, true);
       res.json({ ok: true, counts });
     } catch (e: any) {

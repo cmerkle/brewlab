@@ -1,6 +1,6 @@
 {
   "id": "baratza-virtuoso-plus",
-  "version": 2,
+  "version": 3,
   "name": "Baratza Virtuoso+",
   "brand": "Baratza",
   "type": "grinder",
@@ -8,7 +8,6 @@
   "details": "Electric conical burr grinder, 40 settings.",
   "units": "",
   "burrs": null,
-  "espressoCapable": null,
   "grindRanges": {
     "scale": "settings 0–40 (0 = finest)",
     "min": 0,
@@ -50,7 +49,10 @@
     },
     "notes": {
       "turkish": "Not fine enough for Turkish coffee."
-    }
+    },
+    "unsupported": [
+      "turkish"
+    ]
   },
   "rangeInfo": {
     "confidence": "community",

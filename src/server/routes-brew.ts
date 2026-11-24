@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { type DB, nowIso, todayLocal, deriveStatus, UPLOAD_DIR } from "./db.js";
 import { RecipeSchema, BrewSchema, InventorySchema, GearSchema, RecommendationSchema, TastingSchema, LIMITS, firstError } from "./schemas.js";
-import { validateRanges, METHODS, toGrindNumber, CATEGORY_METHOD } from "../shared/grind.js";
+import { validateRanges, METHODS, toGrindNumber, CATEGORY_METHOD, type Method } from "../shared/grind.js";
 import { loadCatalog, catalogGear, gearFromCatalog, libraryEntryFor, rangeInfoFromCatalog } from "./catalog.js";
 import { importFromLink, importFromPhoto, lookupOnline } from "./imports.js";
 import { sameCoffee } from "./rules.js";
@@ -36,7 +36,7 @@ function cleanRangeInfo(i: z.infer<typeof GearSchema>["rangeInfo"], ranges: { me
 export function gearRow(r: any) {
   return {
     ...r,
-    espressoCapable: r.espressoCapable == null ? null : Boolean(r.espressoCapable),
+    espressoCapable: undefined, // retired column; "can do" lives in grindRanges.unsupported
     variants: parseJ(r.variants),
     grindRanges: parseJ(r.grindRanges),
     rangeInfo: parseJ(r.rangeInfo) ?? null,
@@ -203,15 +203,22 @@ export function brewRouter(db: DB) {
       if (err) return bad(res, err);
       // Drop empty method entries.
       const methods: Record<string, { low: number; high: number }> = {};
+      // Methods it can't do have no range; an older client's "not espresso-capable" means the same.
+      const unsupported = new Set(ranges.unsupported ?? []);
+      if (g.espressoCapable === false && !ranges.methods?.espresso) unsupported.add("espresso");
       for (const [m, v] of Object.entries(ranges.methods ?? {}))
-        if (v && v.low != null && v.high != null) methods[m] = { low: v.low, high: v.high };
-      ranges = { ...ranges, methods };
+        if (v && v.low != null && v.high != null && !unsupported.has(m as Method)) methods[m] = { low: v.low, high: v.high };
+      ranges = { ...ranges, methods, unsupported: METHODS.filter((m) => unsupported.has(m)) };
+      if (!ranges.unsupported!.length) delete ranges.unsupported;
+      if (!Object.keys(methods).length && !ranges.unsupported) ranges = null;
+    } else if (g.type === "grinder" && g.espressoCapable === false) {
+      ranges = { methods: {}, unsupported: ["espresso"] };
     }
     if (g.type !== "grinder") ranges = null;
     const t = nowIso();
     const row = {
       name: g.name, type: g.type, brand: g.brand ?? null, details: g.details ?? null, units: g.units ?? null, burrs: g.burrs ?? null,
-      espressoCapable: g.espressoCapable == null ? null : g.espressoCapable ? 1 : 0, variants: j(g.variants ?? null),
+      espressoCapable: null, variants: j(g.variants ?? null),
       grindRanges: j(ranges),
       defaultMethod: g.type === "brewer" ? g.defaultMethod ?? (g.category ? CATEGORY_METHOD[g.category] : null) ?? null : null,
       category: g.category ?? null, updatedAt: t,
@@ -247,7 +254,7 @@ export function brewRouter(db: DB) {
     res.json({
       gear: c.gear.map((g) => ({
         id: g.id, name: g.name, brand: g.brand, type: g.type, category: g.category, units: g.units ?? null,
-        espressoCapable: g.espressoCapable ?? null, variants: g.variants ?? null, defaultMethod: g.defaultMethod ?? null,
+        variants: g.variants ?? null, defaultMethod: g.defaultMethod ?? null,
         hasRanges: Boolean(g.grindRanges), methods: g.grindRanges ? Object.keys(g.grindRanges.methods) : [],
         confidence: g.rangeInfo?.confidence ?? null, owned: owned.has(g.id),
       })),

@@ -133,7 +133,10 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   **Ranges need a cited source** (`manufacturer` or `community`); transcribe per-method values.
   Owner decision 2026-11-23: every method a grinder can do has a range — gaps are filled with
   **estimates** extrapolated from the grinder's own cited ranges, listed in `rangeInfo.estimated`
-  with `estimateNote` (shown as "est."); methods it can't do get a `notes` entry. Never invent
+  with `estimateNote` (shown as "est."); methods it can't do are listed in `grindRanges.unsupported`
+  (the per-row "can do" box in the gear editor; `canGrind`, `rangeFor` ignores them, conversions say
+  "<grinder> can't grind for <method>") with a `notes` entry saying why. `espressoCapable` is retired
+  (`migrateEspressoCapable` at startup/restore; the API maps an old client's `false` to unsupported). Never invent
   ranges without a cited anchor. Installed gear keeps its own copy of `rangeInfo` (source/notes
   editable in the gear editor); `syncGearWithLibrary` (startup) brings untouched copies up to a
   newer library version and only adds missing methods to edited ones. Converter tests use

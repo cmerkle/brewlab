@@ -1,6 +1,6 @@
 {
   "id": "timemore-c2",
-  "version": 3,
+  "version": 4,
   "name": "Timemore Chestnut C2",
   "brand": "Timemore",
   "type": "grinder",
@@ -8,7 +8,6 @@
   "details": "Hand grinder; clicks counted from the start point (dial turned fully clockwise). Timemore advises not to grind at the finest 0–6 clicks.",
   "units": "clicks",
   "burrs": null,
-  "espressoCapable": null,
   "grindRanges": {
     "scale": "clicks from the start point",
     "min": 0,
@@ -50,7 +49,10 @@
     "notes": {
       "turkish": "Timemore lists no Turkish setting.",
       "immersion": "French press."
-    }
+    },
+    "unsupported": [
+      "turkish"
+    ]
   },
   "rangeInfo": {
     "confidence": "manufacturer",
