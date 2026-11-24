@@ -5,7 +5,7 @@ import path from "node:path";
 import { type DB, nowIso, todayLocal, deriveStatus, UPLOAD_DIR } from "./db.js";
 import { RecipeSchema, BrewSchema, InventorySchema, GearSchema, RecommendationSchema, TastingSchema, LIMITS, firstError } from "./schemas.js";
 import { validateRanges, METHODS, toGrindNumber, CATEGORY_METHOD, type Method } from "../shared/grind.js";
-import { loadCatalog, catalogGear, gearFromCatalog, libraryEntryFor, rangeInfoFromCatalog } from "./catalog.js";
+import { loadCatalog, catalogGear, gearFromCatalog, libraryEntryFor, rangeInfoFromCatalog, loadEstimateRules } from "./catalog.js";
 import { importFromLink, importFromPhoto, lookupOnline } from "./imports.js";
 import { sameCoffee } from "./rules.js";
 import type { z } from "zod";
@@ -248,6 +248,12 @@ export function brewRouter(db: DB) {
     res.json(gearRow(db.prepare("SELECT * FROM gear_items WHERE id=?").get(id)));
   };
   /* ---------- gear & recipe library (catalog/) ---------- */
+  /** The rules behind "Estimate the empty rows" (catalog/estimate-rules.json). */
+  r.get("/catalog/estimate-rules", (_req, res) => {
+    const er = loadEstimateRules();
+    if (!er.rules) return bad(res, `The estimate rules couldn't be read: ${er.error}`, 500);
+    res.json(er.rules);
+  });
   r.get("/catalog", (_req, res) => {
     const c = loadCatalog();
     const owned = new Set((db.prepare("SELECT catalogId FROM gear_items WHERE catalogId IS NOT NULL").all() as any[]).map((x) => x.catalogId));

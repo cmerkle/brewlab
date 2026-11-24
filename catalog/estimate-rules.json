@@ -1,0 +1,125 @@
+{
+  "about": "How Brewlab fills a grinder's empty grind-range rows from its other ranges (the gear editor's “Estimate the empty rows”, and the library's estimated rows). Rules run in `order`; a row filled earlier can feed a later one. For each method the first alternative whose `needs` are all present wins. Expressions use <method>.low / .high / .mid / .span, `min` (the grinder's physical minimum, else 0), numbers, + - * / and parentheses. Results are rounded to the grinder's step and kept inside its min/max.",
+  "version": 1,
+  "notePrefix": "Estimated by extrapolating the cited ranges, not from the source: ",
+  "noteSuffix": ". Dial in from there.",
+  "order": [
+    "pourover",
+    "batch",
+    "aeropress",
+    "moka",
+    "immersion",
+    "coldbrew",
+    "rapid",
+    "turkish"
+  ],
+  "rules": {
+    "pourover": [
+      {
+        "needs": [
+          "batch"
+        ],
+        "low": "batch.low",
+        "high": "batch.high",
+        "note": "pour-over: the drip coffee maker range"
+      }
+    ],
+    "batch": [
+      {
+        "needs": [
+          "pourover"
+        ],
+        "low": "pourover.low",
+        "high": "pourover.high",
+        "note": "drip coffee maker: the pour-over range"
+      }
+    ],
+    "aeropress": [
+      {
+        "needs": [
+          "espresso",
+          "pourover"
+        ],
+        "low": "espresso.high",
+        "high": "pourover.low",
+        "note": "AeroPress: between the espresso and pour-over ranges (or one pour-over span finer when there's no espresso range)"
+      },
+      {
+        "needs": [
+          "pourover"
+        ],
+        "low": "pourover.low - pourover.span",
+        "high": "pourover.low",
+        "note": "AeroPress: between the espresso and pour-over ranges (or one pour-over span finer when there's no espresso range)"
+      }
+    ],
+    "moka": [
+      {
+        "needs": [
+          "espresso",
+          "aeropress"
+        ],
+        "low": "espresso.high",
+        "high": "(espresso.high + aeropress.high) / 2",
+        "note": "moka pot: from the top of the espresso range to halfway to the top of the AeroPress range (or one AeroPress span finer when there's no espresso range)"
+      },
+      {
+        "needs": [
+          "aeropress"
+        ],
+        "low": "aeropress.low - aeropress.span",
+        "high": "aeropress.low",
+        "note": "moka pot: from the top of the espresso range to halfway to the top of the AeroPress range (or one AeroPress span finer when there's no espresso range)"
+      }
+    ],
+    "immersion": [
+      {
+        "needs": [
+          "coldbrew"
+        ],
+        "low": "coldbrew.low - coldbrew.span / 2",
+        "high": "coldbrew.high - coldbrew.span / 2",
+        "note": "French press: the cold brew range moved half its width finer"
+      },
+      {
+        "needs": [
+          "pourover"
+        ],
+        "low": "pourover.high",
+        "high": "pourover.high + pourover.span",
+        "note": "French press: from the top of the pour-over range, one pour-over width coarser"
+      }
+    ],
+    "coldbrew": [
+      {
+        "needs": [
+          "immersion"
+        ],
+        "low": "immersion.low + immersion.span / 2",
+        "high": "immersion.high + immersion.span / 2",
+        "note": "cold brew: the French press range moved half its width coarser"
+      }
+    ],
+    "rapid": [
+      {
+        "needs": [
+          "aeropress",
+          "pourover"
+        ],
+        "low": "aeropress.mid",
+        "high": "pourover.mid",
+        "note": "Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range"
+      }
+    ],
+    "turkish": [
+      {
+        "needs": [
+          "espresso"
+        ],
+        "low": "min",
+        "high": "espresso.low",
+        "note": "Turkish: from zero to the start of the espresso range"
+      }
+    ]
+  }
+}

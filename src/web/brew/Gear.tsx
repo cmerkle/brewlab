@@ -3,6 +3,7 @@ import { CATEGORY_LABELS } from "../Setup";
 import { api, type Gear as GearT, type RangeInfo } from "../api";
 import { useData, Field, FullScreen, ErrorBox, NumInput, useAction, SearchInput } from "../ui";
 import { METHODS, METHOD_LABELS, CATEGORY_METHOD, validateRanges, type Method, type GrindRanges } from "../../shared/grind";
+import { estimateRanges, estimateNoteFor, type EstimateRules } from "../../shared/estimate";
 
 const TYPES = [
   { id: "grinder", label: "Grinders" },
@@ -111,6 +112,49 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
   };
   const [error, setError] = useState<string | null>(null);
   const [suggesting, setSuggesting] = useState(false);
+
+  // "Estimate the empty rows": the library's rules (catalog/estimate-rules.json) applied to this
+  // grinder's other ranges. Fills ticked rows that have no range, marks them est., explains how.
+  const [estimateMsg, setEstimateMsg] = useState<string | null>(null);
+  const emptyRows = METHODS.filter((m) => !cannot.includes(m) && ranges[m]?.low == null && ranges[m]?.high == null);
+  const filledRows = METHODS.filter((m) => !cannot.includes(m) && ranges[m]?.low != null && ranges[m]?.high != null);
+  const estimate = async () => {
+    setEstimateMsg(null);
+    let rules: EstimateRules;
+    try {
+      rules = await api.get<EstimateRules>("/api/catalog/estimate-rules");
+    } catch (e: any) {
+      return setEstimateMsg(e.message);
+    }
+    const methods: GrindRanges["methods"] = {};
+    for (const m of filledRows) methods[m] = { low: ranges[m]!.low!, high: ranges[m]!.high! };
+    const r = estimateRanges({ methods, step: f.step, min: f.min, max: f.max, notation: f.notation, unsupported: cannot }, emptyRows, rules);
+    const made = METHODS.filter((m) => r.methods[m]);
+    setRanges((x) => {
+      const next = { ...x };
+      for (const m of made) next[m] = { low: r.methods[m]!.low, high: r.methods[m]!.high };
+      return next;
+    });
+    if (made.length) {
+      setInfo((i) => {
+        const fresh = [...new Set(made.map((m) => r.notes[m]!))].filter((n) => !(i.estimateNote ?? "").includes(n));
+        const old = i.estimateNote?.trim() ?? "";
+        let note = old;
+        if (!old) note = estimateNoteFor(fresh, rules);
+        else if (fresh.length && old.endsWith(rules.noteSuffix)) note = `${old.slice(0, -rules.noteSuffix.length)}; ${fresh.join("; ")}${rules.noteSuffix}`;
+        else if (fresh.length) note = `${old} ${estimateNoteFor(fresh, rules)}`;
+        return { ...i, estimated: METHODS.filter((m) => made.includes(m) || i.estimated?.includes(m)), estimateNote: note };
+      });
+    }
+    const needs = (alts: Method[][]) => alts.length
+      ? `needs ${alts.map((a) => a.map((n) => METHOD_LABELS[n]).join(" and ")).join(", or ")}`
+      : "no rule for it — type a range";
+    const missing = METHODS.filter((m) => r.missing[m]).map((m) => `${METHOD_LABELS[m]} (${needs(r.missing[m]!)})`);
+    setEstimateMsg(
+      [made.length ? `Estimated ${made.map((m) => METHOD_LABELS[m]).join(", ")} — marked est.; check them and Save.` : "Nothing could be estimated.",
+        missing.length ? `Couldn't estimate ${missing.join(", ")}.` : ""].filter(Boolean).join(" "),
+    );
+  };
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }));
 
   const save = async () => {
@@ -245,6 +289,15 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
                     onChange={(e) => setNotes((x) => ({ ...x, [m]: e.target.value }))} />
                 </div>
               ))}
+            </div>
+            <div className="stack-sm" data-testid="estimate">
+              <button type="button" onClick={estimate} disabled={!emptyRows.length || !filledRows.length}>Estimate the empty rows</button>
+              <p className="hint">
+                {emptyRows.length && filledRows.length
+                  ? `Fills ${emptyRows.map((m) => METHOD_LABELS[m]).join(", ")} from this grinder's other ranges, using the gear library's rules (e.g. cold brew = the French press range moved half its width coarser). Marked est.`
+                  : !filledRows.length ? "Enter at least one range to estimate the others from." : "Every ticked row has a range."}
+              </p>
+              {estimateMsg && <p className="note small" role="status" data-testid="estimate-result">{estimateMsg}</p>}
             </div>
             <Field label="Where these ranges come from" htmlFor="ge-confidence">
               <select id="ge-confidence" value={info.confidence ?? ""} onChange={(e) => setInfo((i) => ({ ...i, confidence: (e.target.value || null) as RangeInfo["confidence"] }))}>

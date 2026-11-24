@@ -452,3 +452,4 @@ input.short { width: 5.5em; }
 .range-row label.rl { display: flex; align-items: center; gap: 8px; min-height: 40px; }
 .range-row label.rl input { width: 20px; height: 20px; margin: 0; flex: none; }
 .range-row .cant { grid-column: 2 / -1; }
+.stack-sm { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }

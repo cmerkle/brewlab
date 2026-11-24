@@ -137,7 +137,11 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   (the per-row "can do" box in the gear editor; `canGrind`, `rangeFor` ignores them, conversions say
   "<grinder> can't grind for <method>") with a `notes` entry saying why. `espressoCapable` is retired
   (`migrateEspressoCapable` at startup/restore; the API maps an old client's `false` to unsupported). Never invent
-  ranges without a cited anchor. Installed gear keeps its own copy of `rangeInfo` (source/notes
+  ranges without a cited anchor. **Estimates come from rules that are data**:
+  `catalog/estimate-rules.json` (per method, alternatives with `needs` + `low`/`high` expressions,
+  evaluated by `src/shared/estimate.ts` — a small parser, never `eval`). The gear editor's
+  "Estimate the empty rows" applies them; `npm test` checks every rule-made library estimate equals
+  what the rules produce (hand-anchored ones are recognised by their estimateNote and skipped). Installed gear keeps its own copy of `rangeInfo` (source/notes
   editable in the gear editor); `syncGearWithLibrary` (startup) brings untouched copies up to a
   newer library version and only adds missing methods to edited ones. Converter tests use
   `tests/fixtures/spec-grinders.json`, not library values.

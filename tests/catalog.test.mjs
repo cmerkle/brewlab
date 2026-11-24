@@ -268,3 +268,34 @@ test("every brewer has a grind category, every category has brewers, every brewe
   for (const c of CATEGORIES.filter((c) => !c.endsWith("grinder") && c !== "other")) assert.ok(CATEGORY_METHOD[c], `kind ${c} has a default grind category`);
   assert.ok(why({ id: "x-cone", version: 1, name: "X", brand: null, type: "brewer", category: "cone-dripper" }).some((m) => /needs a grind category/.test(m)));
 });
+
+test("estimate rules: the library's estimated rows are what catalog/estimate-rules.json produces", async () => {
+  const { loadEstimateRules } = await import("../dist/server/catalog.js");
+  const { estimateRanges, estimateNoteFor, evalExpr } = await import("../dist/shared/estimate.js");
+  const { rules, error } = loadEstimateRules();
+  assert.equal(error, null);
+  let checked = 0;
+  for (const g of cat.gear.filter((x) => x.grindRanges && x.rangeInfo?.estimated?.length)) {
+    const est = g.rangeInfo.estimated, note = g.rangeInfo.estimateNote;
+    // Rows made by a rule say so in the estimateNote; others were anchored by hand (e.g. around a
+    // maker's single suggested setting) and feed the rules like cited ranges.
+    const byRule = est.filter((m) => (rules.rules[m] ?? []).some((a) => note.includes(a.note)));
+    const given = Object.fromEntries(Object.entries(g.grindRanges.methods).filter(([m]) => !byRule.includes(m)));
+    const r = estimateRanges({ ...g.grindRanges, methods: given }, byRule, rules);
+    for (const m of byRule) assert.deepEqual(r.methods[m], g.grindRanges.methods[m], `${g.id}.${m}`);
+    checked += byRule.length;
+  }
+  assert.ok(checked > 40, `checked ${checked} estimated rows`);
+  // The evaluator: arithmetic, precedence, and nothing else.
+  const get = (n) => ({ "a.low": 10, "a.high": 20, min: 0 })[n] ?? (() => { throw new Error(n); })();
+  assert.equal(evalExpr("(a.low + a.high) / 2", get), 15);
+  assert.equal(evalExpr("a.high - a.low * 2 + -1", get), -1);
+  assert.throws(() => evalExpr("process.exit()", get));
+  assert.throws(() => evalExpr("a.low; 1", get));
+  // Missing anchors are reported, and a method the grinder can't do is never estimated.
+  const e = estimateRanges({ methods: { pourover: { low: 20, high: 30 } }, step: 1, unsupported: ["batch"] }, ["turkish", "batch", "aeropress", "rapid"], rules);
+  assert.deepEqual(e.methods, { aeropress: { low: 10, high: 20 }, rapid: { low: 15, high: 25 } });
+  assert.deepEqual(e.missing.turkish, [["espresso"]]);
+  assert.equal(e.methods.batch, undefined);
+  assert.match(estimateNoteFor([e.notes.aeropress], rules), /^Estimated by extrapolating.*Dial in from there\.$/);
+});

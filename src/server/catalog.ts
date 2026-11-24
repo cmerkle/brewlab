@@ -6,6 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { z } from "zod";
 import { METHODS, valueToDial, rangeFor, type GrindRanges, type Method } from "../shared/grind.js";
+import { evalExpr, type EstimateRules } from "../shared/estimate.js";
 
 export const CATALOG_DIR = process.env.CATALOG_DIR || path.resolve("catalog");
 
@@ -135,11 +136,63 @@ function loadDir<T>(dir: string, schema: z.ZodType<T>): { items: T[]; errors: st
 }
 
 let cache: { gear: CatalogGearT[]; recipes: RecipeTemplateT[]; errors: string[] } | null = null;
+/* ---------- estimate rules (catalog/estimate-rules.json) ---------- */
+
+const EstimateRuleSchema = z.object({
+  needs: z.array(z.enum(METHODS)),
+  low: z.string().min(1),
+  high: z.string().min(1),
+  note: z.string().min(1),
+});
+export const EstimateRulesSchema = z.object({
+  about: z.string().optional(),
+  version: z.number().int().positive(),
+  notePrefix: z.string(),
+  noteSuffix: z.string(),
+  order: z.array(z.enum(METHODS)),
+  rules: z.partialRecord(z.enum(METHODS), z.array(EstimateRuleSchema)),
+}).superRefine((r, ctx) => {
+  // Every expression must read, and only use methods the rule says it needs.
+  for (const [m, alts] of Object.entries(r.rules)) {
+    (alts ?? []).forEach((a, i) => {
+      for (const k of ["low", "high"] as const) {
+        try {
+          evalExpr(a[k], (name) => {
+            if (name === "min") return 0;
+            const [meth, part] = name.split(".");
+            if (!a.needs.includes(meth as Method)) throw new Error(`uses ${meth} but doesn't list it in needs`);
+            if (!["low", "high", "mid", "span"].includes(part)) throw new Error(`unknown "${name}"`);
+            return 1;
+          });
+        } catch (e: any) {
+          ctx.addIssue({ code: "custom", message: `${m}[${i}].${k}: ${e.message}`, path: ["rules", m, i, k] });
+        }
+      }
+      if (a.needs.includes(m as Method)) ctx.addIssue({ code: "custom", message: `${m}[${i}] can't need itself`, path: ["rules", m, i, "needs"] });
+    });
+  }
+});
+
+let rulesCache: { rules: EstimateRules | null; error: string | null } | null = null;
+export function loadEstimateRules(dir = CATALOG_DIR, fresh = false): { rules: EstimateRules | null; error: string | null } {
+  if (rulesCache && !fresh && dir === CATALOG_DIR) return rulesCache;
+  let out: { rules: EstimateRules | null; error: string | null };
+  try {
+    const p = EstimateRulesSchema.safeParse(JSON.parse(fs.readFileSync(path.join(dir, "estimate-rules.json"), "utf8")));
+    out = p.success ? { rules: p.data as EstimateRules, error: null } : { rules: null, error: p.error.issues.map((i) => i.message).join("; ") };
+  } catch (e: any) {
+    out = { rules: null, error: e.message };
+  }
+  if (dir === CATALOG_DIR) rulesCache = out;
+  return out;
+}
+
 export function loadCatalog(dir = CATALOG_DIR, fresh = false) {
   if (cache && !fresh && dir === CATALOG_DIR) return cache;
   const g = loadDir(path.join(dir, "gear"), CatalogGear);
   const r = loadDir(path.join(dir, "recipes"), RecipeTemplate);
-  const out = { gear: g.items, recipes: r.items, errors: [...g.errors.map((e) => `gear/${e}`), ...r.errors.map((e) => `recipes/${e}`)] };
+  const er = loadEstimateRules(dir, fresh);
+  const out = { gear: g.items, recipes: r.items, errors: [...g.errors.map((e) => `gear/${e}`), ...r.errors.map((e) => `recipes/${e}`), ...(er.error ? [`estimate-rules.json: ${er.error}`] : [])] };
   if (dir === CATALOG_DIR) cache = out;
   return out;
 }
