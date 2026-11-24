@@ -1,0 +1,32 @@
+# Push a tag like v0.1.0 → a GitHub Release with that version's CHANGELOG section as its notes.
+# (The Docker workflow publishes the image for the same tag. More → About's update check reads
+# the latest release.)
+name: Release
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: github.server_url == 'https://github.com'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tag matches package.json
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p 'require("./package.json").version')"
+          [ "$v" = "$pkg" ] || { echo "Tag $GITHUB_REF_NAME but package.json says $pkg"; exit 1; }
+      - name: Notes from CHANGELOG.md
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          awk -v v="$v" '$0 ~ "^## " { if (on) exit; if (index($0, "## " v " ") == 1 || $0 == "## " v) { on = 1; next } } on' CHANGELOG.md > notes.md
+          [ -s notes.md ] || { echo "No '## $v' section in CHANGELOG.md"; exit 1; }
+          cat notes.md
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --title "Brewlab ${GITHUB_REF_NAME#v}" --notes-file notes.md --verify-tag

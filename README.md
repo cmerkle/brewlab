@@ -71,7 +71,7 @@ And again: if that hostname is reachable from the internet, add authentication i
 Nothing about specific gear is in the code. The **gear library** (`catalog/gear/*.json`) and **recipe templates** (`catalog/recipes/*.json`) are data:
 
 - Adding a model from the library gives you your own editable copy.
-- Grinders come with grind ranges **only where a source is cited** (each shows its confidence and links its source). Every other grinder starts with "no conversion data yet". Add your own ranges under *Gear*, or use the calibration helper.
+- Grinders come with grind ranges **from a cited source**: the maker's chart or a published community chart, linked in the gear editor. Methods a source leaves out are estimated from the grinder's own ranges (rules in `catalog/estimate-rules.json`) and marked "est."; methods a grinder can't do show "—". A grinder with no ranges (or one you add yourself) says "no conversion data yet" until you type its ranges in *Gear* or use the calibration helper.
 - Recipe templates store grind as a *position inside the method's range*, so a template renders onto whatever grinder you have.
 
 **How conversion works:** a setting keeps its position inside the source grinder's range for that brew method and lands at the same position in the target grinder's range. Halfway through one grinder's pour-over range maps to halfway through the other's. Microns-per-click is never used.
@@ -162,10 +162,14 @@ docker run -d --rm --name brewlab-demo -p 127.0.0.1:3104:7642 ghcr.io/cmerkle/br
 curl -XPOST localhost:3104/api/setup/demo && curl -XPOST localhost:3104/api/setup/complete
 ONLY="iPhone SE portrait" BASE=http://localhost:3104 npm run layout   # one viewport per run keeps memory low
 # README screenshots (same demo install):
-BASE=http://localhost:3104 node screenshots.mjs
+BASE=http://localhost:3104 npm run screenshots
 ```
 
 Before tagging a release, rehearse the update on an older install: `scripts/upgrade-test.sh [old-ref]` builds the old version and this checkout, loads the demo data into the old one, then starts the new one on the same volume and checks nothing was lost (default old-ref: the latest `v*` tag).
+
+## Contributing and bug reports
+
+Gear and grind ranges are the most useful contributions, and they're plain JSON: see [CONTRIBUTING.md](CONTRIBUTING.md). Found a bug? **More → About → Report a bug** opens a GitHub issue with your version and device filled in. Security problems: see [SECURITY.md](SECURITY.md).
 
 ## License
 

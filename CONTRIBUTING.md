@@ -2,6 +2,8 @@
 
 Thanks for helping! The most useful contributions are **gear** and **grind ranges** — they're plain JSON, no code.
 
+No source or no time to write the entry? [Open an "Add gear to the library" issue](https://github.com/cmerkle/brewlab/issues/new?template=gear.yml) (also in Brewlab under More → About).
+
 ## The easy way: from the app
 
 Add the gear to your own Brewlab (Gear → "+" → *Add custom gear*), fill in its details and Kind, and save. Then, in its editor:
@@ -28,9 +30,9 @@ One file per model in `catalog/gear/<id>.json` (the `id` must match the file nam
 }
 ```
 
-- `type`: `grinder`, `brewer` or `other`.
-- `category`: one of `hand-grinder`, `electric-grinder`, `cone-dripper`, `flat-bottom-dripper`, `hybrid-dripper`, `immersion-dripper`, `aeropress`, `rapid-brewer`, `french-press`, `moka-pot`, `espresso-machine`, `batch-brewer`, `other`. Recipe templates match brewers by category.
-- Brewers can set `defaultMethod` (`espresso`, `pourover`, `immersion`, `aeropress`, `rapid`, `batch`) and `variants`.
+- `type`: `grinder` or `brewer`.
+- `category`: one of `hand-grinder`, `electric-grinder`, `cone-dripper`, `flat-bottom-dripper`, `hybrid-dripper`, `immersion-dripper`, `aeropress`, `rapid-brewer`, `french-press`, `moka-pot`, `espresso-machine`, `batch-brewer`, `cezve`, `cold-brew-maker`, `siphon`, `other` (a brewer that fits none of these). Recipe templates match brewers by category.
+- Brewers must set `defaultMethod`, one of the brew methods below (see "Brewers need a grind category"), and can list `variants`.
 
 ## Grind ranges need a source
 

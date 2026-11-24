@@ -35,7 +35,7 @@ export const CatalogGear = z.object({
   version: z.number().int().positive(),
   name: z.string().min(1),
   brand: z.string().nullable(),
-  type: z.enum(["grinder", "brewer", "other"]),
+  type: z.enum(["grinder", "brewer"], { message: "type must be grinder or brewer — the library has no other gear" }),
   category: z.enum(CATEGORIES),
   details: z.string().nullable().optional(),
   units: z.string().nullable().optional(),

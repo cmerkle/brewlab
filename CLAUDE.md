@@ -73,8 +73,10 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   the bug link pre-fills version and device). `settings.updateCheck` (off by default) asks GitHub's
   releases API once a day (cron 03:00 + startup, at most daily); "Check now" always works. Repo from
   `LIBRARY_REPO`; tests point `UPDATE_CHECK_URL` at a local stub. Never send anything about the user.
-- Release: bump `package.json` version, `scripts/upgrade-test.sh` (old tag → this checkout on the
-  same volume), then tag `vX.Y.Z` — the Docker workflow publishes the image.
+- Release: bump `package.json` version, add a `## X.Y.Z` section to CHANGELOG.md, run
+  `scripts/upgrade-test.sh` (old tag → this checkout on the same volume) and, for UI changes,
+  `tests/e2e/screenshots.mjs`; then push tag `vX.Y.Z`. On GitHub, `release.yml` makes the Release
+  from that CHANGELOG section (tag must match package.json) and `docker.yml` publishes the image.
 
 ## Commands
 
