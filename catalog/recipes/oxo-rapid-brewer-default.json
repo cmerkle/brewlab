@@ -1,7 +1,7 @@
 {
   "id": "oxo-rapid-brewer-default",
   "legacyId": 1017,
-  "version": 1,
+  "version": 2,
   "name": "OXO Rapid Brewer Default",
   "genericName": "Rapid brewer default",
   "credit": null,
@@ -15,7 +15,7 @@
     ]
   },
   "doseG": 20,
-  "waterG": 300,
+  "waterG": 160,
   "tempC": 94,
   "grind": {
     "position": 0.5,
@@ -26,22 +26,22 @@
   "steps": [
     {
       "atSec": 0,
-      "label": "Pour to 300g",
-      "targetWaterG": 300,
+      "label": "Pour to 160g",
+      "targetWaterG": 160,
       "detail": "Stir to saturate"
     },
     {
       "atSec": 30,
       "label": "Steep",
-      "targetWaterG": 300,
+      "targetWaterG": 160,
       "detail": "Cap and let it steep"
     },
     {
-      "atSec": 150,
+      "atSec": 120,
       "label": "Press / release",
-      "targetWaterG": 300,
-      "detail": ""
+      "targetWaterG": 160,
+      "detail": "About 2 minutes in total. Dilute 1:2 or 1:3 with water or milk"
     }
   ],
-  "notes": "Default OXO Rapid Brewer brew."
+  "notes": "OXO's own hot recipe: 20g fine coffee (first fill line) to 160 mL hot water, about 2 minutes. The brewer only holds about 5 oz of water. Makes a concentrate; OXO suggests diluting it 1:2 or 1:3."
 }

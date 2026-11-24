@@ -4,6 +4,7 @@ import express from "express";
 import fs from "node:fs";
 import path from "node:path";
 import { type DB, DATA_DIR, nowIso } from "./db.js";
+import { getSettings, setSettings } from "./settings.js";
 
 export const BACKUP_DIR = process.env.BACKUP_DIR || path.join(DATA_DIR, "backups");
 export const BACKUP_KEEP = Math.max(1, Number(process.env.BACKUP_KEEP || 14));
@@ -28,6 +29,16 @@ export function listBackups() {
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
+/** How many snapshots to keep: the user's setting (More → Backups), else BACKUP_KEEP. */
+export const keepFor = (db: DB) => getSettings(db).backupKeep ?? BACKUP_KEEP;
+
+/** Delete all but the newest `keep` snapshots; returns the names removed. */
+export function pruneBackups(keep: number) {
+  const old = listBackups().slice(keep).map((b) => b.name);
+  for (const name of old) fs.rmSync(path.join(BACKUP_DIR, name), { force: true });
+  return old;
+}
+
 /** Snapshot the database; nightly runs use one file per day, manual ones are timestamped. */
 export async function createBackup(db: DB, kind: "nightly" | "manual") {
   fs.mkdirSync(BACKUP_DIR, { recursive: true });
@@ -36,8 +47,7 @@ export async function createBackup(db: DB, kind: "nightly" | "manual") {
   const tmp = `${file}.partial`;
   await db.backup(tmp);
   fs.renameSync(tmp, file);
-  // Rotate: keep the newest BACKUP_KEEP snapshots.
-  for (const old of listBackups().slice(BACKUP_KEEP)) fs.rmSync(path.join(BACKUP_DIR, old.name), { force: true });
+  pruneBackups(keepFor(db));
   return { name, bytes: fs.statSync(file).size };
 }
 
@@ -51,7 +61,16 @@ export function exportAll(db: DB) {
 
 export function backupRouter(db: DB) {
   const r = express.Router();
-  r.get("/backups", (_req, res) => res.json({ dir: BACKUP_DIR, keep: BACKUP_KEEP, backups: listBackups() }));
+  const state = () => ({ dir: BACKUP_DIR, keep: keepFor(db), keepDefault: BACKUP_KEEP, custom: getSettings(db).backupKeep != null, backups: listBackups() });
+  r.get("/backups", (_req, res) => res.json(state()));
+  // Retention: { keep: number } or { keep: null } for the BACKUP_KEEP default. Applies right away.
+  r.put("/backups/retention", (req, res) => {
+    const keep = req.body?.keep;
+    if (keep !== null && !(Number.isInteger(keep) && keep >= 1 && keep <= 365)) return res.status(400).json({ error: "Keep between 1 and 365 backups" });
+    setSettings(db, { backupKeep: keep });
+    const removed = pruneBackups(keepFor(db));
+    res.json({ ...state(), removed });
+  });
   r.post("/backups", async (_req, res) => {
     try {
       res.json(await createBackup(db, "manual"));
@@ -63,6 +82,12 @@ export function backupRouter(db: DB) {
     const name = req.params.name;
     if (!NAME_RE.test(name) || !fs.existsSync(path.join(BACKUP_DIR, name))) return res.status(404).json({ error: "Backup not found" });
     res.download(path.join(BACKUP_DIR, name), name);
+  });
+  r.delete("/backups/:name", (req, res) => {
+    const name = req.params.name;
+    if (!NAME_RE.test(name) || !fs.existsSync(path.join(BACKUP_DIR, name))) return res.status(404).json({ error: "Backup not found" });
+    fs.rmSync(path.join(BACKUP_DIR, name));
+    res.json(state());
   });
   r.get("/export", (_req, res) => {
     res.setHeader("Content-Disposition", `attachment; filename="brewlab-export-${stamp(false)}.json"`);

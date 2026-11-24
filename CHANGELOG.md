@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.2
+
+- **Backups:** delete a backup from More → Backups (it asks first), and choose how many to keep there. Lowering the number deletes the oldest ones right away, after asking. *Use the default* goes back to `BACKUP_KEEP` (14 unless you set it).
+- **OXO Rapid Brewer Default** recipe: 20 g to 160 g of water (OXO's own hot recipe, about 2 minutes), not 300 g, which the brewer can't hold. Recipes you already added keep their values; edit the water there.
+- **OXO Rapid Brewer Cold** recipe (new): OXO's cold recipe, 40 g to 160 g of cold water, about 5 minutes.
+- **Layout:** the arrow on the rounded filter dropdowns (Recipes, Brew Log) was cut off on Windows; *Ready to brew* and *Add custom gear* are now centred under the form on wide screens instead of sitting at the left.
+
 ## 0.1.1
 
 - **Step chime fixes:** the chime now also plays when the timer moves from the first step to the second (it was skipped), it sounds on an iPhone set to silent while the brew timer is open, and unmuting the bell plays it once so you know it's on.

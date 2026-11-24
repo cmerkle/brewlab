@@ -333,6 +333,38 @@ try {
     "Report a bug opens GitHub's bug form with the version and device filled in");
   check(/template=gear\.yml/.test(await about.getByTestId("request-gear").getAttribute("href")), "Ask for gear opens the gear form");
 
+  // More → Backups: make three, keep 2 (confirm), delete one (confirm), back to the default.
+  const bk = p.locator('[data-testid="backups"]');
+  const bkRows = bk.locator(".backup-row");
+  const bkBefore = await bkRows.count();
+  for (let i = 0; i < 3; i++) {
+    await bk.getByRole("button", { name: "Back up now" }).click();
+    await bkRows.nth(bkBefore + i).waitFor();
+    await p.waitForTimeout(1100); // manual backups are named to the second
+  }
+  const keepDefault = (await (await fetch(`${BASE}/api/backups`)).json()).keepDefault;
+  await p.fill("#backup-keep", "2");
+  let bkMsg = "";
+  p.once("dialog", (d) => { bkMsg = d.message(); d.accept(); });
+  await bk.getByRole("button", { name: "Save" }).click();
+  await bk.getByRole("button", { name: "Use the default" }).waitFor();
+  let bks = await (await fetch(`${BASE}/api/backups`)).json();
+  check(/deletes the \d+ oldest backup/.test(bkMsg) && bks.keep === 2 && bks.backups.length === 2 && (await bkRows.count()) === 2, `keeping 2 asks first, then removes the older backups (${bkMsg})`);
+  const victim = bks.backups[1].name;
+  p.once("dialog", (d) => d.dismiss());
+  await bk.getByRole("button", { name: `Delete ${victim}` }).click();
+  await p.waitForTimeout(300);
+  check((await bkRows.count()) === 2, "cancelling the delete keeps the backup");
+  p.once("dialog", (d) => d.accept());
+  await bk.getByRole("button", { name: `Delete ${victim}` }).click();
+  await bk.getByRole("button", { name: `Delete ${victim}` }).waitFor({ state: "detached" });
+  bks = await (await fetch(`${BASE}/api/backups`)).json();
+  check(bks.backups.length === 1 && !bks.backups.some((b) => b.name === victim), `a backup can be deleted (${victim})`);
+  await bk.getByRole("button", { name: "Use the default" }).click();
+  await bk.getByRole("button", { name: "Use the default" }).waitFor({ state: "detached" });
+  bks = await (await fetch(`${BASE}/api/backups`)).json();
+  check(bks.keep === keepDefault && !bks.custom && (await p.inputValue("#backup-keep")) === String(keepDefault), `"Use the default" goes back to ${keepDefault}`);
+
   // Discover → Your taste: "always leave out" rules are the user's own.
   await p.goto(`${BASE}/#/discover/taste`);
   const rulesCard = p.locator('[data-testid="avoid-rules"]');

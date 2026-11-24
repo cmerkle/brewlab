@@ -1,0 +1,47 @@
+{
+  "id": "oxo-rapid-brewer-cold",
+  "legacyId": 1021,
+  "version": 1,
+  "name": "OXO Rapid Brewer Cold",
+  "genericName": "Rapid brewer cold",
+  "credit": null,
+  "method": "rapid",
+  "brewer": {
+    "ids": [
+      "oxo-rapid-brewer"
+    ],
+    "categories": [
+      "rapid-brewer"
+    ]
+  },
+  "doseG": 40,
+  "waterG": 160,
+  "tempC": null,
+  "grind": {
+    "position": 0.5,
+    "preferredGrinders": [
+      "k-ultra"
+    ]
+  },
+  "steps": [
+    {
+      "atSec": 0,
+      "label": "Pour to 160g",
+      "targetWaterG": 160,
+      "detail": "Cold water, stir to saturate"
+    },
+    {
+      "atSec": 30,
+      "label": "Steep",
+      "targetWaterG": 160,
+      "detail": "Cap and let it steep"
+    },
+    {
+      "atSec": 300,
+      "label": "Press / release",
+      "targetWaterG": 160,
+      "detail": "About 5 minutes in total. Dilute 1:2 or 1:3 with water or milk, over ice"
+    }
+  ],
+  "notes": "OXO's own cold recipe: 40g fine coffee (second fill line) to 160 mL cold water, about 5 minutes. Makes a concentrate; OXO suggests diluting it 1:2 or 1:3."
+}

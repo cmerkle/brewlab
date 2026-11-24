@@ -108,9 +108,9 @@ Set a provider in the app under **More → Settings → AI provider**: choose on
 
 ## Data and backups
 
-Everything lives in the `brewlab-data` volume at `/data`: the database (`brewlab.db`), bag photos (`uploads/`), nightly snapshots (`backups/`, newest 14 kept) and `secrets.json` if you saved an AI key.
+Everything lives in the `brewlab-data` volume at `/data`: the database (`brewlab.db`), bag photos (`uploads/`), nightly snapshots (`backups/`, newest 14 kept unless you change it) and `secrets.json` if you saved an AI key.
 
-On **More** you can *Back up now*, download a snapshot, or *Export all data (JSON)*. An export can be restored from the first-run setup of a fresh install. For off-machine copies:
+On **More** you can *Back up now*, download or delete a snapshot, set how many to keep, or *Export all data (JSON)*. An export can be restored from the first-run setup of a fresh install. For off-machine copies:
 
 ```bash
 docker compose cp brewlab:/data ./brewlab-data-copy
@@ -132,7 +132,7 @@ All optional, set as environment variables. Compose reads a `.env` file next to 
 |---|---|---|
 | `TZ` | `UTC` | Time zone for the Monday 08:00 refresh, nightly backup and "today". |
 | `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_BASE_URL` | *(unset)* | AI provider via environment instead of the in-app form. `LLM_MODEL` is required except for Anthropic. |
-| `BACKUP_KEEP` | `14` | Snapshots to keep. |
+| `BACKUP_KEEP` | `14` | Snapshots to keep, unless set in More → Backups. |
 | `DISABLE_CRON` | *(unset)* | `1` turns off the weekly refresh and nightly backup. |
 | `IMPORT_ALLOW_HOSTS` | *(unset)* | Hosts the link importer may fetch even though they're private addresses (normally refused). |
 | `LIBRARY_REPO` | `cmerkle/brewlab` | The GitHub repo (`owner/name`) used for "Suggest to the library", More → About's links and the optional update check. Set it if you run a fork. |

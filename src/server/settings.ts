@@ -35,13 +35,15 @@ export const SettingsSchema = z.object({
   }),
   /** Check GitHub once a day for a newer release (off by default: it's a request to github.com). */
   updateCheck: z.boolean(),
+  /** Backups: how many snapshots to keep (newest first). null = the BACKUP_KEEP default. */
+  backupKeep: z.number().int().min(1).max(365).nullable(),
   /** Avoid-rule suggestions the user said no to. */
   dismissedSuggestions: z.array(z.string().max(40)),
 });
 export type Settings = z.infer<typeof SettingsSchema>;
 export const DEFAULT_SETTINGS: Settings = {
   tempUnit: "C", waterUnit: "g", defaultRatio: 16, discoverEnabled: true,
-  ruleDefs: PRESET_RULES, avoidRules: [], palateNotes: "", tasteQuiz: { loves: [], dislikes: [], processes: [], roasts: [] }, dismissedSuggestions: [], updateCheck: false,
+  ruleDefs: PRESET_RULES, avoidRules: [], palateNotes: "", tasteQuiz: { loves: [], dislikes: [], processes: [], roasts: [] }, dismissedSuggestions: [], updateCheck: false, backupKeep: null,
   doseNudge: { ...DEFAULT_DOSE_NUDGE, methods: [...DEFAULT_DOSE_NUDGE.methods] },
 };
 

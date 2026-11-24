@@ -13,7 +13,7 @@ interface Health {
   counts: Record<string, number>;
   tz: string | null;
 }
-interface Backups { dir: string; keep: number; backups: { name: string; bytes: number; createdAt: string }[] }
+interface Backups { dir: string; keep: number; keepDefault: number; custom: boolean; backups: { name: string; bytes: number; createdAt: string }[] }
 
 const standalone = () => window.matchMedia?.("(display-mode: standalone)").matches || (navigator as any).standalone === true;
 
@@ -21,21 +21,10 @@ export function More() {
   const { act, settings, saveSettings, reloadSetup } = useData();
   const [calc, setCalc] = useState(false);
   const [health, setHealth] = useState<Health | null>(null);
-  const [backups, setBackups] = useState<Backups | null>(null);
-  const [busy, setBusy] = useState(false);
   const load = useCallback(() => {
     api.get<Health>("/api/health").then(setHealth).catch(() => {});
-    api.get<Backups>("/api/backups").then(setBackups).catch(() => {});
   }, []);
   useEffect(load, [load]);
-  const backupNow = async () => {
-    setBusy(true);
-    await act(async () => {
-      await api.post("/api/backups");
-      load();
-    }, "Backup created");
-    setBusy(false);
-  };
   const ios = /iphone|ipad/i.test(navigator.userAgent);
 
   return (
@@ -86,26 +75,7 @@ export function More() {
         </section>
       )}
 
-      <section className="card" data-testid="backups">
-        <h2>Backups</h2>
-        <p className="small muted">A snapshot of the database is saved every night at 3 a.m. (the last {backups?.keep ?? 14} are kept). Photos aren't included — back up the whole data volume for those.</p>
-        <div className="row wrap">
-          <button className="primary" disabled={busy} onClick={backupNow}>{busy ? "Backing up…" : "Back up now"}</button>
-          <a className="button" href="/api/export" download>Export all data (JSON)</a>
-        </div>
-        {backups && backups.backups.length > 0 ? (
-          <ul className="plain small">
-            {backups.backups.map((b) => (
-              <li key={b.name}>
-                <a href={`/api/backups/${encodeURIComponent(b.name)}`} download>{b.name}</a>{" "}
-                <span className="muted">· {fmtDate(b.createdAt)} · {Math.round(b.bytes / 1024)} KB</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="small muted">No backups yet.</p>
-        )}
-      </section>
+      <BackupsCard />
 
       {health && (
         <section className="card" data-testid="status">
@@ -280,6 +250,74 @@ export function ScreenInfo() {
 }
 
 /** Brew setup's "grind for a different dose" adjustment: on/off, how much, which methods. */
+function BackupsCard() {
+  const { act, reloadSetup } = useData();
+  const [b, setB] = useState<Backups | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [keep, setKeep] = useState<number | null>(null);
+  const load = useCallback(() => api.get<Backups>("/api/backups").then((x) => { setB(x); setKeep(x.keep); }).catch(() => {}), []);
+  useEffect(() => { load(); }, [load]);
+  const backupNow = async () => {
+    setBusy(true);
+    await act(async () => { await api.post("/api/backups"); await load(); }, "Backup created");
+    setBusy(false);
+  };
+  const remove = (name: string) => {
+    if (!confirm(`Delete the backup ${name}? This can't be undone.`)) return;
+    act(async () => { await api.del(`/api/backups/${encodeURIComponent(name)}`); await load(); }, "Backup deleted");
+  };
+  // null = back to the default (BACKUP_KEEP)
+  const saveKeep = (n: number | null) => {
+    if (!b) return;
+    const next = n ?? b.keepDefault;
+    const lose = Math.max(0, b.backups.length - next);
+    if (lose && !confirm(`Keeping ${next} deletes the ${lose} oldest backup${lose === 1 ? "" : "s"} now. Continue?`)) return;
+    act(async () => { await api.put("/api/backups/retention", { keep: n }); await load(); await reloadSetup(); }, "Saved");
+  };
+  const changed = b != null && keep != null && keep !== b.keep;
+  return (
+    <section className="card" data-testid="backups">
+      <h2>Backups</h2>
+      <p className="small muted">A snapshot of the database is saved every night at 3 a.m. Photos aren't included — back up the whole data volume for those.</p>
+      <div className="row wrap">
+        <button className="primary" disabled={busy} onClick={backupNow}>{busy ? "Backing up…" : "Back up now"}</button>
+        <a className="button" href="/api/export" download>Export all data (JSON)</a>
+      </div>
+      {b && (
+        <div className="pref-row" data-testid="backup-keep">
+          <label htmlFor="backup-keep">Keep the newest</label>
+          <div className="row">
+            <NumInput id="backup-keep" className="short" value={keep} onChange={setKeep} min={1} max={365} decimals={0} aria-label="Backups to keep" />
+            <span className="small">backups</span>
+            {changed && keep! >= 1 && keep! <= 365 && <button onClick={() => saveKeep(Math.round(keep!))}>Save</button>}
+          </div>
+        </div>
+      )}
+      {b && (
+        <p className="small muted">
+          Older ones are deleted when a new backup is made, nightly or by hand.
+          {b.custom ? <> Default is {b.keepDefault}. <button className="link" onClick={() => saveKeep(null)}>Use the default</button></> : null}
+        </p>
+      )}
+      {b && b.backups.length > 0 ? (
+        <ul className="plain small" data-testid="backup-list">
+          {b.backups.map((x) => (
+            <li key={x.name} className="backup-row">
+              <span>
+                <a href={`/api/backups/${encodeURIComponent(x.name)}`} download>{x.name}</a>{" "}
+                <span className="muted">· {fmtDate(x.createdAt)} · {Math.round(x.bytes / 1024)} KB</span>
+              </span>
+              <button className="link danger" aria-label={`Delete ${x.name}`} onClick={() => remove(x.name)}>Delete</button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="small muted">No backups yet.</p>
+      )}
+    </section>
+  );
+}
+
 function DoseNudgeSettings() {
   const { settings, saveSettings, act, gear } = useData();
   // Shown at once and saved in order, so quick edits (typing, ticking boxes) never undo each other.

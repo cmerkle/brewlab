@@ -105,7 +105,9 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   `IMPORT_ALLOW_HOSTS=<fixture host>`. Shopify `/products/<handle>.js` first, then the page
   (JSON-LD / OG / labelled text; "label on one line, value on the next" only in product context).
   Roaster sites rate-limit server-side fetches (429) — don't vary headers to get around it.
-- Nightly backups to /data/backups (03:00, BACKUP_KEEP=14); More has backup/export.
+- Nightly backups to /data/backups (03:00). How many are kept: `settings.backupKeep` (More → Backups;
+  null = `BACKUP_KEEP`, default 14), applied at once via `PUT /api/backups/retention` and after every
+  snapshot. More has back up now, download, delete (`DELETE /api/backups/:name`, names only) and export.
 - **Layout model:** `html.tabbar` (App.tsx, from NOT `(hover: hover) and (pointer: fine) and
   (min-width: 900px)`) → full-height flex column, `<main>` scrolls, tab bar in normal flow at the
   bottom (never `position: fixed` — iOS PWAs mis-place fixed bars after fold/rotate). Desktop keeps
@@ -172,7 +174,7 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   `meta.onboarded` isn't "1"; installs with data are marked onboarded at startup. Preferences in
   the `settings` table (`src/server/settings.ts`): tempUnit (DB always °C — use
   `useTemp`/`TempInput`), waterUnit (instance default; per-device g/oz pref wins), defaultRatio,
-  discoverEnabled, ruleDefs/avoidRules, palateNotes, tasteQuiz, doseNudge, updateCheck. Demo data (`demo/`, fictional) and restore
+  discoverEnabled, ruleDefs/avoidRules, palateNotes, tasteQuiz, doseNudge, updateCheck, backupKeep. Demo data (`demo/`, fictional) and restore
   only go into an empty DB.
 - **Discover taste** (`src/server/taste.ts`): summary from Stash ratings, brew ratings and
   tastings → stage popular (0 rated) / mixed (1–4) / tailored (5+), the research prompt, ranking of

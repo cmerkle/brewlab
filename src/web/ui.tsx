@@ -39,6 +39,7 @@ export interface Settings {
   dismissedSuggestions: string[];
   doseNudge: DoseNudge;
   updateCheck: boolean;
+  backupKeep: number | null;
 }
 export interface SetupState { onboarded: boolean; empty: boolean; settings: Settings }
 
@@ -65,6 +66,7 @@ export const DEFAULT_SETTINGS: Settings = {
   ruleDefs: [], avoidRules: [], palateNotes: "", tasteQuiz: { loves: [], dislikes: [], processes: [], roasts: [] }, dismissedSuggestions: [],
   doseNudge: DEFAULT_DOSE_NUDGE,
   updateCheck: false,
+  backupKeep: null,
 };
 export const useData = () => useContext(Ctx)!;
 
