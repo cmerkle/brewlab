@@ -9,5 +9,5 @@ server rack (Brewlab is self-hosted).
 
 The PNGs in `src/web/public/` are rendered from these: `icon-512.png`, `icon-192.png`,
 `apple-touch-icon.png` (180), `icon-maskable-512.png` (from the maskable SVG) and `favicon.png`
-(64, from the favicon SVG). `favicon.svg` is served as-is. After changing them, bump `CACHE` in
+(64, from the favicon SVG). `favicon.svg` is served as-is. Centring is optical, not by outline: the artwork sits where the midpoint of its outline centre and its visual weight (the rack and carafe are heavy, the steam light) is at the icon's centre. After changing them, bump `CACHE` in
 `src/web/public/sw.js` so installed apps pick them up.

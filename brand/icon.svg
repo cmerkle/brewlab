@@ -4,7 +4,7 @@
     <linearGradient id="coffee" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b8662a"/><stop offset="1" stop-color="#4a2511"/></linearGradient>
     <clipPath id="carafe"><path d="M222 250 L178 350 Q168 380 198 380 H314 Q344 380 334 350 L290 250 Z"/></clipPath>
   </defs>
-  <rect width="512" height="512" fill="url(#bg)"/><g transform="translate(256 256) scale(1.1) translate(-256 -211)">
+  <rect width="512" height="512" fill="url(#bg)"/><g transform="translate(256 256) scale(0.9) translate(-256 -207.0)">
   <!-- server rack behind (the homelab) -->
   <g fill="none" stroke="#5d84a6" stroke-width="9">
     <rect x="104" y="166" width="304" height="48" rx="16"/>
@@ -19,7 +19,7 @@
     <path d="M300 262 H336 L354 330 H322 Z"/>
   </g>
   <!-- steam -->
-  <g fill="#ec9a3c">
+  <g fill="#ec9a3c" transform="translate(257 130) scale(1.75) translate(-257 -130)">
     <path d="M236 128 C210 108 222 88 236 76 C248 66 246 54 238 42 C262 56 266 78 252 94 C242 106 240 116 246 128 Z"/>
     <path d="M274 128 C256 112 264 96 276 86 C285 78 284 68 279 60 C296 72 298 90 288 102 C281 110 280 118 284 128 Z"/>
   </g>
