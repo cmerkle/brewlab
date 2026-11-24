@@ -29,7 +29,7 @@ export function listBackups() {
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-/** How many snapshots to keep: the user's setting (More → Backups), else BACKUP_KEEP. */
+/** How many snapshots to keep: the user's setting (More → Settings → Backups), else BACKUP_KEEP. */
 export const keepFor = (db: DB) => getSettings(db).backupKeep ?? BACKUP_KEEP;
 
 /** Delete all but the newest `keep` snapshots; returns the names removed. */

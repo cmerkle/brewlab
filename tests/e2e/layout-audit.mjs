@@ -38,6 +38,12 @@ const PAGES = [
   { name: "Gear", hash: "brew/gear" },
   { name: "Water", hash: "brew/water" },
   { name: "Stash archive", hash: "brew/stash/archive" },
+  { name: "Insights", hash: "brew/insights" },
+  { name: "Insights (all time, tables)", hash: "brew/insights", act: async (p) => {
+    await p.getByRole("button", { name: "All time" }).click();
+    // Each click renames its button to "Chart", so click them all at once.
+    await p.$$eval(".insight-card .insight-actions button", (bs) => bs.filter((b) => b.textContent === "Table").forEach((b) => b.click()));
+  } },
   { name: "Discover board", hash: "discover/board" },
   { name: "Past editions", hash: "discover/archive" },
   { name: "Tasting log", hash: "discover/tastings" },
@@ -51,6 +57,7 @@ const PAGES = [
   } },
   { name: "Your taste (research prompt open)", hash: "discover/taste", act: async (p) => p.getByRole("button", { name: /Show what the weekly research is told/ }).click() },
   { name: "More", hash: "more" },
+  { name: "Settings", hash: "more/settings" },
   { name: "dialog: Brew setup", hash: "brew/recipes", dialog: true, act: async (p) => p.locator('[data-testid="recipe-1001"] [data-testid="recipe-brew"]').click() },
   { name: "dialog: Timer", hash: "brew/recipes", dialog: true, act: async (p) => { await p.locator('[data-testid="recipe-1001"] [data-testid="recipe-brew"]').click(); await p.getByRole("button", { name: "Ready to brew" }).click(); await p.waitForTimeout(300); } },
   { name: "dialog: Timer running", hash: "brew/recipes", dialog: true, act: async (p) => { await p.locator('[data-testid="recipe-1001"] [data-testid="recipe-brew"]').click(); await p.getByRole("button", { name: "Ready to brew" }).click(); await p.getByRole("button", { name: "Start timer" }).click(); await p.waitForTimeout(300); } },

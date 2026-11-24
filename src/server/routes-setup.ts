@@ -151,11 +151,11 @@ export function setupRouter(db: DB) {
     }
   });
 
-  /** Restore a Brewlab JSON export (More → Backups → Export all data) — only into an empty instance. */
+  /** Restore a Brewlab JSON export (More → Settings → Backups → Export all data) — only into an empty instance. */
   r.post("/setup/restore", express.json({ limit: "50mb" }), (req, res) => {
     if (!isEmpty(db)) return bad(res, "A backup can only be restored into an empty Brewlab.", 409);
     const ex = req.body;
-    if (!ex || ex.app !== "brewlab") return bad(res, "That file isn't a Brewlab export (More → Backups → Export all data).");
+    if (!ex || ex.app !== "brewlab") return bad(res, "That file isn't a Brewlab export (More → Settings → Backups → Export all data).");
     const counts: Record<string, number> = {};
     try {
       db.transaction(() => {

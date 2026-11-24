@@ -7,7 +7,7 @@
 
 A self-hosted coffee app for home brewers: one Docker container, one SQLite database, no account.
 
-- **Brew:** recipes with a guided brew timer, ratio calculator, a grind guide that **converts settings between your grinders**, your coffee stash, a brew log, your gear, and **water recipes** you can compare in the log.
+- **Brew:** recipes with a guided brew timer, ratio calculator, a grind guide that **converts settings between your grinders**, your coffee stash, a brew log, your gear, **water recipes** you can compare in the log, and **Insights**: charts of your brewing habits and what you rate highest.
 - **Discover:** a weekly board of coffees to try. It starts with popular picks and learns from what you rate. An AI provider is optional: with one, Brewlab researches roasters' current offerings; without one, you add candidates and Brewlab filters and ranks them.
 
 It's built for phones first and works just as well on tablets and computers. Install it from the browser to use it like an app.
@@ -48,7 +48,7 @@ Every step can be skipped and redone from **More → Settings → Run setup agai
 |---|---|
 | Logs | `docker compose logs -f` |
 | Health | `curl -s localhost:7642/api/health` |
-| Update | `docker compose pull && docker compose up -d` (or `git pull && docker compose up -d --build`). More → About shows your version and can check for new releases (off by default). |
+| Update | `docker compose pull && docker compose up -d` (or `git pull && docker compose up -d --build`). More → Settings → About shows your version and can check for new releases (off by default). |
 | Stop | `docker compose down` (keeps your data) |
 
 `docker compose down -v` **deletes the volume and all your data.**
@@ -86,6 +86,20 @@ Missing gear, or have a source for a grind range? Add it to your own Brewlab, th
 - **Concentrates:** mark a water as a concentrate (a stock solution, say 6.8 g calcium chloride in 1 L) and other waters can add it by the gram, with the hardness worked out through it.
 - **A library** of cited recipes (`catalog/water/*.json`, additives in `catalog/water-additives.json`): the Third Wave Water profiles, two Lotus drop recipes (Light & Bright, Rao/Perger) and Barista Hustle's concentrate recipes (Melbourne, Budapest, SCA, Barista Hustle Water, Rao, Hendon, Pretty Hard, Hard dot AF, plus the original filter recipe and an espresso one), with their concentrates. Library entries hold only the numbers and a link to the source. Adding one gives you your own copy.
 - **Linked to brewing:** a recipe can have a default water, Brew setup lets you pick the water you're using, and each brew records it. The Brew Log filters by water and compares how each one rated (for a recipe or coffee too), so you can try one coffee with different waters.
+
+## Insights
+
+*More → Insights* turns your brew log and Stash into charts, for the last 7, 30 or 90 days, a year, or all time:
+
+- **Headline numbers:** brews (against the previous period), coffee used, average rating and ratio, coffees, bags finished, money spent on bags, and your brewing streak.
+- **Brews per day / week / month,** and **when you brew** (weekday × hour).
+- **Running totals** of coffee used (grams from your brews) and money spent on beans (bag prices, by purchase date) across the period.
+- **Rating and ratio** distributions.
+- **Brewers, grinders, recipes, brew methods and waters,** by number of brews or by grams of coffee used.
+- **Your coffee by roaster, origin, roast level and process:** counted by brews in the period, by bags in your Stash now, or by every bag you've had (a switch on that section).
+- **What you rate highest:** average brew rating by origin, process, roaster or roast level (where you've rated at least two brews).
+
+Every chart has a *Table* view, and hovering or tabbing to a bar shows its numbers.
 
 ## Discover and AI providers
 
@@ -141,10 +155,10 @@ All optional, set as environment variables. Compose reads a `.env` file next to 
 |---|---|---|
 | `TZ` | `UTC` | Time zone for the Monday 08:00 refresh, nightly backup and "today". |
 | `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_BASE_URL` | *(unset)* | AI provider via environment instead of the in-app form. `LLM_MODEL` is required except for Anthropic. |
-| `BACKUP_KEEP` | `14` | Snapshots to keep, unless set in More → Backups. |
+| `BACKUP_KEEP` | `14` | Snapshots to keep, unless set in More → Settings → Backups. |
 | `DISABLE_CRON` | *(unset)* | `1` turns off the weekly refresh and nightly backup. |
 | `IMPORT_ALLOW_HOSTS` | *(unset)* | Hosts the link importer may fetch even though they're private addresses (normally refused). |
-| `LIBRARY_REPO` | `cmerkle/brewlab` | The GitHub repo (`owner/name`) used for "Suggest to the library", More → About's links and the optional update check. Set it if you run a fork. |
+| `LIBRARY_REPO` | `cmerkle/brewlab` | The GitHub repo (`owner/name`) used for "Suggest to the library", More → Settings → About's links and the optional update check. Set it if you run a fork. |
 | `SEED_DIR` | `/app/seed-data` | Optional starting data for a new install (see [`seed-data/README.md`](seed-data/README.md)). |
 
 ## Development
@@ -178,7 +192,7 @@ Before tagging a release, rehearse the update on an older install: `scripts/upgr
 
 ## Contributing and bug reports
 
-Gear and grind ranges are the most useful contributions, and they're plain JSON: see [CONTRIBUTING.md](CONTRIBUTING.md). Found a bug? **More → About → Report a bug** opens a GitHub issue with your version and device filled in. Security problems: see [SECURITY.md](SECURITY.md).
+Gear and grind ranges are the most useful contributions, and they're plain JSON: see [CONTRIBUTING.md](CONTRIBUTING.md). Found a bug? **More → Settings → About → Report a bug** opens a GitHub issue with your version and device filled in. Security problems: see [SECURITY.md](SECURITY.md).
 
 ## License
 

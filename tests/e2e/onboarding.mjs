@@ -171,6 +171,41 @@ try {
   before.notes.prefer[0].on = true;
   await fetch(`${BASE}/api/settings`, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ prefs: before }) });
   await p.goto(`${BASE}/#/more`);
+  await p.getByTestId("more-pages").waitFor();
+  const morePages = await p.getByTestId("more-pages").locator("li").allInnerTexts();
+  const moreNames = morePages.map((t) => t.replace(/\s*›\s*$/, "").trim());
+  check(JSON.stringify(moreNames) === JSON.stringify(["Grind guide & converter", "Gear", "Water", "Ratio calculator", "Insights", "Settings"]),
+    `on a phone, More lists the pages not in the tab bar: ${moreNames.join(", ")}`);
+  {
+    const dctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    const d = await dctx.newPage();
+    await d.goto(`${BASE}/#/more`);
+    await d.getByTestId("more-pages").waitFor();
+    const names = (await d.getByTestId("more-pages").locator("li").allInnerTexts()).map((t) => t.replace(/\s*›\s*$/, "").trim());
+    check(JSON.stringify(names) === JSON.stringify(["Ratio calculator", "Settings"]), `on desktop (Guide, Gear, Water, Insights in the top nav), More lists: ${names.join(", ")}`);
+    // A narrower desktop window: tabs that don't fit the top bar move into More, Insights first.
+    for (const w of [1000, 920]) {
+      await d.setViewportSize({ width: w, height: 800 });
+      await d.waitForTimeout(200);
+      const inBar = await d.locator("nav.nav > a").allInnerTexts();
+      const inMore = (await d.getByTestId("more-pages").locator("li").allInnerTexts()).map((t) => t.replace(/\s*›\s*$/, "").trim());
+      const fits = await d.locator("nav.nav").evaluate((n) => n.scrollWidth <= n.clientWidth);
+      const tabs = [["Guide", "Grind guide & converter"], ["Gear", "Gear"], ["Water", "Water"], ["Insights", "Insights"]];
+      const once = tabs.every(([bar, more]) => inBar.includes(bar) !== inMore.includes(more));
+      check(fits && once && !inBar.includes("Insights") && inMore.includes("Insights"),
+        `${w}px desktop: bar ${inBar.join(", ")} · More ${inMore.join(", ")} (each tab in one place, bar fits)`);
+    }
+    await d.goto(`${BASE}/#/brew/insights`);
+    await d.getByRole("button", { name: "Back to More" }).waitFor({ timeout: 3000 }).then(() => check(true, "a tab moved into More gets ‹ More on desktop"), () => check(false, "a tab moved into More gets ‹ More on desktop"));
+    await dctx.close();
+  }
+  await p.getByRole("link", { name: /^Settings/ }).click();
+  await p.getByTestId("settings").waitFor();
+  check(p.url().endsWith("#/more/settings") && (await p.locator("h1").first().innerText()) === "Settings", "More → Settings opens the settings page");
+  await p.getByRole("button", { name: "Back to More" }).click();
+  await p.getByTestId("more-pages").waitFor();
+  check(p.url().endsWith("#/more"), "Settings → Back to More");
+  await p.goto(`${BASE}/#/more/settings`);
   await p.getByRole("button", { name: "Run setup again" }).click();
   await p.locator('[data-testid="setup"]').waitFor();
   check((await (await fetch(`${BASE}/api/setup`)).json()).settings.prefs.notes.prefer[0].on === true, "re-running setup keeps Discover's taste tags");
@@ -322,8 +357,8 @@ try {
     check(diff.length === 0, `${libId} rebuilt by hand in the gear editor matches the library copy${diff.length ? ` — differs: ${diff.map((k) => `${k}: ${JSON.stringify(norm(mine?.[k]))} ≠ ${JSON.stringify(norm(lib[k]))}`).join("; ").slice(0, 600)}` : ""}`);
   }
 
-  // More → Grind for a different dose: on/off, how much, which methods.
-  await p.goto(`${BASE}/#/more`);
+  // More → Settings → Grind for a different dose: on/off, how much, which methods.
+  await p.goto(`${BASE}/#/more/settings`);
   const dnCard = p.locator('[data-testid="dose-nudge-settings"]');
   await dnCard.waitFor();
   const dnTable = await dnCard.locator('[data-testid="dose-nudge-table"]').innerText();
@@ -391,7 +426,7 @@ try {
   // recipe's default; Brew setup starts with it; deleting it keeps the name on the recipe.
   const getJ = async (u) => (await fetch(`${BASE}${u}`)).json();
   await p.goto(`${BASE}/#/more`);
-  await p.getByRole("link", { name: /Water recipes/ }).click();
+  await p.getByRole("link", { name: /^Water/ }).click();
   await p.getByRole("button", { name: "Add water" }).click();
   await p.getByRole("button", { name: "Add Rao/Perger (Lotus drops)" }).click();
   await p.locator('[data-testid="water-lib-lotus-rao-perger"] .tag', { hasText: "added" }).waitFor();
@@ -545,7 +580,7 @@ try {
   check(/resting; usually best from about day 10 for a light roast/.test(await tcard.innerText()) && /strawberry/.test(await tcard.locator('[data-testid="bag-tags"]').innerText()),
     "the card shows the tags and a light roast's rest (day 10); search finds a tag");
   // Your own rest window for light roasts
-  await p.goto(`${BASE}/#/more`);
+  await p.goto(`${BASE}/#/more/settings`);
   const rest = p.locator('[data-testid="rest-settings"]');
   await rest.getByLabel("Light: best from day", { exact: true }).fill("4");
   await rest.getByRole("button", { name: "Save" }).click();
@@ -553,7 +588,7 @@ try {
   await p.goto(`${BASE}/#/brew/stash`);
   await p.getByLabel("Search your stash").fill("strawberry");
   check(/in its peak window for a light roast/.test(await tcard.innerText()), "with light roasts resting 4 days, the 5-day-old bag is in its peak window");
-  await p.goto(`${BASE}/#/more`);
+  await p.goto(`${BASE}/#/more/settings`);
   await rest.getByRole("button", { name: "Back to the starting values" }).click();
   await rest.getByRole("button", { name: "Back to the starting values" }).waitFor({ state: "detached" });
   // Discover → Your taste: five tag sections × Preferred / Rather avoid / Do not include.
@@ -610,6 +645,62 @@ try {
   const rp = (await (await fetch(`${BASE}/api/setup`)).json()).settings.prefs;
   check(/Reset your Discover preferences/.test(resetMsg) && rp.roasters.prefer.length === 0 && Object.values(rp).every((x) => Object.values(x).every((l) => l.every((t) => !t.on)))
     && rp.origins.exclude.some((t) => t.id === "blends"), "Reset preferences (after asking): built-in tags back, all off, your own removed");
+
+  // More → Insights: the numbers agree with the data; period, table view and keyboard tooltip work.
+  await p.goto(`${BASE}/#/more`);
+  await p.getByRole("link", { name: /^Insights/ }).click();
+  await p.getByTestId("insights").waitFor();
+  const allBrews = await (await fetch(`${BASE}/api/brews`)).json();
+  const since = (days) => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 1 - days); return allBrews.filter((b) => new Date(b.brewedAt) >= d); };
+  await p.getByRole("button", { name: "30 days" }).click();
+  const b30 = since(30);
+  check((await p.getByTestId("hero-brews").innerText()) === String(b30.length), `hero shows ${b30.length} brews in 30 days`);
+  const g30 = Math.round(b30.reduce((a, b) => a + (b.doseG ?? 0), 0));
+  check((await p.getByTestId("kpi-grams").innerText()).includes(`${g30} g`), `coffee used: ${g30} g`);
+  await p.getByRole("button", { name: "All time" }).click();
+  check((await p.getByTestId("hero-brews").innerText()) === String(allBrews.length), "all time counts every brew");
+  const tl = p.getByTestId("chart-timeline");
+  await tl.getByRole("button", { name: "Table" }).click();
+  const tableTotal = (await tl.locator("tbody tr td:nth-child(2)").allInnerTexts()).reduce((a, t) => a + Number(t), 0);
+  check(tableTotal === allBrews.length, `the table view adds up (${tableTotal})`);
+  await tl.getByRole("button", { name: "Chart" }).click();
+  await tl.locator("rect.hit").last().focus();
+  check(/brew/.test(await tl.locator(".tip").innerText()), "keyboard focus on a column shows its tooltip");
+  const brewers = p.getByTestId("chart-brewers");
+  check(/Hario V60 02/.test(await brewers.innerText()), "brews per brewer lists the V60");
+  // Gear by coffee used: grams per grinder add up to the brews that recorded a grinder
+  await p.getByRole("group", { name: "Gear and recipes by" }).getByRole("button", { name: "Coffee used" }).click();
+  const gr = p.getByTestId("chart-grinders");
+  await gr.getByRole("button", { name: "Table" }).click();
+  const gSum = (await gr.locator("tbody tr td:nth-child(2)").allInnerTexts()).reduce((a, t) => a + Number(t.replace(/[^\d.]/g, "")), 0);
+  const want = Math.round(allBrews.filter((b) => b.grinderName).reduce((a, b) => a + (b.doseG ?? 0), 0));
+  check(Math.abs(gSum - want) <= 1 && /Coffee \(g\)/.test(await gr.locator("thead").innerText()), `coffee used per grinder adds up (${gSum} g of ${want} g)`);
+  await gr.getByRole("button", { name: "Chart" }).click();
+  await p.getByRole("group", { name: "Gear and recipes by" }).getByRole("button", { name: "Brews" }).click();
+  const hm = await p.evaluate(() => {
+    const cells = [...document.querySelectorAll(".heatmap > .hm-cell")].map((c) => c.getBoundingClientRect());
+    const head = Math.max(...[...document.querySelectorAll(".hm-col")].map((c) => c.getBoundingClientRect().bottom));
+    let overlaps = 0;
+    for (let i = 0; i < cells.length; i++) for (let j = i + 1; j < cells.length; j++) { const a = cells[i], c = cells[j]; if (a.left < c.right - 0.5 && c.left < a.right - 0.5 && a.top < c.bottom - 0.5 && c.top < a.bottom - 0.5) overlaps++; }
+    return { n: cells.length, overlaps, belowHead: cells.every((c) => c.top >= head - 0.5) };
+  });
+  check(hm.n === 56 && hm.overlaps === 0 && hm.belowHead, `heatmap: 56 separate cells, below the hour labels (${JSON.stringify(hm)})`);
+  check(!(await p.locator(".insight-filters select").count()), "the top filter row holds only the period");
+  // Running totals: the last value is the period total (the same as the headline tile)
+  const cg = p.getByTestId("chart-cum-grams");
+  await cg.getByRole("button", { name: "Table" }).click();
+  const lastTotal = Number((await cg.locator("tbody tr").last().locator("td").last().innerText()).replace(/[^\d.]/g, ""));
+  const allGrams = Math.round(allBrews.reduce((a, b) => a + (b.doseG ?? 0), 0));
+  check(Math.round(lastTotal) === allGrams, `coffee used, running total ends at ${lastTotal} g (all brews: ${allGrams} g)`);
+  await cg.getByRole("button", { name: "Chart" }).click();
+  await cg.locator("svg").focus();
+  await p.keyboard.press("ArrowLeft");
+  check(/so far/.test(await cg.locator(".tip").innerText()), "the running total's crosshair moves with the arrow keys");
+  const spentTile = await p.getByText("Spent on bags").locator("..").innerText();
+  const spentSub = await p.getByTestId("chart-cum-spend").locator(".insight-title .muted").innerText();
+  check(spentTile.includes(spentSub.split("· ")[1] ?? "?") || (/—/.test(spentTile) && /\$0/.test(spentSub)), `spent on beans agrees with the headline (${spentSub.split("· ")[1]})`);
+  await p.selectOption('select[aria-label="Your coffee charts count"]', "stash");
+  check(/Open and unopened bags/.test(await p.getByTestId("coffee-scope-hint").innerText()), "the Your coffee scope sits with its charts and says what it counts");
 
   // Bag photos: take / choose / paste (no camera-only), converted to JPEG on the device.
   await p.goto(`${BASE}/#/brew/stash`);

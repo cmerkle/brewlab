@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Wordmark } from "./Logo";
 import { DataProvider, BackButton, IconButton, fireAction, useEdgeSwipeBack, anyDialogOpen, useData } from "./ui";
 import { Setup } from "./Setup";
@@ -10,8 +10,10 @@ import { Stash } from "./brew/Stash";
 import { BrewLog } from "./brew/BrewLog";
 import { Gear } from "./brew/Gear";
 import { Water } from "./brew/Water";
+import { Insights } from "./insights/Insights";
 import { Discover } from "./discover/Discover";
-import { More } from "./More";
+import { More, Settings } from "./More";
+import { NAV_ICONS as I, Icon } from "./icons";
 import { ScaleDialog, getActiveBrew, type ActiveBrew } from "./brew/ScaleDialog";
 
 const DISCOVER_TABS = [
@@ -22,28 +24,16 @@ const DISCOVER_TABS = [
   { id: "refresh", label: "Refresh" },
   { id: "taste", label: "Your taste" },
 ];
-const BREW_TABS = ["recipes", "guide", "stash", "log", "gear", "water"];
+const BREW_TABS = ["recipes", "guide", "stash", "log", "gear", "water", "insights"];
+/** Tabs that move into More when the bar has no room, first to go first. Touch tab bars always keep them in More. */
+const OVERFLOW = ["insights", "water", "gear", "guide"];
 
 function parseHash() {
   const [, section = "brew", tab = "", arg = ""] = (location.hash || "#/brew/recipes").split("/");
-  if (section === "more") return { section: "more", tab: "", arg: "" };
+  if (section === "more") return { section: "more", tab: tab === "settings" ? "settings" : "", arg: "" };
   if (section === "discover") return { section, tab: DISCOVER_TABS.some((t) => t.id === tab) ? tab : "board", arg: decodeURIComponent(arg) };
   return { section: "brew", tab: BREW_TABS.includes(tab) ? tab : "recipes", arg: decodeURIComponent(arg) };
 }
-
-const I = {
-  cup: "M4 8h13v5a6 6 0 0 1-6 6H10a6 6 0 0 1-6-6V8Zm13 1h1.5a2.5 2.5 0 0 1 0 5H17M8 2c0 1.5 1 1.5 1 3M12 2c0 1.5 1 1.5 1 3",
-  bag: "M7 7V5a5 5 0 0 1 10 0v2M5 7h14l-1 14H6L5 7Z",
-  log: "M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01",
-  compass: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm3.5-12.5-2 5-5 2 2-5 5-2Z",
-  ruler: "M3 17 17 3l4 4L7 21l-4-4Zm4-4 2 2m1-5 2 2m1-5 2 2",
-  gear: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7.4-3a7.4 7.4 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-2-1.2L14.5 3h-5l-.4 2.6a7.6 7.6 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6a7.4 7.4 0 0 0 0 2.4l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 0 0 2 1.2l.4 2.6h5l.4-2.6a7.6 7.6 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6c.1-.4.1-.8.1-1.2Z",
-  more: "M5 12h.01M12 12h.01M19 12h.01",
-  drop: "M12 3s-6 6.6-6 11a6 6 0 0 0 12 0c0-4.4-6-11-6-11Z",
-};
-const Icon = ({ d }: { d: string }) => (
-  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>
-);
 
 /**
  * Touch devices always get the bottom tab bar (phones, the iPhone Duo's wide inner screen,
@@ -133,24 +123,28 @@ export function App() {
   // A brew that was running when the app was closed (iOS kills backgrounded PWAs) reopens on launch.
   const [resume, setResume] = useState<ActiveBrew | null>(() => getActiveBrew());
 
-  const NAV = [
-    { href: "#/brew/recipes", label: "Recipes", icon: I.cup, on: route.section === "brew" && route.tab === "recipes" },
-    { href: "#/brew/guide", label: "Guide", icon: I.ruler, on: route.tab === "guide", desk: true },
-    { href: "#/brew/stash", label: "Stash", icon: I.bag, on: route.tab === "stash" },
-    { href: "#/brew/log", label: "Brew Log", short: "Log", icon: I.log, on: route.tab === "log" },
-    { href: "#/brew/gear", label: "Gear", icon: I.gear, on: route.tab === "gear", desk: true },
-    { href: "#/brew/water", label: "Water", icon: I.drop, on: route.tab === "water", desk: true },
-    { href: "#/discover/board", label: "Discover", icon: I.compass, on: route.section === "discover" },
-    { href: "#/more", label: "More", icon: I.more, on: route.section === "more" || (tabbar && (route.tab === "guide" || route.tab === "gear" || route.tab === "water")) },
+  const [deskHidden, setDeskHidden] = useState<string[]>([]);
+  const inMore = tabbar ? OVERFLOW : deskHidden; // tabs reached from More right now
+  const NAV: NavItem[] = [
+    { id: "recipes", href: "#/brew/recipes", label: "Recipes", icon: I.cup, on: route.section === "brew" && route.tab === "recipes" },
+    { id: "guide", href: "#/brew/guide", label: "Guide", icon: I.ruler, on: route.tab === "guide" },
+    { id: "stash", href: "#/brew/stash", label: "Stash", icon: I.bag, on: route.tab === "stash" },
+    { id: "log", href: "#/brew/log", label: "Brew Log", short: "Log", icon: I.log, on: route.tab === "log" },
+    { id: "gear", href: "#/brew/gear", label: "Gear", icon: I.gear, on: route.tab === "gear" },
+    { id: "water", href: "#/brew/water", label: "Water", icon: I.drop, on: route.tab === "water" },
+    { id: "insights", href: "#/brew/insights", label: "Insights", icon: I.chart, on: route.tab === "insights" },
+    { id: "discover", href: "#/discover/board", label: "Discover", icon: I.compass, on: route.section === "discover" },
+    { id: "more", href: "#/more", label: "More", icon: I.more, on: route.section === "more" || (route.section === "brew" && inMore.includes(route.tab)) },
   ];
 
-  const nav = <MainNav items={NAV} />;
+  const nav = <MainNav items={NAV} hidden={inMore} measure={!tabbar} onFit={setDeskHidden} />;
 
 
-  const TITLES: Record<string, string> = { recipes: "Recipes", guide: "Grind guide", stash: "Stash", log: "Brew Log", gear: "Gear", water: "Water" };
-  const title = route.section === "discover" ? "Discover" : route.section === "more" ? "More" : TITLES[route.tab] ?? "Brewlab";
+  const TITLES: Record<string, string> = { recipes: "Recipes", guide: "Grind guide", stash: "Stash", log: "Brew Log", gear: "Gear", water: "Water", insights: "Insights" };
+  const title = route.section === "discover" ? "Discover" : route.section === "more" ? (route.tab === "settings" ? "Settings" : "More") : TITLES[route.tab] ?? "Brewlab";
   // Sub-pages reached from More get a back button (and the left-edge swipe) on touch screens.
-  const subPage = tabbar && route.section === "brew" && (route.tab === "guide" || route.tab === "gear" || route.tab === "water");
+  // Settings is always reached from More, so it has one on desktop too.
+  const subPage = (route.section === "brew" && inMore.includes(route.tab)) || (route.section === "more" && route.tab === "settings");
   const goBack = () => {
     if (inAppNavs.current > 0) history.back();
     else location.replace("#/more"); // opened directly (e.g. relaunch) — don't leave the app
@@ -219,8 +213,10 @@ export function App() {
         {route.section === "brew" && route.tab === "log" && <BrewLog />}
         {route.section === "brew" && route.tab === "gear" && <Gear editId={route.arg || null} onEditDone={() => route.arg && go("brew", "gear")} />}
         {route.section === "brew" && route.tab === "water" && <Water />}
+        {route.section === "brew" && route.tab === "insights" && <Insights />}
         {route.section === "discover" && <Discover tab={route.tab} />}
-        {route.section === "more" && <More />}
+        {route.section === "more" && route.tab === "" && <More inMore={inMore} />}
+        {route.section === "more" && route.tab === "settings" && <Settings />}
       </main>
       {tabbar && nav}
       </div>
@@ -231,18 +227,51 @@ export function App() {
   );
 }
 
-type NavItem = { href: string; label: string; short?: string; icon: string; on: boolean; desk?: boolean };
-/** Main navigation; Discover is hidden when turned off in Settings. */
-function MainNav({ items }: { items: NavItem[] }) {
+type NavItem = { id: string; href: string; label: string; short?: string; icon: string; on: boolean };
+/**
+ * Main navigation; Discover is hidden when turned off in Settings. On desktop it measures itself:
+ * when the top bar has no room for every tab, OVERFLOW tabs move into More (onFit), first ones first.
+ * A hidden copy with every tab gives the widths, so the check doesn't depend on what's shown.
+ */
+function MainNav({ items, hidden, measure, onFit }: { items: NavItem[]; hidden: string[]; measure: boolean; onFit: (ids: string[]) => void }) {
   const { settings } = useData();
+  const all = items.filter((n) => settings.discoverEnabled || n.id !== "discover");
+  const box = useRef<HTMLElement>(null);
+  const ruler = useRef<HTMLDivElement>(null);
+  const key = all.map((n) => n.id).join();
+  useLayoutEffect(() => {
+    if (!measure) return;
+    const fit = () => {
+      if (!box.current || !ruler.current) return;
+      const room = box.current.clientWidth;
+      const gap = parseFloat(getComputedStyle(ruler.current).columnGap) || 0;
+      const widths = new Map([...ruler.current.children].map((el) => [(el as HTMLElement).dataset.id!, (el as HTMLElement).getBoundingClientRect().width]));
+      let total = [...widths.values()].reduce((a, w) => a + w + gap, -gap);
+      const out: string[] = [];
+      for (const id of OVERFLOW) {
+        if (total <= room + 0.5) break;
+        if (!widths.has(id)) continue;
+        out.push(id);
+        total -= widths.get(id)! + gap;
+      }
+      onFit(out);
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(box.current!);
+    document.fonts?.ready.then(fit).catch(() => {});
+    return () => ro.disconnect();
+  }, [measure, key]); // eslint-disable-line react-hooks/exhaustive-deps
+  const link = (n: NavItem, live: boolean) => (
+    <a key={n.id} href={n.href} data-id={n.id} className={n.on && live ? "on" : ""} aria-current={n.on && live ? "page" : undefined} tabIndex={live ? undefined : -1}>
+      <span className="ico"><Icon d={n.icon} /></span>
+      <span className="lbl">{n.short ?? n.label}</span>
+    </a>
+  );
   return (
-    <nav className="nav" aria-label="Main">
-      {items.filter((n) => settings.discoverEnabled || !n.href.startsWith("#/discover")).map((n) => (
-        <a key={n.href} href={n.href} className={`${n.on ? "on" : ""} ${n.desk ? "desk-only" : ""}`} aria-current={n.on ? "page" : undefined}>
-          <span className="ico"><Icon d={n.icon} /></span>
-          <span className="lbl">{n.short ?? n.label}</span>
-        </a>
-      ))}
+    <nav className="nav" aria-label="Main" ref={box}>
+      {all.filter((n) => !hidden.includes(n.id)).map((n) => link(n, true))}
+      {measure && <div className="nav-ruler" ref={ruler} aria-hidden="true" {...{ inert: "" }}>{all.map((n) => link(n, false))}</div>}
     </nav>
   );
 }

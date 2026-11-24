@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- **More is a list of pages:** whatever doesn't fit the main bar — Grind guide & converter, Gear, Water, Ratio calculator, Insights and Settings on phones and tablets; on desktop, Ratio calculator and Settings plus any tab the top bar has no room for: a narrow window moves Insights, then Water, Gear and Guide into More automatically. **Settings** (More → Settings) holds what used to be on More, in four groups: *Brewing* (units and defaults, grind for a different dose, rest and peak windows), *Discover and AI*, *Your data* (backups, run setup again) and *App* (install, about, status, screen).
+- **Insights** (More → Insights): a dashboard of your coffee habits for the last 7 / 30 / 90 days, a year, or all time. Headline numbers (brews against the previous period, coffee used, average rating and ratio, coffees, bags finished, spending, brewing streak), brews per day / week / month, running totals of coffee used and money spent on beans, a weekday × hour heatmap, rating and ratio distributions, brewers / grinders / recipes / methods / waters by brews or by grams of coffee used, your coffee by roaster / origin / roast level / process (by brews in the period, bags in the Stash now, or every bag), and what you rate highest. Every chart has a table view and keyboard-reachable tooltips. On wider screens charts sit two to a row with matching heights.
+
 ## 0.3.0
 
 - **Stash archive:** a finished bag leaves the Stash and moves to its Archive (newest first), with its brews and tasting notes kept. *Back to stash* undoes a finish.

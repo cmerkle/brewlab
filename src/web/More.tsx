@@ -5,6 +5,7 @@ import { METHODS, METHOD_LABELS, DEFAULT_DOSE_NUDGE, rangeFor, fmtGrindNumber, t
 import { RatioCalculator } from "./brew/RatioCalculator";
 import { PrefsForm } from "./Setup";
 import { AiProvider } from "./AiProvider";
+import { NAV_ICONS as I, Icon } from "./icons";
 
 interface Health {
   llm: boolean;
@@ -17,9 +18,39 @@ interface Backups { dir: string; keep: number; keepDefault: number; custom: bool
 
 const standalone = () => window.matchMedia?.("(display-mode: standalone)").matches || (navigator as any).standalone === true;
 
-export function More() {
-  const { act, settings, saveSettings, reloadSetup } = useData();
+const PAGES = [
+  { id: "guide", href: "#/brew/guide", label: "Grind guide & converter", icon: I.ruler },
+  { id: "gear", href: "#/brew/gear", label: "Gear", icon: I.gear },
+  { id: "water", href: "#/brew/water", label: "Water", icon: I.drop },
+  { calc: true, label: "Ratio calculator", icon: I.calc },
+  { id: "insights", href: "#/brew/insights", label: "Insights", icon: I.chart },
+  { href: "#/more/settings", label: "Settings", icon: I.sliders },
+] as const;
+
+/**
+ * More: the pages that aren't in the main bar (`inMore`, from App: on touch screens Guide, Gear,
+ * Water and Insights; on desktop whichever the top bar had no room for), plus the calculator and Settings.
+ */
+export function More({ inMore }: { inMore: string[] }) {
   const [calc, setCalc] = useState(false);
+  return (
+    <div className="stack">
+      <section className="card" data-testid="more-pages">
+        <ul className="link-list">
+          {PAGES.filter((x) => !("id" in x) || inMore.includes(x.id)).map((x) => {
+            const inner = <><span className="link-text"><span className="link-ico"><Icon d={x.icon} /></span>{x.label}</span> <span className="muted">›</span></>;
+            return <li key={x.label}>{"calc" in x ? <button className="link-row" onClick={() => setCalc(true)}>{inner}</button> : <a href={x.href}>{inner}</a>}</li>;
+          })}
+        </ul>
+      </section>
+      {calc && <RatioCalculator onClose={() => setCalc(false)} />}
+    </div>
+  );
+}
+
+/** More → Settings: everything that isn't a tool. */
+export function Settings() {
+  const { act, settings, saveSettings, reloadSetup } = useData();
   const [health, setHealth] = useState<Health | null>(null);
   const load = useCallback(() => {
     api.get<Health>("/api/health").then(setHealth).catch(() => {});
@@ -27,23 +58,23 @@ export function More() {
   useEffect(load, [load]);
   const ios = /iphone|ipad/i.test(navigator.userAgent);
 
-  return (
-    <div className="stack">
-      <section className="card">
-        <h2>Tools</h2>
-        <ul className="link-list">
-          <li><a href="#/brew/guide">Grind guide &amp; converter <span className="muted">›</span></a></li>
-          <li><a href="#/brew/gear">Gear <span className="muted">›</span></a></li>
-          <li><a href="#/brew/water">Water recipes <span className="muted">›</span></a></li>
-          <li><button className="link-row" onClick={() => setCalc(true)}>Ratio calculator <span className="muted">›</span></button></li>
-        </ul>
-      </section>
+  const group = (title: string) => <h2 className="group">{title}</h2>;
 
-      <section className="card" data-testid="settings">
-        <h2>Settings</h2>
+  // Four groups instead of one long scroll: brewing, Discover and AI, your data, and the app itself.
+  return (
+    <div className="stack" data-testid="settings">
+      {group("Brewing")}
+      <section className="card" data-testid="settings-units">
+        <h2>Units and defaults</h2>
         <PrefsForm />
+      </section>
+      <DoseNudgeSettings />
+      <RestSettings />
+
+      {group("Discover and AI")}
+      <section className="card" data-testid="settings-discover">
         <div className="pref-row">
-          <span>Discover</span>
+          <h2>Discover</h2>
           <div className="seg big" role="group" aria-label="Show Discover">
             {[true, false].map((v) => (
               <button key={String(v)} className={settings.discoverEnabled === v ? "on" : ""} aria-pressed={settings.discoverEnabled === v}
@@ -51,21 +82,25 @@ export function More() {
             ))}
           </div>
         </div>
-        <button className="block" onClick={() => act(async () => { await api.post("/api/setup/restart"); await reloadSetup(); })}>
-          Run setup again
-        </button>
-        <p className="muted small">Setup again only adds — your gear, recipes and data stay.</p>
+        <p className="muted small">The weekly board of coffees to try. Off hides the Discover tab; nothing is deleted.</p>
       </section>
-
-      <DoseNudgeSettings />
-      <RestSettings />
-
       <section className="card" data-testid="ai-card">
         <h2>AI provider</h2>
         <p className="muted small">Optional. Reads bag photos and researches the weekly Discover board. Without it, Brewlab uses OCR and you add board candidates yourself.</p>
         <AiProvider />
       </section>
 
+      {group("Your data")}
+      <BackupsCard />
+      <section className="card" data-testid="settings-setup">
+        <h2>Setup</h2>
+        <button className="block" onClick={() => act(async () => { await api.post("/api/setup/restart"); await reloadSetup(); })}>
+          Run setup again
+        </button>
+        <p className="muted small">Setup again only adds — your gear, recipes and data stay.</p>
+      </section>
+
+      {group("App")}
       {!standalone() && (
         <section className="card">
           <h2>Install the app</h2>
@@ -76,9 +111,7 @@ export function More() {
           )}
         </section>
       )}
-
-      <BackupsCard />
-
+      <About />
       {health && (
         <section className="card" data-testid="status">
           <h2>Status</h2>
@@ -97,9 +130,7 @@ export function More() {
           </p>
         </section>
       )}
-      <About />
       <ScreenInfo />
-      {calc && <RatioCalculator onClose={() => setCalc(false)} />}
     </div>
   );
 }

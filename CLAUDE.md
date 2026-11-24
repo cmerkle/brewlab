@@ -43,7 +43,7 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   the grinder; the unit word comes from the grinder (`fmtGrind`). Conversion math runs on the
   linear scale (`dialToValue`/`valueToDial`; they differ only for Ode-style `thirds`: dial 5.1 = 5⅓).
   Legacy text is converted by `normalizeGrindSettings` (startup, seed, restore) and the API schema.
-- **Dose nudge** (`doseAdjustedGrind`) is a setting (`settings.doseNudge`, More → "Grind for a
+- **Dose nudge** (`doseAdjustedGrind`) is a setting (`settings.doseNudge`, More → Settings → "Grind for a
   different dose"): on/off, `percent` of the method range per doubling of dose vs the recipe, and
   which methods (default on, 20%, rapid/pourover/batch — `DEFAULT_DOSE_NUDGE`). Shown with a
   one-tap "Use <recipe grind>"; typing a grind turns it off.
@@ -104,7 +104,16 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   (`concentrateId` line → stock ppm × stock litres / total litres). One level only (a concentrate
   can't contain one), not brewed with directly, can't be deleted or un-flagged while a water uses it.
   Library concentrates (Barista Hustle's) are additives of kind `concentrate`, calculated from their salts.
-- **About / updates** (`src/server/about.ts`, More → About): version from package.json (`/api/about`,
+- **Insights** (`src/shared/insights.ts` pure functions, `src/web/insights/`): computed in the browser
+  from the loaded brews and bags (no API). Charts are hand-built SVG/HTML, one hue `--chart-1`
+  (validated with the dataviz validator on both card surfaces: light #a85a22, dark #cf7f3e — the UI
+  accent is too low-chroma for marks), bars ≤ 24px with 4px rounded data ends, solid hairline grid on
+  `niceTicks`, a hover/focus tooltip on every mark, and a Table view per card. Card grids are at most two columns with paired cards the same height (the top section pairs Brews per day with When you brew); an odd gear card out is `wide`. Running totals
+  (`cumulative`: grams from brews, spend from bag prices on their purchase date) are 2px lines with a
+  10% wash, a snapping crosshair (←/→ when focused) and the total labelled at the end. The top filter row (period) scopes everything;
+  the Your coffee scope (brews in the period / bags in the stash / every bag) and the Gear and recipes
+  measure (brews / grams: `rankBy(…, weight)`) sit on their sections. Days are local; "all time" starts at the first brew.
+- **About / updates** (`src/server/about.ts`, More → Settings → About): version from package.json (`/api/about`,
   also in `/api/health`), links to the repo's releases and issue forms (`.github/ISSUE_TEMPLATE`;
   the bug link pre-fills version and device). `settings.updateCheck` (off by default) asks GitHub's
   releases API once a day (cron 03:00 + startup, at most daily); "Check now" always works. Repo from
@@ -139,7 +148,7 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   `IMPORT_ALLOW_HOSTS=<fixture host>`. Shopify `/products/<handle>.js` first, then the page
   (JSON-LD / OG / labelled text; "label on one line, value on the next" only in product context).
   Roaster sites rate-limit server-side fetches (429) — don't vary headers to get around it.
-- Nightly backups to /data/backups (03:00). How many are kept: `settings.backupKeep` (More → Backups;
+- Nightly backups to /data/backups (03:00). How many are kept: `settings.backupKeep` (More → Settings → Backups;
   null = `BACKUP_KEEP`, default 14), applied at once via `PUT /api/backups/retention` and after every
   snapshot. More has back up now, download, delete (`DELETE /api/backups/:name`, names only) and export.
 - **Layout model:** `html.tabbar` (App.tsx, from NOT `(hover: hover) and (pointer: fine) and
@@ -148,6 +157,11 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   the top nav. iOS 26 standalone bug (WebKit 301108): in `(display-mode: standalone)` the shell uses
   `100lvh`, html `min-height: 100lvh`; don't pin html/body to `height: 100%`. The tab bar ignores
   side safe-area insets and caps the bottom inset at 34px.
+- **More** (`#/more`, `More` in More.tsx) lists the pages that aren't in the main bar plus the ratio calculator and Settings
+  (`#/more/settings`, `Settings`), which holds every preference card in four groups (Brewing, Discover and AI,
+  Your data, App). Which tabs are in More (`inMore`, App.tsx): on touch screens always the `OVERFLOW` tabs
+  (Guide, Gear, Water, Insights); on desktop `MainNav` measures a hidden copy of every tab and moves
+  `OVERFLOW` tabs into More, Insights first, only when the top bar has no room. A tab in More gets ‹ More. Sub-pages show `<BackButton label="More" />`.
 - **Title-bar actions** are rendered by App.tsx from the route (`headerActions()`), never
   registered by pages. "+" buttons `fireAction("new-recipe" | "add-bag" | "log-brew" | "add-gear")`;
   pages handle them with `useAction(...)`. Tests find buttons by aria-label.

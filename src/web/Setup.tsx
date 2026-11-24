@@ -131,7 +131,7 @@ function Welcome({ empty, onFresh, onDone }: { empty: boolean; onFresh: () => vo
         </button>
         <button className="choice" onClick={() => file.current?.click()} disabled={busy}>
           <strong>Restore a backup</strong>
-          <span>A Brewlab export (More → Backups → Export all data).</span>
+          <span>A Brewlab export (More → Settings → Backups → Export all data).</span>
         </button>
       </div>
       <input ref={file} type="file" accept="application/json,.json" hidden aria-label="Brewlab export file"

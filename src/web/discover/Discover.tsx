@@ -326,7 +326,7 @@ function Refresh({ board, reload }: { board: Board; reload: () => void }) {
           Runs automatically on Mondays around 8 a.m.{" "}
           {board.llm.researchSupported
             ? `Research runs on ${board.llm.provider} (${board.llm.model}): it checks roasters' own pages, then applies the matching rules and publishes. Candidates entered below take priority over research.`
-            : `${board.llm.problem ? `LLM setup problem: ${board.llm.problem} ` : board.llm.enabled ? `The ${board.llm.provider} provider has no web search, so research is manual. ` : "No AI provider is connected (More → Settings → AI provider), so research is manual. "}Enter candidates below; the refresh drops anything tried, on the avoid list, already in the stash, or matching your "Always leave out" rules (Your taste), ranks the rest by your ratings and publishes them.`}
+            : `${board.llm.problem ? `LLM setup problem: ${board.llm.problem} ` : board.llm.enabled ? `The ${board.llm.provider} provider has no web search, so research is manual. ` : "No AI provider is connected (More → Settings → AI provider), so research is manual. "}Enter candidates below; the refresh drops anything tried, on the avoid list, already in the stash, or matching a switched-on "Do not include" tag (Your taste), ranks the rest by your ratings and publishes them.`}
         </p>
         <button className="primary" onClick={run} disabled={running}>{running ? "Refreshing…" : "Run refresh now"}</button>
         {result && (

@@ -2,7 +2,7 @@
 
 Thanks for helping! The most useful contributions are **gear** and **grind ranges** — they're plain JSON, no code.
 
-No source or no time to write the entry? [Open an "Add gear to the library" issue](https://github.com/cmerkle/brewlab/issues/new?template=gear.yml) (also in Brewlab under More → About).
+No source or no time to write the entry? [Open an "Add gear to the library" issue](https://github.com/cmerkle/brewlab/issues/new?template=gear.yml) (also in Brewlab under More → Settings → About).
 
 ## The easy way: from the app
 
