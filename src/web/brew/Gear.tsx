@@ -89,7 +89,11 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
     min: base?.min ?? null as number | null,
     max: base?.max ?? null as number | null,
     scale: base?.scale ?? "",
+    notation: (base?.notation ?? "decimal") as "decimal" | "thirds",
+    dialDivisor: base?.dialDivisor ?? null as number | null,
   });
+  // Per-method notes (e.g. "can't do espresso", "the maker groups moka with AeroPress").
+  const [notes, setNotes] = useState<Partial<Record<Method, string>>>(() => ({ ...(base?.notes ?? {}) }));
   const [ranges, setRanges] = useState<RangeForm>(() => {
     const out: RangeForm = {};
     for (const m of METHODS) {
@@ -121,9 +125,12 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
         const r = ranges[m];
         if (r && r.low != null && r.high != null) methods[m] = { low: r.low, high: r.high };
       }
+      const cleanNotes: GrindRanges["notes"] = {};
+      for (const m of METHODS) if (notes[m]?.trim()) cleanNotes[m] = notes[m]!.trim();
       grindRanges = Object.keys(methods).length
         ? { methods, step: f.step, min: f.min, max: f.max, scale: f.scale || undefined,
-            notation: base?.notation, dialDivisor: base?.dialDivisor ?? null, notes: base?.notes }
+            notation: f.notation === "thirds" ? "thirds" : undefined, dialDivisor: f.dialDivisor,
+            notes: Object.keys(cleanNotes).length ? cleanNotes : undefined }
         : null;
     }
     const body = {
@@ -231,6 +238,9 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
                     onChange={(n) => setRange(m, { low: n })} />
                   <NumInput aria-label={`${METHOD_LABELS[m]} high`} placeholder="high" value={ranges[m]?.high ?? null} decimals={3}
                     onChange={(n) => setRange(m, { high: n })} />
+                  <textarea className="range-note" aria-label={`${METHOD_LABELS[m]} note`} placeholder="+ note" value={notes[m] ?? ""}
+                    rows={Math.max(1, Math.ceil((notes[m]?.length ?? 0) / 42))}
+                    onChange={(e) => setNotes((x) => ({ ...x, [m]: e.target.value }))} />
                 </div>
               ))}
             </div>
@@ -246,6 +256,16 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
               <Field label="Physical max" htmlFor="ge-max"><NumInput id="ge-max" value={f.max} onChange={(n) => set("max", n)} decimals={2} /></Field>
             </div>
             <Field label="Scale description" htmlFor="ge-scale"><input id="ge-scale" value={f.scale} onChange={(e) => set("scale", e.target.value)} /></Field>
+            <div className="grid2">
+              <Field label="Dial notation" htmlFor="ge-notation" hint="Thirds: the digit after the point counts thirds, like the Fellow Ode (5.1 = 5⅓, 5.2 = 5⅔).">
+                <select id="ge-notation" value={f.notation} onChange={(e) => set("notation", e.target.value as "decimal" | "thirds")}>
+                  <option value="decimal">Decimal (5.5 = halfway)</option><option value="thirds">Thirds (5.1 = 5⅓)</option>
+                </select>
+              </Field>
+              <Field label="Dial shows setting ÷" htmlFor="ge-divisor" hint="Note only, e.g. 10 for a dial that reads 7.2 at 72 clicks.">
+                <NumInput id="ge-divisor" value={f.dialDivisor} onChange={(n) => set("dialDivisor", n)} decimals={2} />
+              </Field>
+            </div>
           </>
         )}
         {f.type === "brewer" && (

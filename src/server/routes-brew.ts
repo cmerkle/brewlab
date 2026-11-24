@@ -63,10 +63,11 @@ function libraryInfo(r: any) {
     rangesDiffer: Boolean(libRanges) && normalizeJson(libRanges) !== normalizeJson(r.grindRanges),
   };
 }
+/** Key order and empty (null) fields don't count as a difference. */
 const normalizeJson = (s: string | null) => {
   if (!s) return "";
   try {
-    const sort = (v: any): any => (Array.isArray(v) ? v.map(sort) : v && typeof v === "object" ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, sort(v[k])])) : v);
+    const sort = (v: any): any => (Array.isArray(v) ? v.map(sort) : v && typeof v === "object" ? Object.fromEntries(Object.keys(v).filter((k) => v[k] != null).sort().map((k) => [k, sort(v[k])])) : v);
     return JSON.stringify(sort(JSON.parse(s)));
   } catch {
     return s;

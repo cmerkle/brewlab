@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { DB } from "./db.js";
 
 import { PRESET_RULES, type AvoidRuleDef } from "./rules.js";
+import { METHODS, DEFAULT_DOSE_NUDGE } from "../shared/grind.js";
 
 const words = z.array(z.string().max(40)).max(30);
 const RuleDef = z.object({
@@ -25,6 +26,13 @@ export const SettingsSchema = z.object({
   palateNotes: z.string().max(5000),
   /** Optional quick quiz (first-run setup or Discover → Your taste). */
   tasteQuiz: z.object({ loves: words, dislikes: words, processes: words, roasts: words }),
+  /** Brew setup: move the grind when the dose differs from the recipe's. */
+  doseNudge: z.object({
+    enabled: z.boolean(),
+    /** % of the grinder's range for the method, per doubling of the dose. */
+    percent: z.number().min(0).max(100),
+    methods: z.array(z.enum(METHODS)).max(METHODS.length),
+  }),
   /** Avoid-rule suggestions the user said no to. */
   dismissedSuggestions: z.array(z.string().max(40)),
 });
@@ -32,6 +40,7 @@ export type Settings = z.infer<typeof SettingsSchema>;
 export const DEFAULT_SETTINGS: Settings = {
   tempUnit: "C", waterUnit: "g", defaultRatio: 16, discoverEnabled: true,
   ruleDefs: PRESET_RULES, avoidRules: [], palateNotes: "", tasteQuiz: { loves: [], dislikes: [], processes: [], roasts: [] }, dismissedSuggestions: [],
+  doseNudge: { ...DEFAULT_DOSE_NUDGE, methods: [...DEFAULT_DOSE_NUDGE.methods] },
 };
 
 export function getSettings(db: DB): Settings {

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Grind-for-dose is a setting** (More → "Grind for a different dose"): switch it off, choose how far the grind moves per doubling of the dose (% of the grinder's range for that grind category, 20% by default), and which grind categories it applies to (pour-over, drip coffee maker and Rapid Brewer by default). The card shows a worked example on your own grinder.
+- **Custom gear can say everything library gear can:** the gear editor now edits per-category notes (e.g. "can't do espresso"), dial notation (Ode-style thirds) and the dial divisor, which only library entries could carry before. Saving a library grinder unchanged no longer shows "your ranges differ from the library".
 - **Gear is grinders and brewers only.** The "Other (scales, kettles, accessories)" section is gone: nothing else in the app used those entries. Existing ones are kept and still listed under "Other" so they can be removed; new ones can't be added.
 - **Grind categories match a grind chart:** Turkish, espresso, moka pot, AeroPress, pour-over (V60), drip coffee maker, French press, cold brew (plus Rapid Brewer). Every brewer belongs to one ("Grind category" in the gear editor, suggested from its Kind), and the library rules now require it. New library brewers cover the gaps: a cezve (Turkish), Hario Mizudashi and Toddy (cold brew), Hario Technica siphon, Melitta 1x4, Moccamaster KBGV and Flair 58.
 - **Every library grinder now covers every method it can do:**

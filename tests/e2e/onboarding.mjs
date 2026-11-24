@@ -157,12 +157,24 @@ try {
   check(/No source yet/.test(await p.locator('[data-testid="range-source"]').innerText()), "a custom grinder starts with no source");
   await p.fill("#ge-source", "https://example.com/my-c40-chart");
   await p.fill("#ge-source-note", "Calibrated against my V60.");
+  // Custom gear has every field library gear has: per-method notes, dial notation, divisor.
+  await p.getByLabel("Espresso note").fill("Too slow to dial in for espresso.");
+  await p.selectOption("#ge-notation", "thirds");
+  await p.fill("#ge-divisor", "10");
   await p.getByRole("button", { name: "Save", exact: true }).click();
+  await p.locator(`[data-testid="gear-${c40.id}"]`).waitFor();
+  const c40r = (await (await fetch(`${BASE}/api/gear`)).json()).find((g) => g.id === c40.id).grindRanges;
+  check(c40r.notes?.espresso === "Too slow to dial in for espresso." && c40r.notation === "thirds" && c40r.dialDivisor === 10,
+    `custom grinder saves notes, notation and divisor: ${JSON.stringify({ n: c40r.notes, t: c40r.notation, d: c40r.dialDivisor })}`);
   await p.locator(`[data-testid="gear-${c40.id}"]`).getByRole("button", { name: "Edit" }).click();
+  // (put the C40 back on a decimal dial for the rest of the run)
+  await p.selectOption("#ge-notation", "decimal");
+  await p.fill("#ge-divisor", "");
   const src = p.locator('[data-testid="range-source"]');
   check(/Your ranges — Calibrated against my V60\./.test(await src.innerText()) && (await src.locator("a").getAttribute("href")) === "https://example.com/my-c40-chart",
     `source saved and shown: ${(await src.innerText()).replace(/\s+/g, " ")}`);
-  await p.getByRole("button", { name: "Cancel" }).click();
+  await p.getByRole("button", { name: "Save", exact: true }).click();
+  await p.locator(`[data-testid="gear-${c40.id}"]`).waitFor();
   // A library grinder brings its source and marks the extrapolated rows.
   const k6 = await (await fetch(`${BASE}/api/gear/from-catalog`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ catalogId: "k6" }) })).json();
   await p.reload();
@@ -171,9 +183,28 @@ try {
   check(/From the gear library — the maker's chart/.test(k6src) && /Estimated \(est\.\): Drip coffee maker, French press \/ immersion, Cold brew, Rapid Brewer/.test(k6src), `K6 source + estimates: ${k6src.replace(/\s+/g, " ").slice(0, 160)}`);
   check((await p.locator('[data-testid="range-table"] .est-badge').count()) === 4, "est. badges on the four estimated rows");
   check((await p.getByLabel("Turkish low").inputValue()) === "28", "Turkish from the K6 manual (28–40)");
+  check(!(await p.locator('[data-testid="library-ranges"]').count()), "an untouched library grinder doesn't claim to differ from the library");
   await p.getByLabel("Cold brew low").fill("150");
   check((await p.locator('[data-testid="range-table"] .est-badge').count()) === 3, "typing your own value clears that row's est. badge");
   await p.getByRole("button", { name: "Cancel" }).click();
+
+  // More → Grind for a different dose: on/off, how much, which methods.
+  await p.goto(`${BASE}/#/more`);
+  const dnCard = p.locator('[data-testid="dose-nudge-settings"]');
+  await dnCard.waitFor();
+  check(/twice the dose → .* coarser/.test(await dnCard.innerText()), `the setting shows a worked example on your gear: ${(await dnCard.locator(".hint").innerText()).slice(0, 120)}`);
+  await p.fill("#dn-percent", "40");
+  await dnCard.getByLabel("French press / immersion").check();
+  await p.waitForTimeout(400);
+  let dn = (await (await fetch(`${BASE}/api/setup`)).json()).settings.doseNudge;
+  check(dn.percent === 40 && dn.methods.includes("immersion"), `percent and methods saved: ${JSON.stringify(dn)}`);
+  await dnCard.getByRole("button", { name: /Back to the defaults/ }).click();
+  await dnCard.getByRole("group", { name: "Adjust the grind for the dose" }).getByRole("button", { name: "Off" }).click();
+  await p.waitForTimeout(400);
+  dn = (await (await fetch(`${BASE}/api/setup`)).json()).settings.doseNudge;
+  check(!dn.enabled && dn.percent === 20 && !dn.methods.includes("immersion") && !(await p.locator("#dn-percent").count()), `defaults restored, then switched off: ${JSON.stringify(dn)}`);
+  await dnCard.getByRole("group", { name: "Adjust the grind for the dose" }).getByRole("button", { name: "On" }).click();
+  await p.waitForTimeout(300);
 
   // Discover → Your taste: "always leave out" rules are the user's own.
   await p.goto(`${BASE}/#/discover/taste`);

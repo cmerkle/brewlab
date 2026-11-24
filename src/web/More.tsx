@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "./api";
-import { useData, fmtDate } from "./ui";
+import { useData, fmtDate, NumInput } from "./ui";
+import { METHODS, METHOD_LABELS, DEFAULT_DOSE_NUDGE, rangeFor, fmtGrindNumber, type DoseNudge } from "../shared/grind";
 import { RatioCalculator } from "./brew/RatioCalculator";
 import { PrefsForm } from "./Setup";
 import { AiProvider } from "./AiProvider";
@@ -65,6 +66,8 @@ export function More() {
         </button>
         <p className="muted small">Setup again only adds — your gear, recipes and data stay.</p>
       </section>
+
+      <DoseNudgeSettings />
 
       <section className="card" data-testid="ai-card">
         <h2>AI provider</h2>
@@ -193,6 +196,81 @@ export function ScreenInfo() {
         }}>{copied ? "Copied" : "Copy"}</button>
       </div>
       <p className="hint">If the tab bar ever floats above the bottom, tap Refresh, then Copy and send these numbers.</p>
+    </section>
+  );
+}
+
+/** Brew setup's "grind for a different dose" adjustment: on/off, how much, which methods. */
+function DoseNudgeSettings() {
+  const { settings, saveSettings, act, gear } = useData();
+  // Shown at once and saved in order, so quick edits (typing, ticking boxes) never undo each other.
+  const [cfg, setCfg] = useState<DoseNudge>(settings.doseNudge);
+  const latest = useRef(cfg);
+  const saved = JSON.stringify(settings.doseNudge);
+  useEffect(() => {
+    latest.current = settings.doseNudge;
+    setCfg(settings.doseNudge);
+  }, [saved]); // eslint-disable-line react-hooks/exhaustive-deps
+  const save = (patch: Partial<DoseNudge>) => {
+    const next = { ...latest.current, ...patch };
+    latest.current = next;
+    setCfg(next);
+    queue.current = queue.current.then(() => act(() => saveSettings({ doseNudge: next })));
+  };
+  const queue = useRef<Promise<unknown>>(Promise.resolve());
+  // A worked example on the user's own gear, so the percentage means something.
+  const ex = (() => {
+    for (const m of cfg.methods) {
+      for (const g of gear.filter((x) => x.type === "grinder")) {
+        const r = rangeFor(g, m);
+        if (r && r.high > r.low) {
+          const d = (cfg.percent / 100) * (r.high - r.low);
+          return `e.g. ${g.name}, ${METHOD_LABELS[m]} ${fmtGrindNumber(r.low)}–${fmtGrindNumber(r.high)}${g.units ? ` ${g.units}` : ""}: twice the dose → ${fmtGrindNumber(Math.round(d * 100) / 100)} coarser, half → that much finer.`;
+        }
+      }
+    }
+    return null;
+  })();
+  return (
+    <section className="card stack" data-testid="dose-nudge-settings">
+      <h2>Grind for a different dose</h2>
+      <p className="muted small">When you brew more or less coffee than the recipe, Brew setup moves the grind: coarser for a bigger dose (a deeper bed drains slower), finer for a smaller one. You can always type your own number.</p>
+      <div className="pref-row">
+        <span>Adjust the grind</span>
+        <div className="seg big" role="group" aria-label="Adjust the grind for the dose">
+          {[true, false].map((v) => (
+            <button key={String(v)} className={cfg.enabled === v ? "on" : ""} aria-pressed={cfg.enabled === v} onClick={() => save({ enabled: v })}>{v ? "On" : "Off"}</button>
+          ))}
+        </div>
+      </div>
+      {cfg.enabled && (
+        <>
+          <div className="pref-row">
+            <label htmlFor="dn-percent">Per doubling of the dose</label>
+            <span className="row">
+              <NumInput id="dn-percent" className="short" value={cfg.percent} min={0} max={100} decimals={1}
+                onChange={(n) => { if (n != null && n >= 0 && n <= 100) save({ percent: n }); }} />
+              <span className="muted">% of the range</span>
+            </span>
+          </div>
+          <p className="hint">The range is your grinder's low–high for that grind category (Gear). {ex}</p>
+          <fieldset className="checks">
+            <legend>Applies to</legend>
+            {METHODS.map((m) => (
+              <label key={m} className="check">
+                <input type="checkbox" checked={cfg.methods.includes(m)}
+                  onChange={(e) => save({ methods: e.target.checked ? METHODS.filter((x) => x === m || cfg.methods.includes(x)) : cfg.methods.filter((x) => x !== m) })} />
+                {METHOD_LABELS[m]}
+              </label>
+            ))}
+          </fieldset>
+          {(cfg.percent !== DEFAULT_DOSE_NUDGE.percent || [...cfg.methods].sort().join() !== [...DEFAULT_DOSE_NUDGE.methods].sort().join()) && (
+            <button className="link" onClick={() => save({ percent: DEFAULT_DOSE_NUDGE.percent, methods: [...DEFAULT_DOSE_NUDGE.methods] })}>
+              Back to the defaults ({DEFAULT_DOSE_NUDGE.percent}%, {DEFAULT_DOSE_NUDGE.methods.map((m) => METHOD_LABELS[m]).join(", ")})
+            </button>
+          )}
+        </>
+      )}
     </section>
   );
 }

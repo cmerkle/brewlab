@@ -41,9 +41,14 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   the grinder; the unit word comes from the grinder (`fmtGrind`). Conversion math runs on the
   linear scale (`dialToValue`/`valueToDial`; they differ only for Ode-style `thirds`: dial 5.1 = 5⅓).
   Legacy text is converted by `normalizeGrindSettings` (startup, seed, restore) and the API schema.
-- **Dose nudge** (`doseAdjustedGrind`): drip methods only (pourover/rapid/batch), ±20% of the
-  method range per doubling of dose vs the recipe; shown with a one-tap "Use <recipe grind>";
-  typing a grind turns it off.
+- **Dose nudge** (`doseAdjustedGrind`) is a setting (`settings.doseNudge`, More → "Grind for a
+  different dose"): on/off, `percent` of the method range per doubling of dose vs the recipe, and
+  which methods (default on, 20%, pourover/batch/rapid — `DEFAULT_DOSE_NUDGE`). Shown with a
+  one-tap "Use <recipe grind>"; typing a grind turns it off.
+- **Prefer settings and data over constants.** The owner wants Brewlab highly configurable: a
+  behaviour with a tunable number or list belongs in `settings` (with a default) or in `catalog/`,
+  not hard-coded. Library gear and custom gear share one shape — every field a library entry can
+  carry (ranges, per-method notes, notation, dial divisor, source) is editable in the gear editor.
 - Brew flow: **Brew setup** (dose/water/ratio/temp/bag/grinder) → *Ready to brew* → timer screen
   idle at 0:00 → *Start timer* → *Finish* → log (temp and grind still editable). The active brew is
   persisted only once the timer runs.
@@ -144,7 +149,7 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   `meta.onboarded` isn't "1"; installs with data are marked onboarded at startup. Preferences in
   the `settings` table (`src/server/settings.ts`): tempUnit (DB always °C — use
   `useTemp`/`TempInput`), waterUnit (instance default; per-device g/oz pref wins), defaultRatio,
-  discoverEnabled, avoidRules, palateNotes, tasteQuiz. Demo data (`demo/`, fictional) and restore
+  discoverEnabled, ruleDefs/avoidRules, palateNotes, tasteQuiz, doseNudge. Demo data (`demo/`, fictional) and restore
   only go into an empty DB.
 - **Discover taste** (`src/server/taste.ts`): summary from Stash ratings, brew ratings and
   tastings → stage popular (0 rated) / mixed (1–4) / tailored (5+), the research prompt, ranking of

@@ -273,24 +273,28 @@ export function validateRanges(methods: Partial<Record<Method, { low?: number | 
 
 /* ------------------------------ dose → grind nudge ------------------------------ */
 
-/** Drip methods, where a bigger bed drains slower and wants a coarser grind. */
-export const DOSE_NUDGE_METHODS: readonly Method[] = ["pourover", "rapid", "batch"];
-/** Share of the method's range to move per doubling (or halving) of the dose. */
-export const DOSE_NUDGE_PER_DOUBLING = 0.2;
+/**
+ * How Brew setup adjusts the grind for a different dose (a setting: More → Settings).
+ * `percent` = share of the grinder's range for that method to move per doubling (or halving).
+ */
+export interface DoseNudge { enabled: boolean; percent: number; methods: Method[] }
+/** Defaults: drip methods, where a bigger bed drains slower and wants a coarser grind. */
+export const DEFAULT_DOSE_NUDGE: DoseNudge = { enabled: true, percent: 20, methods: ["pourover", "batch", "rapid"] };
 
 /**
- * Grind for a different dose than the recipe's: drip methods move coarser (bigger dose) or finer
- * (smaller dose) by DOSE_NUDGE_PER_DOUBLING of the method range per doubling. Returns null when
- * nothing changes (other methods, no range, same dose, or the step rounds it away).
+ * Grind for a different dose than the recipe's: the chosen methods move coarser (bigger dose) or
+ * finer (smaller dose) by `cfg.percent` of the method range per doubling. Returns null when
+ * nothing changes (turned off, other methods, no range, same dose, or the step rounds it away).
  */
 export function doseAdjustedGrind(
-  g: GrinderLike, m: Method, dial: number, recipeDoseG: number, doseG: number,
+  g: GrinderLike, m: Method, dial: number, recipeDoseG: number, doseG: number, cfg: DoseNudge = DEFAULT_DOSE_NUDGE,
 ): { dial: number; delta: number } | null {
-  if (!DOSE_NUDGE_METHODS.includes(m) || !(recipeDoseG > 0) || !(doseG > 0) || doseG === recipeDoseG) return null;
+  if (!cfg.enabled || !(cfg.percent > 0) || !cfg.methods.includes(m)) return null;
+  if (!(recipeDoseG > 0) || !(doseG > 0) || doseG === recipeDoseG) return null;
   const r = rangeFor(g, m);
   if (!r || r.high <= r.low) return null;
   const er = effectiveRanges(g);
-  let v = dialToValue(g, dial) + DOSE_NUDGE_PER_DOUBLING * Math.log2(doseG / recipeDoseG) * (r.high - r.low);
+  let v = dialToValue(g, dial) + (cfg.percent / 100) * Math.log2(doseG / recipeDoseG) * (r.high - r.low);
   if (er?.min != null) v = Math.max(er.min, v);
   if (er?.max != null) v = Math.min(er.max, v);
   const out = valueToDial(g, v);

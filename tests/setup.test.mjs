@@ -36,6 +36,12 @@ test("fresh install: empty, not onboarded, default settings", async () => {
   assert.equal((await call("PUT", "/api/settings", { tempUnit: "F", defaultRatio: 15 })).body.tempUnit, "F");
   assert.equal((await call("PUT", "/api/settings", { tempUnit: "K" })).status, 400);
   assert.equal((await call("GET", "/api/setup")).body.settings.defaultRatio, 15);
+  // Dose → grind adjustment is a setting (on, 20% per doubling, drip methods by default).
+  assert.deepEqual(s.settings.doseNudge, { enabled: true, percent: 20, methods: ["pourover", "batch", "rapid"] });
+  const dn = { enabled: false, percent: 35, methods: ["pourover", "immersion"] };
+  assert.deepEqual((await call("PUT", "/api/settings", { doseNudge: dn })).body.doseNudge, dn);
+  assert.equal((await call("PUT", "/api/settings", { doseNudge: { ...dn, percent: 150 } })).status, 400);
+  assert.equal((await call("PUT", "/api/settings", { doseNudge: { ...dn, methods: ["siphon"] } })).status, 400);
   server.closeAllConnections(); server.close();
 });
 

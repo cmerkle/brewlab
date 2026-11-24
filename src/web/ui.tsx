@@ -1,3 +1,4 @@
+import { DEFAULT_DOSE_NUDGE, type DoseNudge } from "../shared/grind";
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { api, type Bag, type Brew, type Gear, type Limits, type Recipe } from "./api";
@@ -36,6 +37,7 @@ export interface Settings {
   ruleDefs: AvoidRuleDef[]; avoidRules: string[]; palateNotes: string;
   tasteQuiz: { loves: string[]; dislikes: string[]; processes: string[]; roasts: string[] };
   dismissedSuggestions: string[];
+  doseNudge: DoseNudge;
 }
 export interface SetupState { onboarded: boolean; empty: boolean; settings: Settings }
 
@@ -60,6 +62,7 @@ const Ctx = createContext<Data | null>(null);
 export const DEFAULT_SETTINGS: Settings = {
   tempUnit: "C", waterUnit: "g", defaultRatio: 16, discoverEnabled: true,
   ruleDefs: [], avoidRules: [], palateNotes: "", tasteQuiz: { loves: [], dislikes: [], processes: [], roasts: [] }, dismissedSuggestions: [],
+  doseNudge: DEFAULT_DOSE_NUDGE,
 };
 export const useData = () => useContext(Ctx)!;
 

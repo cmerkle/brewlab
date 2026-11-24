@@ -96,6 +96,11 @@ test("dose nudge: drip methods go coarser for a bigger dose, finer for a smaller
   assert.equal(doseAdjustedGrind(ode, "pourover", 5, 20, 40).dial, 5.1);
   // No range for the method → no nudge
   assert.equal(doseAdjustedGrind(G("x", "X", "clicks"), "pourover", 10, 20, 40), null);
+  // The settings: off, a different share per doubling, other methods.
+  assert.equal(doseAdjustedGrind(kul, "pourover", 72, 20, 40, { enabled: false, percent: 20, methods: ["pourover"] }), null);
+  assert.deepEqual(doseAdjustedGrind(kul, "pourover", 72, 20, 40, { enabled: true, percent: 50, methods: ["pourover"] }), { dial: 80, delta: 8 });
+  assert.equal(doseAdjustedGrind(kul, "pourover", 72, 20, 40, { enabled: true, percent: 20, methods: ["immersion"] }), null);
+  assert.ok(doseAdjustedGrind(kul, "immersion", 85, 20, 40, { enabled: true, percent: 20, methods: ["immersion"] }));
 });
 
 test("Work Horse scaled to 35g / 460g pours ~229g then lands on 460g — not 560g", () => {

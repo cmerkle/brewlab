@@ -219,6 +219,10 @@ input.invalid { border-color: var(--danger); }
 .step-edit { border: 1px solid var(--line); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
 .ranges { display: flex; flex-direction: column; gap: 6px; }
 .range-row { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr); gap: 6px; align-items: center; }
+.range-row .range-note { grid-column: 1 / -1; font-size: 0.85em; min-height: 32px; padding: 4px 8px; resize: none; background: transparent; border: 1px dashed var(--line); color: var(--muted, inherit); }
+.range-row .range-note:not(:placeholder-shown) { border-style: solid; }
+.range-row .range-note:focus { color: var(--text); }
+.range-row + .range-row { border-top: 1px solid var(--line); padding-top: 6px; }
 .rl { font-size: .85rem; }
 .import { background: var(--accent-soft); border-radius: var(--radius); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
 .import .row input { flex: 1; }
@@ -438,3 +442,10 @@ a.button.disabled { opacity: .45; pointer-events: none; }
 .rules .rule .toggle-row { flex: 1; min-width: 0; }
 .rule-words { overflow-wrap: anywhere; }
 .rule.editing { display: flex; flex-direction: column; gap: 4px; padding: 8px; border: 1px solid var(--line); border-radius: 10px; margin: 4px 0; }
+
+/* Checkbox lists (settings) */
+fieldset.checks { border: 0; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 4px 12px; }
+fieldset.checks legend { font-weight: 600; margin-bottom: 6px; padding: 0; }
+label.check { display: flex; align-items: center; gap: 8px; min-height: 40px; }
+label.check input { width: 20px; height: 20px; margin: 0; }
+input.short { width: 5.5em; }

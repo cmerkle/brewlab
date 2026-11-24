@@ -128,7 +128,7 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
   onEditGrinder?: (id: string) => void;
   resume?: ActiveBrew;
 }) {
-  const { limits, gear, bags, brews, reload, toast } = useData();
+  const { limits, gear, bags, brews, reload, toast, settings } = useData();
   const temp = useTemp();
   const grinders = useGrinders();
   const method = methodOf(plan, gear);
@@ -158,7 +158,7 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
 
   // Grind: the recipe's (converted to the chosen grinder), nudged for the dose on drip methods —
   // until you type your own number.
-  const dripNudge = grinder && choice.setting != null && dose ? doseAdjustedGrind(grinder, method, choice.setting, plan.doseG, dose) : null;
+  const dripNudge = grinder && choice.setting != null && dose ? doseAdjustedGrind(grinder, method, choice.setting, plan.doseG, dose, settings.doseNudge) : null;
   const suggested = dripNudge?.dial ?? choice.setting;
   const [typedGrind, setTypedGrind] = useState<{ value: number | null } | null>(resume ? { value: resume.grind } : null);
   const grind = typedGrind ? typedGrind.value : suggested;
