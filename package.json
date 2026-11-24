@@ -1,6 +1,6 @@
 {
   "name": "brewlab",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Self-hosted coffee brewing assistant and weekly recommendations board",
   "license": "MIT",
   "private": true,
