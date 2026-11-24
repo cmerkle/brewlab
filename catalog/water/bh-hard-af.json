@@ -1,0 +1,23 @@
+{
+  "id": "bh-hard-af",
+  "version": 1,
+  "name": "Hard dot AF (Barista Hustle)",
+  "credit": "Barista Hustle",
+  "base": "distilled",
+  "volume": 1,
+  "volumeUnit": "L",
+  "additives": [
+    {
+      "additive": "bh-buffer",
+      "amount": 45.2,
+      "unit": "g"
+    },
+    {
+      "additive": "bh-hardness",
+      "amount": 176.8,
+      "unit": "g"
+    }
+  ],
+  "source": "https://www.baristahustle.com/diy-water-recipes-redux/",
+  "notes": "Very hard water at the top of the range: brew settings will need big changes. Weigh 45.2 g Buffer and 176.8 g Hardness concentrate, then 778 g deionised water (about 1000 g in all)."
+}

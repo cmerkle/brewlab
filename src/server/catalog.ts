@@ -7,6 +7,7 @@ import path from "node:path";
 import { z } from "zod";
 import { METHODS, valueToDial, rangeFor, type GrindRanges, type Method } from "../shared/grind.js";
 import { evalExpr, type EstimateRules } from "../shared/estimate.js";
+import { AMOUNT_UNITS, VOLUME_UNITS, convertAmount, type WaterAdditive, type WaterBase, type WaterLine } from "../shared/water.js";
 
 export const CATALOG_DIR = process.env.CATALOG_DIR || path.resolve("catalog");
 
@@ -362,5 +363,104 @@ export function gearFromCatalog(c: CatalogGearT) {
     catalogId: c.id,
     catalogVersion: c.version,
     category: c.category,
+  };
+}
+
+/* ---------- water (catalog/water-additives.json + catalog/water/<id>.json) ---------- */
+
+const ppm = z.number().min(0).max(100000).nullable();
+const httpsUrl = z.string().regex(/^https:\/\/\S+$/, "must be a link starting with https://");
+const WaterBaseSchema = z.object({ id: z.string().regex(/^[a-z0-9-]+$/), name: z.string().min(1), gh: ppm, kh: ppm, note: z.string().optional() });
+const AdditiveSchema = z
+  .object({
+    id: z.string().regex(/^[a-z0-9-]+$/),
+    name: z.string().min(1),
+    kind: z.enum(["salt", "drops", "packet", "concentrate"]),
+    formula: z.string().optional(),
+    ref: z.object({
+      amount: z.number().positive(), unit: z.enum(AMOUNT_UNITS), volume: z.number().positive(), volumeUnit: z.enum(VOLUME_UNITS),
+      gh: ppm, kh: ppm, tds: z.number().min(0).nullable().optional(),
+    }),
+    basis: z.enum(["calculated", "published"]),
+    source: httpsUrl.optional(),
+    note: z.string().optional(),
+  })
+  .superRefine((a, ctx) => {
+    // Published strengths need a cited source; calculated ones say how (molar mass) in the note.
+    if (a.basis === "published" && !a.source) ctx.addIssue({ code: "custom", message: `${a.id}: a published strength needs a source link`, path: ["source"] });
+    if (a.basis === "calculated" && !a.note) ctx.addIssue({ code: "custom", message: `${a.id}: say how the strength was calculated (note)`, path: ["note"] });
+  });
+export const WaterAdditivesSchema = z.object({
+  about: z.string().optional(),
+  version: z.number().int().positive(),
+  bases: z.array(WaterBaseSchema),
+  additives: z.array(AdditiveSchema),
+});
+export const WaterTemplate = z.object({
+  id: z.string().regex(/^[a-z0-9-]+$/),
+  version: z.number().int().positive(),
+  name: z.string().min(1),
+  credit: z.string().nullable().optional(),
+  base: z.string(),
+  volume: z.number().positive(),
+  volumeUnit: z.enum(VOLUME_UNITS),
+  additives: z.array(z.object({ additive: z.string(), amount: z.number().positive(), unit: z.enum(AMOUNT_UNITS) })).min(1),
+  /** The source's own numbers (shown, and checked against what the additives add up to). */
+  stated: z.object({ gh: z.number().min(0).optional(), kh: z.number().min(0).optional(), tds: z.number().min(0).optional() }).optional(),
+  /** Every library water recipe cites where it comes from. */
+  source: httpsUrl,
+  notes: z.string().optional(),
+});
+export type WaterTemplateT = z.infer<typeof WaterTemplate>;
+
+let waterCache: { bases: WaterBase[]; additives: WaterAdditive[]; recipes: WaterTemplateT[]; errors: string[] } | null = null;
+export function loadWaterCatalog(dir = CATALOG_DIR, fresh = false) {
+  if (waterCache && !fresh && dir === CATALOG_DIR) return waterCache;
+  const errors: string[] = [];
+  let bases: WaterBase[] = [];
+  let additives: WaterAdditive[] = [];
+  try {
+    const p = WaterAdditivesSchema.safeParse(JSON.parse(fs.readFileSync(path.join(dir, "water-additives.json"), "utf8")));
+    if (p.success) ({ bases, additives } = p.data as { bases: WaterBase[]; additives: WaterAdditive[] });
+    else errors.push(...p.error.issues.map((i) => `water-additives.json: ${i.path.join(".")}: ${i.message}`));
+  } catch (e: any) {
+    errors.push(`water-additives.json: ${e.message}`);
+  }
+  for (const [what, list] of [["base", bases], ["additive", additives]] as const) {
+    const seen = new Set<string>();
+    for (const x of list) {
+      if (seen.has(x.id)) errors.push(`water-additives.json: two ${what}s have the id "${x.id}"`);
+      seen.add(x.id);
+    }
+  }
+  const r = loadDir(path.join(dir, "water"), WaterTemplate);
+  errors.push(...r.errors.map((e) => `water/${e}`));
+  const recipes: WaterTemplateT[] = [];
+  for (const t of r.items) {
+    const where = `water/${t.id}.json`;
+    let ok = true;
+    if (!bases.some((b) => b.id === t.base)) { errors.push(`${where}: base "${t.base}" isn't in water-additives.json`); ok = false; }
+    for (const l of t.additives) {
+      const a = additives.find((x) => x.id === l.additive);
+      if (!a) { errors.push(`${where}: additive "${l.additive}" isn't in water-additives.json`); ok = false; }
+      else if (convertAmount(1, l.unit, a.ref.unit) == null) { errors.push(`${where}: ${a.name} is measured in ${a.ref.unit}, not ${l.unit}`); ok = false; }
+    }
+    if (ok) recipes.push(t);
+  }
+  const out = { bases, additives, recipes, errors };
+  if (dir === CATALOG_DIR) waterCache = out;
+  return out;
+}
+export const catalogWater = (id: string) => loadWaterCatalog().recipes.find((w) => w.id === id) ?? null;
+
+/** A library water recipe as an editable copy's fields. */
+export function waterFromTemplate(t: WaterTemplateT) {
+  const c = loadWaterCatalog();
+  const base = c.bases.find((b) => b.id === t.base);
+  return {
+    name: t.name, baseId: t.base, baseName: base?.name ?? t.base, baseGh: null, baseKh: null, volume: t.volume, volumeUnit: t.volumeUnit,
+    additives: t.additives.map((l) => ({ additiveId: l.additive, name: c.additives.find((a) => a.id === l.additive)?.name ?? l.additive, amount: l.amount, unit: l.unit })) as WaterLine[],
+    notes: [t.notes, t.credit ? `By ${t.credit}.` : null].filter(Boolean).join(" ") || null,
+    source: t.source, catalogId: t.id, catalogVersion: t.version,
   };
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0
+
+- **Brew setup holds the ratio:** change the coffee and the water follows, change the water and the coffee follows. Only the ratio field and the ratio buttons change the ratio.
+- **Water recipes** (More → Water): a base water, a volume and additives (minerals, drops, packets), with hardness and alkalinity worked out as you type, in ppm as CaCO₃. Salts are calculated from molar mass. Lotus drops and Third Wave Water use published figures, and anything unpublished shows as "—". Mark a water as a concentrate (a stock solution) and other waters add it by the gram. A cited library: the Third Wave Water profiles, Lotus Light & Bright and Rao/Perger, and Barista Hustle's concentrate recipes (the eight from its redux post, the original filter recipe and an espresso one) with their concentrates. Recipes can have a default water, Brew setup lets you pick one, brews record it, and the Brew Log filters by water and compares how each rated.
+- **Brew timer:** the clock, the current step and the countdown to the next one stay at the top; the list of steps scrolls on its own and follows the brew, so the timer is never pushed off screen.
+
 ## 0.1.2
 
 - **Backups:** delete a backup from More → Backups (it asks first), and choose how many to keep there. Lowering the number deletes the oldest ones right away, after asking. *Use the default* goes back to `BACKUP_KEEP` (14 unless you set it).

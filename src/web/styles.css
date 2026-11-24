@@ -284,6 +284,11 @@ ol.steps .tgt { font-weight: 700; font-variant-numeric: tabular-nums; }
 .now-step { background: var(--accent-soft); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 4px; }
 .now-step .target { font-size: 2.6rem; font-weight: 800; font-variant-numeric: tabular-nums; }
 .now-step .step-label { font-size: 1.1rem; font-weight: 700; }
+/* Brew timer: the clock and the current step stay put; only the step list scrolls (and follows the
+   brew). On a screen too short for even that, the body scrolls as a whole again. */
+.fs-body.pinned { display: flex; flex-direction: column; }
+.fs-body.pinned > .timer { flex: 1 1 auto; min-height: 0; width: 100%; }
+.timer > ol.steps.follow { flex: 1 1 0; min-height: 96px; overflow-y: auto; overscroll-behavior: contain; position: relative; }
 .next { margin-top: 6px; font-size: .9rem; }
 
 /* ---------- full-screen dialog ---------- */
@@ -388,6 +393,11 @@ details.card summary { cursor: pointer; font-weight: 600; }
   .timer .next-count { font-size: 1.7rem; }
   .timer > .muted { grid-area: info; }
   .timer > ol.steps { grid-area: steps; }
+  .fs-body.pinned > .timer { grid-template-rows: auto auto minmax(0, 1fr); }
+  /* "Set up and ready" / "Resumed" gets a row of its own above the clock. */
+  .fs-body.pinned > .timer:has(> .hint) { grid-template-areas: "hint hint" "clock next" "now steps" "info steps"; grid-template-rows: auto auto auto minmax(0, 1fr); }
+  .timer > .hint { grid-area: hint; }
+  .timer > ol.steps.follow { align-self: stretch; min-height: 0; }
 }
 
 /* Full-screen dialogs clear the notch / Dynamic Island when the phone is held sideways. */

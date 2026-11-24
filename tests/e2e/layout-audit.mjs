@@ -36,6 +36,7 @@ const PAGES = [
   { name: "Stash ⋯ menu", hash: "brew/stash", act: async (p) => p.locator('[data-testid="bag-1"] .menu .icon-btn').click() },
   { name: "Brew Log", hash: "brew/log" },
   { name: "Gear", hash: "brew/gear" },
+  { name: "Water", hash: "brew/water" },
   { name: "Discover board", hash: "discover/board" },
   { name: "Past editions", hash: "discover/archive" },
   { name: "Tasting log", hash: "discover/tastings" },
@@ -77,6 +78,8 @@ const PAGES = [
   } },
   { name: "dialog: Suggest to the library", hash: "brew/gear", dialog: true, act: async (p) => { await p.locator('[data-testid="gear-ode-gen2"]').getByRole("button", { name: "Edit" }).click(); await p.locator('[data-testid="suggest-open"]').click(); await p.locator('[data-testid="suggest-json"]').waitFor(); } },
   { name: "dialog: Gear library", hash: "brew/gear", dialog: true, act: async (p) => { await p.getByRole("button", { name: "Add gear" }).click(); await p.locator('[data-testid="gear-library"] li').first().waitFor(); } },
+  { name: "dialog: Water library", hash: "brew/water", dialog: true, act: async (p) => { await p.getByRole("button", { name: "Add water" }).click(); await p.locator('[data-testid^="water-lib-"]').first().waitFor(); } },
+  { name: "dialog: Water editor", hash: "brew/water", dialog: true, act: async (p) => { await p.locator('[data-testid="water-1"]').getByRole("button", { name: "Edit" }).click(); await p.locator('[data-testid="water-form"]').waitFor(); await p.getByRole("button", { name: "+ Add an additive" }).click(); await p.selectOption("#wr-add-4", "__custom"); await p.selectOption("#wr-base", "tap"); } },
 ];
 
 function auditInPage({ isDialog, deviceW, deviceH }) {

@@ -65,6 +65,12 @@ Every brewer has a `defaultMethod`: the grind range it uses on the user's grinde
 
 `catalog/recipes/<id>.json`. The grind is a **position** (0–1) inside the method's range on the user's grinder, so one template works on any grinder with ranges. Templates name the brewers they fit by library id and/or category.
 
+## Water recipes
+
+`catalog/water/<id>.json`: a base (`distilled`, `ro` …), a volume (`ml`, `L` or `gal`) and additives by id with an amount and unit. Every water recipe needs an **https** `source`. Optional `stated` holds the source's own GH/KH/TDS. CI checks that it matches what the additives add up to, within 10%.
+
+Bases and additives live in `catalog/water-additives.json`. An additive's `ref` says what `amount` of it adds to `volume` of water (GH and KH in ppm as CaCO₃). Use `null` for a value the maker doesn't publish, never a guess. A `published` strength needs a `source` link. A `calculated` one (pure salts from molar mass, or a published concentrate worked out from its salts) says how in its `note`. Quote only numbers from a source, and link to it. Don't copy its text.
+
 ## What CI checks
 
 `npm run check:catalog` (CI runs it on every pull request) explains each problem in plain words:
@@ -74,7 +80,8 @@ Every brewer has a `defaultMethod`: the grind range it uses on the user's grinde
 - each range has low ≤ high and sits inside the grinder's `min`/`max`;
 - `type` and `category` agree (grinder ↔ `*-grinder`), only grinders have ranges, only brewers have `defaultMethod`, and every brewer has one;
 - methods listed in `rangeInfo.estimated` have a range, come with an `estimateNote`, and aren't all of them;
-- recipe templates only refer to gear that exists.
+- recipe templates only refer to gear that exists;
+- water recipes only use bases and additives that exist, in units their strength can be converted to, cite an https source, and match their stated GH/KH.
 
 ## Before you open a pull request
 

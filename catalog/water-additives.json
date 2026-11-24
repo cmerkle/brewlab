@@ -1,0 +1,351 @@
+{
+  "about": "Water bases and additives for water recipes (catalog/water/). gh = general hardness and kh = alkalinity, both in ppm as CaCO₃, added by `ref.amount` of `ref.unit` in `ref.volume` of water. null = not published (shown as unknown, never guessed). Salts are calculated from molar mass; products cite the maker or a published source.",
+  "version": 1,
+  "bases": [
+    {
+      "id": "distilled",
+      "name": "Distilled",
+      "gh": 0,
+      "kh": 0,
+      "note": "No minerals: the usual starting point for recipes."
+    },
+    {
+      "id": "ro",
+      "name": "Reverse osmosis (RO)",
+      "gh": null,
+      "kh": null,
+      "note": "Close to zero but varies by system: measure yours and enter it."
+    },
+    {
+      "id": "zerowater",
+      "name": "ZeroWater (filtered)",
+      "gh": 0,
+      "kh": 0,
+      "note": "Treated as zero while the filter's meter reads 000; replace the filter when it doesn't."
+    },
+    {
+      "id": "tap",
+      "name": "Tap",
+      "gh": null,
+      "kh": null,
+      "note": "Varies by place and season: check your water report or test it, and enter the numbers."
+    },
+    {
+      "id": "bottled",
+      "name": "Bottled spring water",
+      "gh": null,
+      "kh": null,
+      "note": "Enter the hardness and alkalinity from the label or your test."
+    }
+  ],
+  "additives": [
+    {
+      "id": "epsom-salt",
+      "name": "Epsom salt (magnesium sulfate)",
+      "kind": "salt",
+      "formula": "MgSO₄·7H₂O",
+      "ref": {
+        "amount": 1,
+        "unit": "g",
+        "volume": 1,
+        "volumeUnit": "L",
+        "gh": 406.1,
+        "kh": 0
+      },
+      "basis": "calculated",
+      "note": "Calculated from the molar mass of MgSO₄·7H₂O (246.47 g/mol): ppm as CaCO₃ from 1 g in 1 L."
+    },
+    {
+      "id": "calcium-chloride-dihydrate",
+      "name": "Calcium chloride (dihydrate)",
+      "kind": "salt",
+      "formula": "CaCl₂·2H₂O",
+      "ref": {
+        "amount": 1,
+        "unit": "g",
+        "volume": 1,
+        "volumeUnit": "L",
+        "gh": 680.8,
+        "kh": 0
+      },
+      "basis": "calculated",
+      "note": "Calculated from the molar mass of CaCl₂·2H₂O (147.01 g/mol): ppm as CaCO₃ from 1 g in 1 L."
+    },
+    {
+      "id": "calcium-chloride-anhydrous",
+      "name": "Calcium chloride (anhydrous)",
+      "kind": "salt",
+      "formula": "CaCl₂",
+      "ref": {
+        "amount": 1,
+        "unit": "g",
+        "volume": 1,
+        "volumeUnit": "L",
+        "gh": 901.8,
+        "kh": 0
+      },
+      "basis": "calculated",
+      "note": "Calculated from the molar mass of CaCl₂ (110.98 g/mol): ppm as CaCO₃ from 1 g in 1 L. Check your package: most food-grade calcium chloride is the dihydrate."
+    },
+    {
+      "id": "magnesium-chloride-hexahydrate",
+      "name": "Magnesium chloride (hexahydrate)",
+      "kind": "salt",
+      "formula": "MgCl₂·6H₂O",
+      "ref": {
+        "amount": 1,
+        "unit": "g",
+        "volume": 1,
+        "volumeUnit": "L",
+        "gh": 492.3,
+        "kh": 0
+      },
+      "basis": "calculated",
+      "note": "Calculated from the molar mass of MgCl₂·6H₂O (203.30 g/mol): ppm as CaCO₃ from 1 g in 1 L."
+    },
+    {
+      "id": "baking-soda",
+      "name": "Baking soda (sodium bicarbonate)",
+      "kind": "salt",
+      "formula": "NaHCO₃",
+      "ref": {
+        "amount": 1,
+        "unit": "g",
+        "volume": 1,
+        "volumeUnit": "L",
+        "gh": 0,
+        "kh": 595.7
+      },
+      "basis": "calculated",
+      "note": "Calculated from the molar mass of NaHCO₃ (84.007 g/mol): ppm as CaCO₃ from 1 g in 1 L."
+    },
+    {
+      "id": "potassium-bicarbonate",
+      "name": "Potassium bicarbonate",
+      "kind": "salt",
+      "formula": "KHCO₃",
+      "ref": {
+        "amount": 1,
+        "unit": "g",
+        "volume": 1,
+        "volumeUnit": "L",
+        "gh": 0,
+        "kh": 499.9
+      },
+      "basis": "calculated",
+      "note": "Calculated from the molar mass of KHCO₃ (100.115 g/mol): ppm as CaCO₃ from 1 g in 1 L."
+    },
+    {
+      "id": "lotus-calcium",
+      "name": "Lotus Calcium",
+      "kind": "drops",
+      "ref": {
+        "amount": 1,
+        "unit": "drops",
+        "volume": 450,
+        "volumeUnit": "ml",
+        "gh": 10,
+        "kh": 0
+      },
+      "basis": "published",
+      "source": "https://scottrao.com/blog/lotus-water-drops",
+      "note": "One drop in 450 ml adds 10 ppm hardness (as CaCO₃)."
+    },
+    {
+      "id": "lotus-magnesium",
+      "name": "Lotus Magnesium",
+      "kind": "drops",
+      "ref": {
+        "amount": 1,
+        "unit": "drops",
+        "volume": 450,
+        "volumeUnit": "ml",
+        "gh": 10,
+        "kh": 0
+      },
+      "basis": "published",
+      "source": "https://scottrao.com/blog/lotus-water-drops",
+      "note": "One drop in 450 ml adds 10 ppm hardness (as CaCO₃)."
+    },
+    {
+      "id": "lotus-sodium",
+      "name": "Lotus Sodium (bicarbonate)",
+      "kind": "drops",
+      "ref": {
+        "amount": 1,
+        "unit": "drops",
+        "volume": 450,
+        "volumeUnit": "ml",
+        "gh": 0,
+        "kh": 5
+      },
+      "basis": "published",
+      "source": "https://scottrao.com/blog/lotus-water-drops",
+      "note": "One drop in 450 ml adds 5 ppm alkalinity (as CaCO₃)."
+    },
+    {
+      "id": "lotus-potassium",
+      "name": "Lotus Potassium (bicarbonate)",
+      "kind": "drops",
+      "ref": {
+        "amount": 1,
+        "unit": "drops",
+        "volume": 450,
+        "volumeUnit": "ml",
+        "gh": 0,
+        "kh": 5
+      },
+      "basis": "published",
+      "source": "https://scottrao.com/blog/lotus-water-drops",
+      "note": "One drop in 450 ml adds 5 ppm alkalinity (as CaCO₃)."
+    },
+    {
+      "id": "tww-classic-light-roast",
+      "name": "Third Wave Water Classic Light Roast",
+      "kind": "packet",
+      "ref": {
+        "amount": 1,
+        "unit": "packets",
+        "volume": 1,
+        "volumeUnit": "gal",
+        "gh": null,
+        "kh": 40,
+        "tds": 150
+      },
+      "basis": "published",
+      "source": "https://support.thirdwavewater.com/en-US/about-classic-profile-125764",
+      "note": "One stick per gallon: TDS 150 mg/L, alkalinity 36–40 mg/L (citrate buffering). Third Wave Water doesn't publish the hardness."
+    },
+    {
+      "id": "tww-medium-roast",
+      "name": "Third Wave Water Medium Roast",
+      "kind": "packet",
+      "ref": {
+        "amount": 1,
+        "unit": "packets",
+        "volume": 1,
+        "volumeUnit": "gal",
+        "gh": null,
+        "kh": 80,
+        "tds": 150
+      },
+      "basis": "published",
+      "source": "https://support.thirdwavewater.com/en-US/what-is-in-third-wave-water-76575",
+      "note": "One stick per gallon: TDS ~150 mg/L, alkalinity ~80 mg/L. Third Wave Water doesn't publish the hardness."
+    },
+    {
+      "id": "tww-dark-roast",
+      "name": "Third Wave Water Dark Roast",
+      "kind": "packet",
+      "ref": {
+        "amount": 1,
+        "unit": "packets",
+        "volume": 1,
+        "volumeUnit": "gal",
+        "gh": null,
+        "kh": 137.5,
+        "tds": 180
+      },
+      "basis": "published",
+      "source": "https://support.thirdwavewater.com/en-US/what-is-in-third-wave-water-76575",
+      "note": "One stick per gallon: TDS ~180 mg/L, alkalinity ~135–140 mg/L. Third Wave Water doesn't publish the hardness."
+    },
+    {
+      "id": "tww-espresso",
+      "name": "Third Wave Water Espresso Machine",
+      "kind": "packet",
+      "ref": {
+        "amount": 1,
+        "unit": "packets",
+        "volume": 1,
+        "volumeUnit": "gal",
+        "gh": null,
+        "kh": 80,
+        "tds": 150
+      },
+      "basis": "published",
+      "source": "https://support.thirdwavewater.com/en-US/what-is-in-third-wave-water-76575",
+      "note": "One stick per gallon: TDS ~150 mg/L, alkalinity ~80 mg/L. Third Wave Water doesn't publish the hardness."
+    },
+    {
+      "id": "tww-cold-brew",
+      "name": "Third Wave Water Cold Brew",
+      "kind": "packet",
+      "ref": {
+        "amount": 1,
+        "unit": "packets",
+        "volume": 1,
+        "volumeUnit": "gal",
+        "gh": null,
+        "kh": null
+      },
+      "basis": "published",
+      "source": "https://support.thirdwavewater.com/en-US/what-is-in-third-wave-water-76575",
+      "note": "Magnesium sulfate, sodium and potassium bicarbonate. Third Wave Water doesn't publish its hardness or alkalinity."
+    },
+    {
+      "id": "bh-buffer",
+      "name": "Barista Hustle Buffer concentrate",
+      "kind": "concentrate",
+      "ref": {
+        "amount": 1,
+        "unit": "g",
+        "volume": 1,
+        "volumeUnit": "L",
+        "gh": 0,
+        "kh": 0.9991
+      },
+      "basis": "calculated",
+      "source": "https://www.baristahustle.com/diy-water-recipes-redux/",
+      "note": "Make it: 1.68 g baking soda dissolved in 1 L deionised water (about 1000 ppm KH). Calculated from the baking soda's molar mass: 1 g of it in 1 L of finished water adds about 1 ppm KH."
+    },
+    {
+      "id": "bh-hardness",
+      "name": "Barista Hustle Hardness concentrate",
+      "kind": "concentrate",
+      "ref": {
+        "amount": 1,
+        "unit": "g",
+        "volume": 1,
+        "volumeUnit": "L",
+        "gh": 0.9925,
+        "kh": 0
+      },
+      "basis": "calculated",
+      "source": "https://www.baristahustle.com/diy-water-recipes-redux/",
+      "note": "Make it: 2.45 g Epsom salt dissolved in 1 L deionised water (about 1000 ppm GH). Calculated from the Epsom salt's molar mass: 1 g of it in 1 L of finished water adds about 1 ppm GH."
+    },
+    {
+      "id": "bh-original-concentrate",
+      "name": "Barista Hustle original concentrate",
+      "kind": "concentrate",
+      "ref": {
+        "amount": 1,
+        "unit": "g",
+        "volume": 1,
+        "volumeUnit": "L",
+        "gh": 19.0264,
+        "kh": 9.6009
+      },
+      "basis": "calculated",
+      "source": "https://www.baristahustle.com/barista-hustle-water-recipe/",
+      "note": "Make it: 8.6 g baking soda and 25 g Epsom salt in 500 g deionised water. Calculated from the salts' molar masses: 1 g of it in 1 L of finished water adds about 19 ppm GH and 9.6 ppm KH."
+    },
+    {
+      "id": "bh-espresso-concentrate",
+      "name": "Barista Hustle espresso concentrate",
+      "kind": "concentrate",
+      "ref": {
+        "amount": 1,
+        "unit": "g",
+        "volume": 1,
+        "volumeUnit": "L",
+        "gh": 18.8743,
+        "kh": 14.2862
+      },
+      "basis": "calculated",
+      "source": "https://www.baristahustle.com/march-2017-victor-barrera-tabi-from-koppi/",
+      "note": "Make it: 12.9 g baking soda and 25 g Epsom salt in 500 g deionised water. Calculated from the salts' molar masses: 1 g of it in 1 L of finished water adds about 18.9 ppm GH and 14.3 ppm KH."
+    }
+  ]
+}

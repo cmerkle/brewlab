@@ -4,9 +4,21 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const { loadCatalog, CATALOG_DIR } = await import(new URL("../dist/server/catalog.js", import.meta.url));
+const { loadCatalog, loadWaterCatalog, CATALOG_DIR } = await import(new URL("../dist/server/catalog.js", import.meta.url));
+const { hardness } = await import(new URL("../dist/shared/water.js", import.meta.url));
 const c = loadCatalog(CATALOG_DIR, true);
-const problems = [...c.errors];
+const w = loadWaterCatalog(CATALOG_DIR, true);
+const problems = [...c.errors, ...w.errors];
+
+// A water recipe's published GH/KH must match what its additives add up to (within 10%).
+for (const t of w.recipes) {
+  const h = hardness({ baseId: t.base, volume: t.volume, volumeUnit: t.volumeUnit, additives: t.additives.map((l) => ({ additiveId: l.additive, name: l.additive, amount: l.amount, unit: l.unit })) }, w);
+  for (const k of ["gh", "kh"]) {
+    const said = t.stated?.[k];
+    if (said == null || h[k] == null) continue;
+    if (Math.abs(h[k] - said) > Math.max(2, said * 0.1)) problems.push(`water/${t.id}.json: the source says ${k.toUpperCase()} ${said}, the additives add up to ${h[k]}`);
+  }
+}
 
 // Templates must point at real gear, and gear ids must be unique case-insensitively.
 const ids = new Set(c.gear.map((g) => g.id));
@@ -27,4 +39,4 @@ if (problems.length) {
   process.exit(1);
 }
 const withRanges = c.gear.filter((g) => g.grindRanges).length;
-console.log(`✓ Library OK: ${c.gear.length} gear (${withRanges} with sourced grind ranges), ${c.recipes.length} recipe templates.`);
+console.log(`✓ Library OK: ${c.gear.length} gear (${withRanges} with sourced grind ranges), ${c.recipes.length} recipe templates, ${w.recipes.length} water recipes (${w.additives.length} additives).`);

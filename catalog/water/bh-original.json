@@ -1,0 +1,18 @@
+{
+  "id": "bh-original",
+  "version": 1,
+  "name": "Barista Hustle original (filter)",
+  "credit": "Barista Hustle",
+  "base": "distilled",
+  "volume": 502,
+  "volumeUnit": "ml",
+  "additives": [
+    {
+      "additive": "bh-original-concentrate",
+      "amount": 2,
+      "unit": "g"
+    }
+  ],
+  "source": "https://www.baristahustle.com/barista-hustle-water-recipe/",
+  "notes": "The first Barista Hustle recipe, meant for filter: 2 g of the original concentrate in another 500 g deionised water (502 g in all)."
+}

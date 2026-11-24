@@ -57,6 +57,24 @@ CREATE TABLE IF NOT EXISTS inventory_items (
   updatedAt TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS water_recipes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  baseId TEXT,
+  baseName TEXT,
+  baseGh REAL,
+  baseKh REAL,
+  volume REAL NOT NULL,
+  volumeUnit TEXT NOT NULL,
+  additives TEXT NOT NULL DEFAULT '[]',
+  notes TEXT,
+  source TEXT,
+  catalogId TEXT,
+  catalogVersion INTEGER,
+  createdAt TEXT NOT NULL,
+  updatedAt TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS recipes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
@@ -184,6 +202,12 @@ function migrate(db: DB) {
   if (!has("gear_items", "catalogVersion")) db.exec("ALTER TABLE gear_items ADD COLUMN catalogVersion INTEGER");
   if (!has("gear_items", "category")) db.exec("ALTER TABLE gear_items ADD COLUMN category TEXT");
   if (!has("gear_items", "rangeInfo")) db.exec("ALTER TABLE gear_items ADD COLUMN rangeInfo TEXT"); // JSON: where the ranges come from
+  // Water recipes: a recipe's default water and the water a brew used (name kept if the water is deleted).
+  if (!has("water_recipes", "concentrate")) db.exec("ALTER TABLE water_recipes ADD COLUMN concentrate INTEGER NOT NULL DEFAULT 0");
+  for (const t of ["recipes", "brews"]) {
+    if (!has(t, "waterId")) db.exec(`ALTER TABLE ${t} ADD COLUMN waterId INTEGER REFERENCES water_recipes(id) ON DELETE SET NULL`);
+    if (!has(t, "waterName")) db.exec(`ALTER TABLE ${t} ADD COLUMN waterName TEXT`);
+  }
 }
 
 export const nowIso = () => new Date().toISOString();

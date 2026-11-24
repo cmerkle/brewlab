@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { type DB, nowIso, deriveStatus } from "./db.js";
 import { toGrindNumber } from "../shared/grind.js";
-import { loadCatalog, catalogGear, catalogRecipe, gearFromCatalog, renderTemplate, rangeInfoFromCatalog, type OwnedGear, type GearRangeInfo } from "./catalog.js";
+import { loadCatalog, catalogGear, catalogRecipe, gearFromCatalog, renderTemplate, rangeInfoFromCatalog, catalogWater, waterFromTemplate, type OwnedGear, type GearRangeInfo } from "./catalog.js";
 import type { GrindRanges, Method } from "../shared/grind.js";
 
 export const SEED_DIR = process.env.SEED_DIR || path.resolve("seed-data");
@@ -27,6 +27,7 @@ function readSeed<T>(file: string, dir = SEED_DIR): T | null {
 }
 
 export interface SeedReport {
+  water: number;
   gear: number;
   starterRecipes: number;
   recipes: number;
@@ -41,7 +42,7 @@ export interface SeedReport {
 /** Import a seed directory (default seed-data/; the demo uses demo/). Idempotent: upsert by id. */
 export function runSeed(db: DB, dir = SEED_DIR): SeedReport {
   const t = nowIso();
-  const report: SeedReport = { gear: 0, starterRecipes: 0, recipes: 0, brews: 0, inventory: 0, editions: 0, picks: 0, tastings: 0, avoids: 0 };
+  const report: SeedReport = { water: 0, gear: 0, starterRecipes: 0, recipes: 0, brews: 0, inventory: 0, editions: 0, picks: 0, tastings: 0, avoids: 0 };
   // This instance's starting setup (seed-data/setup.json): library gear + recipe templates.
   // This install's own values for some gear, used instead of the library's (e.g. what a spec
   // requires): grindRanges apply only when the gear is first installed (later edits are kept);
@@ -90,6 +91,25 @@ export function runSeed(db: DB, dir = SEED_DIR): SeedReport {
   const brewerMethod = new Map(gearRows.map((g) => [g.id, g.defaultMethod]));
 
   db.transaction(() => {
+    // Water recipes (water.json): { water: [{ id, library: "<catalog/water id>" } | { id, name, baseId, volume, volumeUnit, additives, … }] }
+    const wat = readSeed<{ water: any[] }>("water.json", dir);
+    for (const w of wat?.water ?? []) {
+      let v: any = w;
+      if (w.library) {
+        const tpl = catalogWater(w.library);
+        if (!tpl) throw new Error(`water.json lists "${w.library}", which isn't in the water library`);
+        v = { ...waterFromTemplate(tpl), ...(w.name ? { name: w.name } : {}) };
+      }
+      upsert(db, "water_recipes", {
+        id: w.id, name: v.name, baseId: v.baseId ?? null, baseName: v.baseName ?? null, baseGh: v.baseGh ?? null, baseKh: v.baseKh ?? null,
+        volume: v.volume, volumeUnit: v.volumeUnit, additives: JSON.stringify(v.additives ?? []), notes: v.notes ?? null, source: v.source ?? null,
+        catalogId: v.catalogId ?? null, catalogVersion: v.catalogVersion ?? null, concentrate: v.concentrate ? 1 : 0,
+        createdAt: w.createdAt ?? t, updatedAt: w.updatedAt ?? t,
+      });
+      report.water++;
+    }
+    const waterName = (id: unknown) => (id == null ? null : ((db.prepare("SELECT name FROM water_recipes WHERE id=?").get(id) as { name: string } | undefined)?.name ?? null));
+
     // Inventory first so recipe/brew links resolve.
     const inv = readSeed<{ items: any[] }>("assistant-inventory.json", dir);
     for (const i of inv?.items ?? []) {
@@ -111,7 +131,8 @@ export function runSeed(db: DB, dir = SEED_DIR): SeedReport {
         coffee: r.coffee ?? null, doseG: r.doseG, waterG: r.waterG, tempC: r.tempC ?? null, grinderId: r.grinderId ?? null,
         grinderName: gearName.get(r.grinderId) ?? r.grinderName ?? null, grindSetting: r.grindSetting ?? null,
         steps: JSON.stringify(r.steps ?? []), notes: r.notes ?? null, favorite: r.favorite ? 1 : 0, starter: 0,
-        inventoryId: r.inventoryId ?? null, createdAt: r.createdAt ?? t, updatedAt: r.updatedAt ?? t,
+        inventoryId: r.inventoryId ?? null, waterId: r.waterId ?? null, waterName: waterName(r.waterId) ?? r.waterName ?? null,
+        createdAt: r.createdAt ?? t, updatedAt: r.updatedAt ?? t,
       });
       report.recipes++;
     }
@@ -126,6 +147,7 @@ export function runSeed(db: DB, dir = SEED_DIR): SeedReport {
         grindSetting: x.grindSetting ?? null, steps: x.steps ? JSON.stringify(x.steps) : null,
         inventoryId: x.inventoryId ?? null, rating: x.rating ?? null, notes: x.notes ?? null,
         totalTimeSec: x.totalTimeSec ?? null, brewedAt: x.brewedAt ?? t,
+        waterId: x.waterId ?? null, waterName: waterName(x.waterId) ?? x.waterName ?? null,
       });
       report.brews++;
     }
@@ -224,6 +246,7 @@ export function counts(db: DB) {
     tastings: c("SELECT COUNT(*) n FROM tastings"),
     avoids: c("SELECT COUNT(*) n FROM avoids"),
     gear: c("SELECT COUNT(*) n FROM gear_items"),
+    water: c("SELECT COUNT(*) n FROM water_recipes"),
   };
 }
 

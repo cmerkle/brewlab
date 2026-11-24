@@ -5,6 +5,7 @@ import { scaleSteps, applyRatio, ratioOf, fmtRatio, RATIO_TOGGLES, fmtG, type La
 import { GrinderSwitcher, grindFor, grindLabel, useGrinders, methodOf } from "../grindui";
 import { doseAdjustedGrind, fmtGrind, toGrindNumber } from "../../shared/grind";
 import { RatioCalculator } from "./RatioCalculator";
+import { WaterSelect } from "./Water";
 
 export interface BrewPlan {
   recipeId: number | null;
@@ -21,6 +22,9 @@ export interface BrewPlan {
   grindSetting: number | null;
   steps: Step[];
   inventoryId: number | null;
+  /** The recipe's default water recipe. */
+  waterId?: number | null;
+  waterName?: string | null;
   /** Grinder picked on the recipe card's switcher (converted from the original). */
   selectedGrinderId?: string | null;
 }
@@ -29,7 +33,7 @@ export const planFromRecipe = (r: Recipe): BrewPlan => ({ ...r, recipeId: r.id }
 export const planFromBrew = (b: Brew): BrewPlan => ({
   recipeId: b.recipeId, name: b.recipeName || "Re-brew", brewerId: b.brewerId, brewerName: b.brewerName, method: b.method,
   coffee: b.coffee, doseG: b.doseG, waterG: b.waterG, tempC: b.tempC, grinderId: b.grinderId, grinderName: b.grinderName,
-  grindSetting: b.grindSetting, steps: b.steps ?? [], inventoryId: b.inventoryId,
+  grindSetting: b.grindSetting, steps: b.steps ?? [], inventoryId: b.inventoryId, waterId: b.waterId, waterName: b.waterName,
 });
 
 /* ------------------------------ active brew (survives the PWA being closed) ------------------------------ */
@@ -42,6 +46,7 @@ export interface ActiveBrew {
   grind: number | null;
   tempC?: number | null;
   inventoryId: number | null;
+  waterId?: number | null;
   phase: "timer" | "log";
   startAt: number;
   endAt: number | null;
@@ -141,7 +146,7 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
   onEditGrinder?: (id: string) => void;
   resume?: ActiveBrew;
 }) {
-  const { limits, gear, bags, brews, reload, toast, settings } = useData();
+  const { limits, gear, bags, brews, water: waters, reload, toast, settings } = useData();
   const temp = useTemp();
   const grinders = useGrinders();
   const method = methodOf(plan, gear);
@@ -161,6 +166,8 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
   const grinder = grinders.find((g) => g.id === choice.grinderId) ?? null;
   const [tempC, setTempC] = useState<number | null>(resume?.tempC !== undefined ? resume.tempC : plan.tempC);
   const [inventoryId, setInventoryId] = useState<number | null>(resume?.inventoryId ?? plan.inventoryId);
+  const [waterId, setWaterId] = useState<number | null>(resume?.waterId !== undefined ? resume.waterId : plan.waterId ?? null);
+  const waterRec = waters.find((w) => w.id === waterId) ?? null;
   const [phase, setPhase] = useState<"setup" | "timer" | "log">(resume?.phase ?? "setup");
   const [startAt, setStartAt] = useState<number | null>(resume?.startAt ?? null);
   const [endAt, setEndAt] = useState<number | null>(resume?.endAt ?? null);
@@ -212,8 +219,8 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
   // Persist the running brew so it can be resumed if iOS closes the app.
   useEffect(() => {
     if ((phase === "timer" || phase === "log") && startAt)
-      setPref(ACTIVE_KEY, { plan, dose, water, grinderId, grind, tempC, inventoryId, phase: phase as "timer" | "log", startAt, endAt } satisfies ActiveBrew);
-  }, [phase, startAt, endAt, plan, dose, water, grinderId, grind, tempC, inventoryId]);
+      setPref(ACTIVE_KEY, { plan, dose, water, grinderId, grind, tempC, inventoryId, waterId, phase: phase as "timer" | "log", startAt, endAt } satisfies ActiveBrew);
+  }, [phase, startAt, endAt, plan, dose, water, grinderId, grind, tempC, inventoryId, waterId]);
 
   const elapsed = startAt ? ((endAt ?? now) - startAt) / 1000 : 0;
   const currentIdx = steps.reduce((acc, s, i) => ((s.atSec ?? 0) <= elapsed ? i : acc), 0);
@@ -230,15 +237,19 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
     lastIdx.current = currentIdx;
   }, [currentIdx, phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // The ratio holds: typing coffee moves the water, typing water moves the coffee. Only the ratio
+  // field and toggles change the ratio. (With the ratio field empty, the two are free.)
   const setDoseTyped = (n: number | null) => {
     setDose(n);
     setLast("dose");
-    if (n && water) setRatioIn(ratioOf(n, water));
+    if (n && ratioIn) setWater(round1(n * ratioIn));
+    else if (n && water) setRatioIn(ratioOf(n, water));
   };
   const setWaterTyped = (n: number | null) => {
     setWater(n);
     setLast("water");
-    if (n && dose) setRatioIn(ratioOf(dose, n));
+    if (n && ratioIn) setDose(round1(n / ratioIn));
+    else if (n && dose) setRatioIn(ratioOf(dose, n));
   };
   const applyR = (r: number | null) => {
     setRatioIn(r);
@@ -299,10 +310,10 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
         method, coffee: bag?.name ?? plan.coffee, doseG: logDose, waterG: logWater, tempC: logTemp,
         grinderId: choice.grinderId, grinderName: choice.grinderName, grindSetting: grind,
         steps: logWater ? scaleSteps(plan.steps, plan.waterG, logWater) : steps, inventoryId, rating, notes: notes || null,
-        totalTimeSec: logTime,
+        totalTimeSec: logTime, waterId,
       });
       clearActiveBrew();
-      await reload(["brews", "bags"]);
+      await reload(["brews", "bags", "water"]);
       toast("Brew saved to the log");
       onClose();
     } catch (e: any) {
@@ -313,6 +324,9 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
   };
 
 
+  const waterPicker = (id: string) => (
+    <WaterSelect id={id} value={waterId} onChange={setWaterId} keptName={waterId == null && plan.waterId == null ? plan.waterName : null} />
+  );
   const bagPicker = (id: string) => (
     <Field label="Coffee from your Stash" htmlFor={id}>
       <select id={id} value={inventoryId ?? ""} onChange={(e) => setInventoryId(e.target.value ? Number(e.target.value) : null)}>
@@ -336,6 +350,7 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
     <FullScreen
       title={title}
       onClose={close}
+      bodyClassName={phase === "timer" ? "pinned" : undefined}
       footer={
         phase === "setup" ? (
           <button className="primary block" disabled={!valid} onClick={ready}>Ready to brew</button>
@@ -377,12 +392,13 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
             ))}
             <button type="button" className="link" onClick={() => setCalc(true)}>Ratio calculator</button>
           </div>
-          <div className="hint">Ratio toggles keep {last === "water" ? `the ${waterLabel.toLowerCase()}` : "the coffee dose"} fixed (whichever you edited last).</div>
+          <div className="hint">The ratio stays put: change the coffee and the {waterLabel.toLowerCase()} follows, and the other way round. A new ratio keeps {last === "water" ? `the ${waterLabel.toLowerCase()}` : "the coffee dose"} fixed (whichever you edited last).</div>
           <Field label={`Water temperature (${temp.label})`} htmlFor="sd-temp">
             <TempInput id="sd-temp" value={tempC} onChange={setTempC} />
           </Field>
 
           {bagPicker("sd-bag")}
+          {(waters.length > 0 || plan.waterName) && waterPicker("sd-waterrec")}
           {lowCoffee && <div className="note" role="status">Only {Math.max(0, bag!.remainingG!)} g left in this bag — less than the {dose} g dose.</div>}
 
           <GrinderSwitcher recipe={plan} value={grinderId} onChange={setGrinderId} idPrefix="sd" onEditGrinder={onEditGrinder} />
@@ -438,8 +454,8 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
           ) : (
             <div className="next-step done"><div>Last step — tap <strong>Finish</strong> when it's drained.</div></div>
           )}
-          <div className="muted small">Grind: {fmtGrind(grind, grinder) || "—"} on {choice.grinderName ?? "—"}{tempC != null ? ` · ${temp.fmt(tempC)}` : ""} · {dose}g coffee / {water != null ? fmtG(water) : "—"}g {waterLabel.toLowerCase()}{bag ? ` · ${bag.name}` : ""}</div>
-          <StepList steps={steps} active={currentIdx} />
+          <div className="muted small">Grind: {fmtGrind(grind, grinder) || "—"} on {choice.grinderName ?? "—"}{tempC != null ? ` · ${temp.fmt(tempC)}` : ""} · {dose}g coffee / {water != null ? fmtG(water) : "—"}g {waterLabel.toLowerCase()}{bag ? ` · ${bag.name}` : ""}{waterRec ? ` · ${waterRec.name}` : ""}</div>
+          <StepList steps={steps} active={currentIdx} follow />
         </div>
       )}
 
@@ -462,6 +478,7 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
             </Field>
           </div>
           {bagPicker("lg-bag")}
+          {(waters.length > 0 || plan.waterName) && waterPicker("lg-waterrec")}
           <Field label="Rating"><Stars value={rating} onChange={setRating} /></Field>
           <Field label="Notes" htmlFor="lg-notes"><textarea id="lg-notes" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} /></Field>
           <ErrorBox error={error} />
@@ -483,9 +500,22 @@ function BellIcon({ off }: { off: boolean }) {
   );
 }
 
-export function StepList({ steps, active }: { steps: Step[]; active?: number }) {
+const round1 = (n: number) => Math.round(n * 10) / 10;
+
+/** `follow`: the list scrolls itself (not the page) to keep the active step in view, with the step before it peeking above. */
+export function StepList({ steps, active, follow }: { steps: Step[]; active?: number; follow?: boolean }) {
+  const ref = useRef<HTMLOListElement>(null);
+  useEffect(() => {
+    const ol = ref.current;
+    if (!follow || !ol || active == null) return;
+    const li = ol.children[active] as HTMLElement | undefined;
+    if (!li) return;
+    const prev = ol.children[active - 1] as HTMLElement | undefined;
+    const top = prev ? prev.offsetTop + prev.offsetHeight / 2 : li.offsetTop;
+    ol.scrollTo({ top: Math.max(0, top), behavior: "smooth" }); // offsets are relative to the ol (position: relative)
+  }, [active, follow]);
   return (
-    <ol className="steps" data-testid="steps">
+    <ol ref={ref} className={follow ? "steps follow" : "steps"} data-testid="steps">
       {steps.map((s, i) => (
         <li key={i} className={active === i ? "active" : active != null && i < active ? "done" : ""}>
           <span className="at">{fmtTime(s.atSec ?? 0)}</span>

@@ -1,6 +1,7 @@
 import { CATEGORIES } from "./catalog.js";
 import { z } from "zod";
 import { METHODS, toGrindNumber } from "../shared/grind.js";
+import { AMOUNT_UNITS, VOLUME_UNITS } from "../shared/water.js";
 
 /** Numeric limits — the single source for server validation AND form inputs (served at /api/schema). */
 export const LIMITS = {
@@ -61,6 +62,8 @@ export const RecipeSchema = z.object({
   notes: str(5000),
   favorite: z.boolean().optional(),
   inventoryId: z.number().int().nullable().optional(),
+  waterId: z.number().int().nullable().optional(),
+  waterName: str(200),
 });
 
 export const BrewSchema = z.object({
@@ -82,6 +85,34 @@ export const BrewSchema = z.object({
   notes: str(5000),
   totalTimeSec: optNum("totalTimeSec", "Total time"),
   brewedAt: z.string().optional(),
+  waterId: z.number().int().nullable().optional(),
+  waterName: str(200),
+});
+
+const ppmIn = (label: string) =>
+  z.number({ error: `${label} must be a number` }).min(0, `${label} can't be negative`).max(5000, `${label} must be at most 5000 ppm`).nullable().optional();
+export const WaterLineSchema = z.object({
+  additiveId: z.string().max(100).nullable().optional(),
+  concentrateId: z.number().int().nullable().optional(),
+  name: z.string().trim().min(1, "Each additive needs a name").max(200),
+  amount: z.number({ error: "Additive amounts must be numbers" }).positive("Additive amounts must be more than 0").max(100000, "Additive amounts must be at most 100000"),
+  unit: z.enum(AMOUNT_UNITS, { error: `Additive units are ${AMOUNT_UNITS.join(", ")}` }),
+  gh: ppmIn("An additive's hardness"),
+  kh: ppmIn("An additive's alkalinity"),
+});
+export const WaterSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(200),
+  baseId: str(100),
+  baseName: str(200),
+  baseGh: ppmIn("The base water's hardness"),
+  baseKh: ppmIn("The base water's alkalinity"),
+  volume: z.number({ error: "Volume must be a number" }).positive("Volume must be more than 0").max(100000, "Volume must be at most 100000"),
+  volumeUnit: z.enum(VOLUME_UNITS, { error: `Volume units are ${VOLUME_UNITS.join(", ")}` }),
+  additives: z.array(WaterLineSchema).max(30).default([]),
+  /** A stock solution: other water recipes add grams of it. */
+  concentrate: z.boolean().optional(),
+  notes: str(5000),
+  source: z.string().trim().max(2000).refine((u) => u === "" || /^https?:\/\/\S+$/.test(u), "The source must be a link starting with https://").nullable().optional(),
 });
 
 export const InventorySchema = z.object({
@@ -198,5 +229,5 @@ export function firstError(e: z.ZodError): string {
   if (!i) return "Invalid input";
   const where = i.path.length ? `${i.path.join(".")}: ` : "";
   // Our messages already name the field; only prefix zod's generic ones.
-  return /must|required|Dates|Link|Rating|Choose/.test(i.message) ? i.message : `${where}${i.message}`;
+  return /must|required|Dates|Link|Rating|Choose|needs|can't|units are/.test(i.message) ? i.message : `${where}${i.message}`;
 }

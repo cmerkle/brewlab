@@ -4,6 +4,7 @@ import { useData, Field, FullScreen, ErrorBox, NumInput, WaterInput, Stars, fmtD
 import { ScaleDialog, planFromBrew, type BrewPlan } from "./ScaleDialog";
 import { fmtRatio, ratioOf, scaleSteps } from "../../shared/brew";
 import { grindLabel } from "../grindui";
+import { WaterSelect } from "./Water";
 
 export function BrewLog() {
   const { brews, recipes, bags, gear, loaded } = useData();
@@ -12,18 +13,21 @@ export function BrewLog() {
   const [editing, setEditing] = useState<Brew | "new" | null>(null);
   const [coffee, setCoffee] = useState("");
   const [recipe, setRecipe] = useState("");
+  const [waterF, setWaterF] = useState("");
   const [q, setQ] = useState("");
   useAction("log-brew", () => setEditing("new"));
 
   const coffees = useMemo(() => [...new Set(brews.map((b) => b.coffee).filter(Boolean) as string[])].sort(), [brews]);
   const recipeNames = useMemo(() => [...new Set(brews.map((b) => b.recipeName).filter(Boolean) as string[])].sort(), [brews]);
+  const waterNames = useMemo(() => [...new Set(brews.map((b) => b.waterName).filter(Boolean) as string[])].sort(), [brews]);
   const shown = useMemo(() => {
     const needle = q.trim().toLowerCase();
     return brews.filter((b) =>
       (!coffee || b.coffee === coffee) &&
       (!recipe || b.recipeName === recipe) &&
-      (!needle || [b.notes, b.recipeName, b.coffee, b.grinderName].some((x) => x?.toLowerCase().includes(needle))));
-  }, [brews, coffee, recipe, q]);
+      (!waterF || b.waterName === waterF) &&
+      (!needle || [b.notes, b.recipeName, b.coffee, b.grinderName, b.waterName].some((x) => x?.toLowerCase().includes(needle))));
+  }, [brews, coffee, recipe, waterF, q]);
   const stats = useMemo(() => {
     const rated = shown.filter((b) => b.rating != null);
     const avg = rated.length ? rated.reduce((a, b) => a + (b.rating ?? 0), 0) / rated.length : null;
@@ -42,6 +46,18 @@ export function BrewLog() {
     }
     return [...m.entries()].map(([c, e]) => ({ coffee: c, n: e.n, avg: e.sum / e.n })).sort((a, b) => b.avg - a.avg).slice(0, 5);
   }, [brews, recipe]);
+  // The same for waters (for the filtered recipe and coffee, if any) — which water suits them best.
+  const byWater = useMemo(() => {
+    const m = new Map<string, { n: number; sum: number }>();
+    for (const b of brews) {
+      if (!b.waterName || b.rating == null || (recipe && b.recipeName !== recipe) || (coffee && b.coffee !== coffee)) continue;
+      const e = m.get(b.waterName) ?? { n: 0, sum: 0 };
+      e.n++;
+      e.sum += b.rating;
+      m.set(b.waterName, e);
+    }
+    return [...m.entries()].map(([w, e]) => ({ water: w, n: e.n, avg: e.sum / e.n })).sort((a, b) => b.avg - a.avg);
+  }, [brews, recipe, coffee]);
 
   const rebrew = (b: Brew) => {
     // Start that exact brew again: the logged dose / water / grinder / grind setting / steps.
@@ -66,6 +82,12 @@ export function BrewLog() {
           <option value="">All recipes</option>
           {recipeNames.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
+        {waterNames.length > 0 && (
+          <select className="pill-select" aria-label="Filter by water" value={waterF} onChange={(e) => setWaterF(e.target.value)}>
+            <option value="">All waters</option>
+            {waterNames.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+        )}
       </div>
       {!loaded && <p className="muted">Loading…</p>}
       {loaded && brews.length === 0 && <p className="muted">No brews logged yet.</p>}
@@ -80,6 +102,12 @@ export function BrewLog() {
         <details className="card small">
           <summary>Best-rated coffees{recipe ? ` for ${recipe}` : ""}</summary>
           <ol className="small">{byCoffee.map((c) => <li key={c.coffee}>{c.coffee} — {c.avg.toFixed(1)}★ ({c.n})</li>)}</ol>
+        </details>
+      )}
+      {byWater.length > 1 && !waterF && (
+        <details className="card small" data-testid="water-compare">
+          <summary>Waters compared{[recipe, coffee].filter(Boolean).length ? ` for ${[recipe, coffee].filter(Boolean).join(" · ")}` : ""}</summary>
+          <ol className="small">{byWater.map((w) => <li key={w.water}>{w.water} — {w.avg.toFixed(1)}★ ({w.n})</li>)}</ol>
         </details>
       )}
       <ul className="log">
@@ -97,6 +125,7 @@ export function BrewLog() {
                 {b.totalTimeSec != null ? ` · ${fmtTime(b.totalTimeSec)}` : ""}
               </div>
               <div className="small" data-testid="brew-coffee">Coffee: {b.coffee ?? "—"}{bag ? " (from Stash)" : ""}</div>
+              {b.waterName && <div className="small" data-testid="brew-water">Water: {b.waterName}</div>}
               {b.rating != null && <Stars value={b.rating} />}
               {b.notes && <p className="small">{b.notes}</p>}
               <div className="row wrap">
@@ -134,6 +163,8 @@ function BrewForm({ brew, onClose }: { brew: Brew | null; onClose: () => void })
     rating: brew?.rating ?? null as number | null,
     notes: brew?.notes ?? "",
     totalTimeSec: brew?.totalTimeSec ?? null as number | null,
+    waterId: brew?.waterId ?? null as number | null,
+    waterName: brew?.waterName ?? null as string | null,
   });
   const [error, setError] = useState<string | null>(null);
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }));
@@ -143,7 +174,7 @@ function BrewForm({ brew, onClose }: { brew: Brew | null; onClose: () => void })
     try {
       if (brew) await api.put(`/api/brews/${brew.id}`, body);
       else await api.post("/api/brews", body);
-      await reload(["brews", "bags"]);
+      await reload(["brews", "bags", "water"]);
       toast("Brew saved");
       onClose();
     } catch (e: any) {
@@ -154,7 +185,7 @@ function BrewForm({ brew, onClose }: { brew: Brew | null; onClose: () => void })
     if (!brew || !confirm("Delete this brew?")) return;
     const ok = await act(async () => {
       await api.del(`/api/brews/${brew.id}`);
-      await reload(["brews", "bags"]);
+      await reload(["brews", "bags", "water"]);
     }, "Brew deleted");
     if (ok) onClose();
   };
@@ -166,7 +197,7 @@ function BrewForm({ brew, onClose }: { brew: Brew | null; onClose: () => void })
           <Field label="Recipe" htmlFor="bl-recipe">
             <select id="bl-recipe" value={f.recipeId ?? ""} onChange={(e) => {
               const r = recipes.find((x) => x.id === Number(e.target.value));
-              setF((x) => r ? { ...x, recipeId: r.id, recipeName: r.name, brewerId: r.brewerId, brewerName: r.brewerName, doseG: x.doseG ?? r.doseG, waterG: x.waterG ?? r.waterG, tempC: x.tempC ?? r.tempC, grinderId: x.grinderId ?? r.grinderId, grindSetting: x.grindSetting ?? r.grindSetting } : { ...x, recipeId: null });
+              setF((x) => r ? { ...x, recipeId: r.id, recipeName: r.name, brewerId: r.brewerId, brewerName: r.brewerName, doseG: x.doseG ?? r.doseG, waterG: x.waterG ?? r.waterG, tempC: x.tempC ?? r.tempC, grinderId: x.grinderId ?? r.grinderId, grindSetting: x.grindSetting ?? r.grindSetting, waterId: x.waterId ?? r.waterId } : { ...x, recipeId: null });
             }}>
               <option value="">{f.recipeName && !f.recipeId ? f.recipeName : "— none —"}</option>
               {recipes.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
@@ -208,6 +239,7 @@ function BrewForm({ brew, onClose }: { brew: Brew | null; onClose: () => void })
             <NumInput id="bl-grind" value={f.grindSetting} onChange={(n) => set("grindSetting", n)} min={0} max={10000} decimals={2} />
           </Field>
         </div>
+        <WaterSelect id="bl-waterrec" value={f.waterId} onChange={(id) => setF((x) => ({ ...x, waterId: id, waterName: id == null ? null : x.waterName }))} keptName={f.waterName} />
         <Field label="Total time (s)" htmlFor="bl-time"><NumInput id="bl-time" value={f.totalTimeSec} onChange={(n) => set("totalTimeSec", n)} min={0} max={limits?.totalTimeSec.max} decimals={0} /></Field>
         <Field label="Rating"><Stars value={f.rating} onChange={(n) => set("rating", n)} /></Field>
         <Field label="Notes" htmlFor="bl-notes"><textarea id="bl-notes" rows={3} value={f.notes} onChange={(e) => set("notes", e.target.value)} /></Field>

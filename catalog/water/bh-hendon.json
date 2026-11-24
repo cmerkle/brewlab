@@ -1,0 +1,23 @@
+{
+  "id": "bh-hendon",
+  "version": 1,
+  "name": "Hendon Water (Barista Hustle)",
+  "credit": "Barista Hustle",
+  "base": "distilled",
+  "volume": 1,
+  "volumeUnit": "L",
+  "additives": [
+    {
+      "additive": "bh-buffer",
+      "amount": 30.8,
+      "unit": "g"
+    },
+    {
+      "additive": "bh-hardness",
+      "amount": 99.9,
+      "unit": "g"
+    }
+  ],
+  "source": "https://www.baristahustle.com/diy-water-recipes-redux/",
+  "notes": "Near the middle of Christopher Hendon and Maxwell Colonna-Dashwood's \"ideal brew zone\". Weigh 30.8 g Buffer and 99.9 g Hardness concentrate, then 869.3 g deionised water (about 1000 g in all)."
+}

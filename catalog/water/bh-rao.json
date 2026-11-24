@@ -1,0 +1,23 @@
+{
+  "id": "bh-rao",
+  "version": 1,
+  "name": "Rao Water (Barista Hustle)",
+  "credit": "Barista Hustle",
+  "base": "distilled",
+  "volume": 1,
+  "volumeUnit": "L",
+  "additives": [
+    {
+      "additive": "bh-buffer",
+      "amount": 50.1,
+      "unit": "g"
+    },
+    {
+      "additive": "bh-hardness",
+      "amount": 75.7,
+      "unit": "g"
+    }
+  ],
+  "source": "https://www.baristahustle.com/diy-water-recipes-redux/",
+  "notes": "Close to Scott Rao's recommended water chemistry: a little harder and more buffered than the SCA recipe. Weigh 50.1 g Buffer and 75.7 g Hardness concentrate, then 874.2 g deionised water (about 1000 g in all)."
+}

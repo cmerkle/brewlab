@@ -1,0 +1,27 @@
+{
+  "id": "lotus-light-and-bright",
+  "version": 1,
+  "name": "Light & Bright (Lotus drops)",
+  "credit": "Lance Hedrick",
+  "base": "distilled",
+  "volume": 1,
+  "volumeUnit": "L",
+  "additives": [
+    {
+      "additive": "lotus-calcium",
+      "amount": 13,
+      "unit": "drops"
+    },
+    {
+      "additive": "lotus-potassium",
+      "amount": 11,
+      "unit": "drops"
+    }
+  ],
+  "stated": {
+    "gh": 60,
+    "kh": 25
+  },
+  "source": "https://scottrao.com/blog/lotus-water-drops",
+  "notes": "Lance Hedrick's recipe, as listed by Scott Rao: 60 GH / 25 KH. Distilled or RO water."
+}

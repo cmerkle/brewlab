@@ -1,0 +1,23 @@
+{
+  "id": "bh-sca",
+  "version": 1,
+  "name": "SCA (Barista Hustle)",
+  "credit": "Barista Hustle",
+  "base": "distilled",
+  "volume": 1,
+  "volumeUnit": "L",
+  "additives": [
+    {
+      "additive": "bh-buffer",
+      "amount": 40.1,
+      "unit": "g"
+    },
+    {
+      "additive": "bh-hardness",
+      "amount": 68.6,
+      "unit": "g"
+    }
+  ],
+  "source": "https://www.baristahustle.com/diy-water-recipes-redux/",
+  "notes": "Barista Hustle's take on the SCA water specification. Weigh 40.1 g Buffer and 68.6 g Hardness concentrate, then 891.3 g deionised water (about 1000 g in all)."
+}

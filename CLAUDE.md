@@ -58,8 +58,9 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
 - Brew flow: **Brew setup** (dose/water/ratio/temp/bag/grinder) → *Ready to brew* → timer screen
   idle at 0:00 → *Start timer* → *Finish* → log (temp and grind still editable). The active brew is
   persisted only once the timer runs.
-- Pour steps scale off **water**, not dose. Ratio quick-toggles 1:13–1:17 plus 1:2; they hold
-  whichever of coffee/water was edited last (coffee by default).
+- Pour steps scale off **water**, not dose. In Brew setup the **ratio holds**: typing coffee moves
+  the water and typing water moves the coffee; only the ratio field and quick-toggles (1:13–1:17
+  plus 1:2) change it, and they hold whichever of coffee/water was edited last (coffee by default).
 - The brew timer reads **grams only**, even when the water field is in oz.
 - Stash status is derived from dates: unopened → open → finished. Deleting a bag keeps linked
   recipes/brews (name kept, link nulled). Same for gear.
@@ -70,6 +71,18 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   robusta, smoky) and can be edited, deleted, restored or added to; `settings.avoidRules` = ids
   switched on (all off by default). Match = a keyword at the start of a word in name / process /
   tasting notes / notes / "<roast> roast", case and accents folded (`ruleMatch`).
+- **Water recipes** (`src/shared/water.ts`, `src/server/routes-water.ts`, More → Water): base + volume
+  + additives (amount + unit). GH/KH (ppm as CaCO₃) come from additive strengths that are **data**
+  (`catalog/water-additives.json`: `ref` = what `amount` `unit` adds to `volume`; salts `calculated`
+  from molar mass, products `published` with a source). An unpublished value is `null` → shown as
+  "—", never guessed; only g↔mg convert. Library recipes `catalog/water/*.json` need an https source;
+  `stated` GH/KH must match the computed value (±10%, `check:catalog` and `npm test`). Recipes
+  (`waterId`, default) and brews (`waterId`, used) link to `water_recipes`; deleting a water keeps
+  `waterName` (same as bags/gear). Seed: optional `water.json` (`{ id, library }` or full rows).
+  **Concentrates**: a water with `concentrate=1` is a stock; other waters add it by g/mg/ml
+  (`concentrateId` line → stock ppm × stock litres / total litres). One level only (a concentrate
+  can't contain one), not brewed with directly, can't be deleted or un-flagged while a water uses it.
+  Library concentrates (Barista Hustle's) are additives of kind `concentrate`, calculated from their salts.
 - **About / updates** (`src/server/about.ts`, More → About): version from package.json (`/api/about`,
   also in `/api/health`), links to the repo's releases and issue forms (`.github/ISSUE_TEMPLATE`;
   the bug link pre-fills version and device). `settings.updateCheck` (off by default) asks GitHub's
@@ -117,6 +130,8 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
 - **Title-bar actions** are rendered by App.tsx from the route (`headerActions()`), never
   registered by pages. "+" buttons `fireAction("new-recipe" | "add-bag" | "log-brew" | "add-gear")`;
   pages handle them with `useAction(...)`. Tests find buttons by aria-label.
+- **Brew timer:** the dialog body is `pinned` (FullScreen `bodyClassName`): clock, current and next
+  step stay on screen and only the step list scrolls, following the active step (`StepList follow`).
 - **Dialogs** render via a portal to `<body>` (`FullScreen`): iOS WebKit confines fixed overlays
   inside a scroller. Never render a fixed overlay inside `<main>` without a portal; the layout audit
   enforces "dialog directly under body".

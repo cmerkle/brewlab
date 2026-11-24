@@ -12,7 +12,7 @@ import { readSecrets, writeSecrets } from "./secrets.js";
 export const DEMO_DIR = process.env.DEMO_DIR || path.resolve("demo");
 
 // Parents before children, so links resolve on restore.
-const DATA_TABLES = ["gear_items", "inventory_items", "recipes", "brews", "board_editions", "picks", "tastings", "avoids"] as const;
+const DATA_TABLES = ["gear_items", "inventory_items", "water_recipes", "recipes", "brews", "board_editions", "picks", "tastings", "avoids"] as const;
 
 function isEmpty(db: DB) {
   return DATA_TABLES.every((t) => (db.prepare(`SELECT COUNT(*) n FROM ${t}`).get() as { n: number }).n === 0);

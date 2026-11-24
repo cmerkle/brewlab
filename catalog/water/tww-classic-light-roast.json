@@ -1,0 +1,22 @@
+{
+  "id": "tww-classic-light-roast",
+  "version": 1,
+  "name": "Third Wave Water Classic Light Roast",
+  "credit": "Third Wave Water",
+  "base": "distilled",
+  "volume": 1,
+  "volumeUnit": "gal",
+  "additives": [
+    {
+      "additive": "tww-classic-light-roast",
+      "amount": 1,
+      "unit": "packets"
+    }
+  ],
+  "stated": {
+    "kh": 40,
+    "tds": 150
+  },
+  "source": "https://support.thirdwavewater.com/en-US/about-classic-profile-125764",
+  "notes": "One stick in a gallon of distilled or RO water."
+}

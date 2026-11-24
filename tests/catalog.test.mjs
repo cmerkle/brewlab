@@ -120,6 +120,25 @@ test("no gear is hardcoded in src/ (library ids never appear as string literals)
   assert.deepEqual(hits, []);
 });
 
+test("no water recipe, base or additive is hardcoded in src/ either", async () => {
+  const { loadWaterCatalog } = await import("../dist/server/catalog.js");
+  const w = loadWaterCatalog(undefined, true);
+  const ids = [...w.recipes, ...w.bases, ...w.additives].map((x) => x.id);
+  const hits = [];
+  const walk = (d) => {
+    for (const f of fs.readdirSync(d)) {
+      const p = path.join(d, f);
+      if (fs.statSync(p).isDirectory()) walk(p);
+      else if (/\.(ts|tsx)$/.test(f)) {
+        const src = fs.readFileSync(p, "utf8");
+        for (const id of ids) if (src.includes(`"${id}"`) || src.includes(`'${id}'`)) hits.push(`${p}: "${id}"`);
+      }
+    }
+  };
+  walk("src");
+  assert.deepEqual(hits, []);
+});
+
 test("an install's setup.json can carry its own ranges for a gear item (used instead of the library's)", () => {
   const dir = fs.mkdtempSync(path.join(tmp, "own-ranges-"));
   const own = { step: 1, methods: { pourover: { low: 10, high: 20 } } };

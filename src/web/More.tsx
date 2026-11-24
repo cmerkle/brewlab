@@ -34,6 +34,7 @@ export function More() {
         <ul className="link-list">
           <li><a href="#/brew/guide">Grind guide &amp; converter <span className="muted">›</span></a></li>
           <li><a href="#/brew/gear">Gear <span className="muted">›</span></a></li>
+          <li><a href="#/brew/water">Water recipes <span className="muted">›</span></a></li>
           <li><button className="link-row" onClick={() => setCalc(true)}>Ratio calculator <span className="muted">›</span></button></li>
         </ul>
       </section>

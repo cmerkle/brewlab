@@ -1,7 +1,7 @@
 import { DEFAULT_DOSE_NUDGE, type DoseNudge } from "../shared/grind";
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { api, type Bag, type Brew, type Gear, type Limits, type Recipe } from "./api";
+import { api, type Bag, type Brew, type Gear, type Limits, type Recipe, type WaterRecipe } from "./api";
 import { G_PER_OZ } from "../shared/brew";
 
 /* ------------------------------ App data ------------------------------ */
@@ -55,7 +55,8 @@ interface Data {
   recipes: Recipe[];
   brews: Brew[];
   bags: Bag[];
-  reload: (what?: ("gear" | "recipes" | "brews" | "bags")[]) => Promise<void>;
+  water: WaterRecipe[];
+  reload: (what?: ("gear" | "recipes" | "brews" | "bags" | "water")[]) => Promise<void>;
   toast: (msg: string, kind?: "ok" | "err") => void;
   /** Run an action, toasting `ok` on success and the error message on failure. */
   act: (fn: () => Promise<unknown>, ok?: string) => Promise<boolean>;
@@ -76,6 +77,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [brews, setBrews] = useState<Brew[]>([]);
   const [bags, setBags] = useState<Bag[]>([]);
+  const [water, setWater] = useState<WaterRecipe[]>([]);
   const [toasts, setToasts] = useState<{ id: number; msg: string; kind: string }[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [setup, setSetup] = useState<SetupState | null>(null);
@@ -92,12 +94,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setSetup((s) => (s ? { ...s, settings } : s));
   }, []);
 
-  const reload = useCallback(async (what: ("gear" | "recipes" | "brews" | "bags")[] = ["gear", "recipes", "brews", "bags"]) => {
+  const reload = useCallback(async (what: ("gear" | "recipes" | "brews" | "bags" | "water")[] = ["gear", "recipes", "brews", "bags", "water"]) => {
     await Promise.all([
       what.includes("gear") && api.get<Gear[]>("/api/gear").then(setGear),
       what.includes("recipes") && api.get<Recipe[]>("/api/recipes").then(setRecipes),
       what.includes("brews") && api.get<Brew[]>("/api/brews").then(setBrews),
       what.includes("bags") && api.get<Bag[]>("/api/inventory").then(setBags),
+      what.includes("water") && api.get<WaterRecipe[]>("/api/water").then(setWater),
     ]);
   }, []);
   const toast = useCallback((msg: string, kind: "ok" | "err" = "ok") => {
@@ -132,7 +135,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, [reload, reloadSetup, toast]);
 
   return (
-    <Ctx.Provider value={{ loaded, setup, settings: setup?.settings ?? DEFAULT_SETTINGS, saveSettings, reloadSetup, limits, gear, recipes, brews, bags, reload, toast, act }}>
+    <Ctx.Provider value={{ loaded, setup, settings: setup?.settings ?? DEFAULT_SETTINGS, saveSettings, reloadSetup, limits, gear, recipes, brews, bags, water, reload, toast, act }}>
       {children}
       <div className="toasts" role="status" aria-live="polite">
         {toasts.map((t) => (
@@ -369,7 +372,8 @@ export function BackButton({ onClick, label = "Back" }: { onClick: () => void; l
 }
 
 /** Full-screen dialog: fixed to the viewport so it is always visible on a phone. */
-export function FullScreen({ title, onClose, children, footer }: { title: string; onClose: () => void; children: React.ReactNode; footer?: React.ReactNode }) {
+/** `bodyClassName`: e.g. "pinned" — the body fills the screen without scrolling and a child scrolls instead. */
+export function FullScreen({ title, onClose, children, footer, bodyClassName }: { title: string; onClose: () => void; children: React.ReactNode; footer?: React.ReactNode; bodyClassName?: string }) {
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
   const [isTop, setIsTop] = useState(true);
@@ -417,7 +421,7 @@ export function FullScreen({ title, onClose, children, footer }: { title: string
         <BackButton onClick={() => closeRef.current()} />
         <h2>{title}</h2>
       </header>
-      <div className="fs-body">{children}</div>
+      <div className={bodyClassName ? `fs-body ${bodyClassName}` : "fs-body"}>{children}</div>
       {footer && <footer className="fs-foot">{footer}</footer>}
     </div>,
     document.body,
@@ -479,7 +483,7 @@ export function Menu({ items, label = "More actions" }: { items: { label: string
 
 /** Title-bar actions. The App renders the buttons for the current route itself (so they can't
     go missing); a button fires a named action and the visible page handles it. */
-export type PageAction = "new-recipe" | "add-bag" | "log-brew" | "add-gear";
+export type PageAction = "new-recipe" | "add-bag" | "log-brew" | "add-gear" | "add-water";
 export const fireAction = (name: PageAction) => window.dispatchEvent(new CustomEvent("brewlab:action", { detail: name }));
 export function useAction(name: PageAction, fn: () => void) {
   const ref = useRef(fn);

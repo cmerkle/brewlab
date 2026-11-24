@@ -8,6 +8,7 @@ import { validateRanges, METHODS, toGrindNumber, CATEGORY_METHOD, type Method } 
 import { loadCatalog, catalogGear, gearFromCatalog, libraryEntryFor, rangeInfoFromCatalog, loadEstimateRules } from "./catalog.js";
 import { importFromLink, importFromPhoto, lookupOnline } from "./imports.js";
 import { sameCoffee } from "./rules.js";
+import { waterNameFor } from "./routes-water.js";
 import type { z } from "zod";
 
 const j = (v: unknown) => (v == null ? null : JSON.stringify(v));
@@ -154,7 +155,7 @@ function recipeKey(r: any) {
   return JSON.stringify([
     (r.name ?? "").trim().toLowerCase(), r.brewerId ?? null, r.method ?? null, r.coffee ?? null, Number(r.doseG), Number(r.waterG),
     r.tempC == null ? null : Number(r.tempC), r.grinderId ?? null, r.grindSetting ?? null, JSON.parse(steps || "[]"),
-    r.notes ?? null, r.inventoryId ?? null,
+    r.notes ?? null, r.inventoryId ?? null, r.waterId ?? null,
   ]);
 }
 
@@ -341,6 +342,7 @@ export function brewRouter(db: DB) {
       method: d.method ?? null, coffee, doseG: d.doseG, waterG: d.waterG, tempC: d.tempC ?? null, grinderId: d.grinderId || null,
       grinderName: (d.grinderId && names.get(d.grinderId)) || d.grinderName || null, grindSetting: d.grindSetting ?? null,
       steps: JSON.stringify(d.steps ?? []), notes: d.notes ?? null, favorite: d.favorite ? 1 : 0, inventoryId: d.inventoryId ?? null,
+      waterId: d.waterId ?? null, waterName: waterNameFor(db, d.waterId, d.waterName),
     };
   };
   const identicalExists = (vals: any, exceptId?: number) => {
@@ -353,8 +355,8 @@ export function brewRouter(db: DB) {
     const t = nowIso();
     const info = db
       .prepare(
-        `INSERT INTO recipes (name, brewerId, brewerName, method, coffee, doseG, waterG, tempC, grinderId, grinderName, grindSetting, steps, notes, favorite, starter, inventoryId, createdAt, updatedAt)
-         VALUES (@name, @brewerId, @brewerName, @method, @coffee, @doseG, @waterG, @tempC, @grinderId, @grinderName, @grindSetting, @steps, @notes, @favorite, 0, @inventoryId, @t, @t)`,
+        `INSERT INTO recipes (name, brewerId, brewerName, method, coffee, doseG, waterG, tempC, grinderId, grinderName, grindSetting, steps, notes, favorite, starter, inventoryId, waterId, waterName, createdAt, updatedAt)
+         VALUES (@name, @brewerId, @brewerName, @method, @coffee, @doseG, @waterG, @tempC, @grinderId, @grinderName, @grindSetting, @steps, @notes, @favorite, 0, @inventoryId, @waterId, @waterName, @t, @t)`,
       )
       .run({ ...vals, t });
     return recipeRow(db.prepare("SELECT * FROM recipes WHERE id=?").get(info.lastInsertRowid));
@@ -384,7 +386,7 @@ export function brewRouter(db: DB) {
       db.prepare(
         `UPDATE recipes SET name=@name, brewerId=@brewerId, brewerName=@brewerName, method=@method, coffee=@coffee, doseG=@doseG, waterG=@waterG,
          tempC=@tempC, grinderId=@grinderId, grinderName=@grinderName, grindSetting=@grindSetting, steps=@steps, notes=@notes,
-         favorite=@favorite, inventoryId=@inventoryId, updatedAt=@t WHERE id=@id`,
+         favorite=@favorite, inventoryId=@inventoryId, waterId=@waterId, waterName=@waterName, updatedAt=@t WHERE id=@id`,
       ).run({ ...vals, id, t: nowIso() });
       res.json(recipeRow(db.prepare("SELECT * FROM recipes WHERE id=?").get(id)));
     } catch (e: any) {
@@ -412,6 +414,7 @@ export function brewRouter(db: DB) {
       name: `${src.name} (Copy)`, brewerId: src.brewerId, brewerName: src.brewerName, method: src.method, coffee: src.coffee,
       doseG: src.doseG, waterG: src.waterG, tempC: src.tempC, grinderId: src.grinderId, grinderName: src.grinderName,
       grindSetting: src.grindSetting, steps: src.steps, notes: src.notes, favorite: 0, inventoryId: src.inventoryId,
+      waterId: src.waterId ?? null, waterName: src.waterName ?? null,
     };
     const dup = identicalExists(vals);
     if (dup) return res.status(409).json({ error: `"${dup.name}" is already saved — no second identical copy was made.`, existing: recipeRow(dup) });
@@ -442,6 +445,7 @@ export function brewRouter(db: DB) {
       grinderName: (d.grinderId && names.get(d.grinderId)) || d.grinderName || null, grindSetting: d.grindSetting ?? null,
       steps: d.steps ? JSON.stringify(d.steps) : null, inventoryId: d.inventoryId ?? null, rating: d.rating ?? null,
       notes: d.notes ?? null, totalTimeSec: d.totalTimeSec == null ? null : Math.round(d.totalTimeSec), brewedAt: d.brewedAt || nowIso(),
+      waterId: d.waterId ?? null, waterName: waterNameFor(db, d.waterId, d.waterName),
     };
   };
   r.post("/brews", (req, res) => {
@@ -451,8 +455,8 @@ export function brewRouter(db: DB) {
       const v = brewValues(p.data);
       const info = db
         .prepare(
-          `INSERT INTO brews (recipeId, recipeName, brewerId, brewerName, method, coffee, doseG, waterG, tempC, grinderId, grinderName, grindSetting, steps, inventoryId, rating, notes, totalTimeSec, brewedAt)
-           VALUES (@recipeId, @recipeName, @brewerId, @brewerName, @method, @coffee, @doseG, @waterG, @tempC, @grinderId, @grinderName, @grindSetting, @steps, @inventoryId, @rating, @notes, @totalTimeSec, @brewedAt)`,
+          `INSERT INTO brews (recipeId, recipeName, brewerId, brewerName, method, coffee, doseG, waterG, tempC, grinderId, grinderName, grindSetting, steps, inventoryId, rating, notes, totalTimeSec, brewedAt, waterId, waterName)
+           VALUES (@recipeId, @recipeName, @brewerId, @brewerName, @method, @coffee, @doseG, @waterG, @tempC, @grinderId, @grinderName, @grindSetting, @steps, @inventoryId, @rating, @notes, @totalTimeSec, @brewedAt, @waterId, @waterName)`,
         )
         .run(v);
       res.json(brewRow(db.prepare("SELECT * FROM brews WHERE id=?").get(info.lastInsertRowid)));
@@ -471,7 +475,7 @@ export function brewRouter(db: DB) {
       db.prepare(
         `UPDATE brews SET recipeId=@recipeId, recipeName=@recipeName, brewerId=@brewerId, brewerName=@brewerName, method=@method, coffee=@coffee,
          doseG=@doseG, waterG=@waterG, tempC=@tempC, grinderId=@grinderId, grinderName=@grinderName, grindSetting=@grindSetting, steps=@steps,
-         inventoryId=@inventoryId, rating=@rating, notes=@notes, totalTimeSec=@totalTimeSec, brewedAt=@brewedAt WHERE id=@id`,
+         inventoryId=@inventoryId, rating=@rating, notes=@notes, totalTimeSec=@totalTimeSec, brewedAt=@brewedAt, waterId=@waterId, waterName=@waterName WHERE id=@id`,
       ).run({ ...v, id });
       res.json(brewRow(db.prepare("SELECT * FROM brews WHERE id=?").get(id)));
     } catch (e: any) {

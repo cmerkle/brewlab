@@ -5,6 +5,7 @@ import { GrinderSwitcher, grindLabel, methodOf } from "../grindui";
 import { ScaleDialog, planFromRecipe, StepList, type BrewPlan } from "./ScaleDialog";
 import { fmtRatio, ratioOf, type Step } from "../../shared/brew";
 import { METHODS, METHOD_LABELS, type Method } from "../../shared/grind";
+import { WaterSelect } from "./Water";
 
 export function Recipes({ onEditGrinder }: { onEditGrinder: (id: string) => void }) {
   const { recipes, loaded } = useData();
@@ -133,6 +134,7 @@ export function RecipeCard({ r, onBrew, onEdit, onEditGrinder, startOpen = false
             <div><dt>Grind</dt><dd>{grindLabel(r, gear)}</dd></div>
           </dl>
           {(r.coffee || bag) && <div className="muted">Coffee: {bag ? `${bag.name} (from Stash)` : r.coffee}</div>}
+          {r.waterName && <div className="muted" data-testid="recipe-water">Water: {r.waterName}{r.waterId == null ? " (removed)" : ""}</div>}
           <GrinderSwitcher recipe={r} value={grinderId} onChange={setGrinderId} idPrefix={`rc${r.id}`} onEditGrinder={onEditGrinder} />
           <StepList steps={r.steps} />
           {r.notes && <p className="muted small">{r.notes}</p>}
@@ -170,6 +172,8 @@ export function RecipeEditor({ recipe, onClose }: { recipe: Recipe | null; onClo
     steps: (recipe?.steps ?? [{ label: "Pour to 320g", targetWaterG: 320, atSec: 0, detail: "" }]) as Step[],
     notes: recipe?.notes ?? "",
     inventoryId: recipe?.inventoryId ?? null as number | null,
+    waterId: recipe?.waterId ?? null as number | null,
+    waterName: recipe?.waterName ?? null as string | null,
   }));
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -185,7 +189,7 @@ export function RecipeEditor({ recipe, onClose }: { recipe: Recipe | null; onClo
         steps: f.steps.map((s) => ({ ...s, detail: s.detail || null })) };
       if (recipe) await api.put(`/api/recipes/${recipe.id}`, body);
       else await api.post("/api/recipes", body);
-      await reload(["recipes"]);
+      await reload(["recipes", "water"]);
       toast("Recipe saved");
       onClose();
     } catch (e: any) {
@@ -228,6 +232,7 @@ export function RecipeEditor({ recipe, onClose }: { recipe: Recipe | null; onClo
           </Field>
           <Field label="Coffee" htmlFor="re-coffee"><input id="re-coffee" value={f.coffee} onChange={(e) => set("coffee", e.target.value)} /></Field>
         </div>
+        <WaterSelect id="re-waterrec" value={f.waterId} onChange={(id) => setF((x) => ({ ...x, waterId: id, waterName: id == null ? null : x.waterName }))} keptName={f.waterName} label="Water recipe (default)" />
         <div className="grid3">
           <Field label="Coffee (g)" htmlFor="re-dose"><NumInput id="re-dose" value={f.doseG} onChange={(n) => set("doseG", n)} min={limits?.doseG.min} max={limits?.doseG.max} decimals={1} /></Field>
           <WaterInput id="re-water" label={effMethod === "espresso" ? "Yield" : "Water"} grams={f.waterG} onChange={(n) => set("waterG", n)} />

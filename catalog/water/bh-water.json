@@ -1,0 +1,23 @@
+{
+  "id": "bh-water",
+  "version": 1,
+  "name": "Barista Hustle Water",
+  "credit": "Barista Hustle",
+  "base": "distilled",
+  "volume": 1,
+  "volumeUnit": "L",
+  "additives": [
+    {
+      "additive": "bh-buffer",
+      "amount": 40.1,
+      "unit": "g"
+    },
+    {
+      "additive": "bh-hardness",
+      "amount": 80.7,
+      "unit": "g"
+    }
+  ],
+  "source": "https://www.baristahustle.com/diy-water-recipes-redux/",
+  "notes": "Barista Hustle's own original recipe, made with the newer concentrates. Weigh 40.1 g Buffer and 80.7 g Hardness concentrate, then 879.2 g deionised water (about 1000 g in all)."
+}

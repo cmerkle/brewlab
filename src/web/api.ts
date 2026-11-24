@@ -1,5 +1,40 @@
 import type { GrindRanges, Method } from "../shared/grind";
 import type { Step } from "../shared/brew";
+import type { Hardness, VolumeUnit, WaterAdditive, WaterBase, WaterLine } from "../shared/water";
+
+export interface WaterRecipe {
+  id: number;
+  name: string;
+  baseId: string | null;
+  baseName: string | null;
+  baseGh: number | null;
+  baseKh: number | null;
+  volume: number;
+  volumeUnit: VolumeUnit;
+  additives: WaterLine[];
+  notes: string | null;
+  source: string | null;
+  catalogId: string | null;
+  /** A stock solution other waters add by the gram (not brewed with directly). */
+  concentrate: boolean;
+  hardness: Hardness;
+  usage: { recipes: number; brews: number; rated: number; avgRating: number | null };
+}
+export interface WaterTemplate {
+  id: string;
+  name: string;
+  credit?: string | null;
+  baseName: string;
+  volume: number;
+  volumeUnit: VolumeUnit;
+  lines: WaterLine[];
+  stated?: { gh?: number; kh?: number; tds?: number };
+  source: string;
+  notes?: string;
+  owned: boolean;
+  hardness: Hardness;
+}
+export interface WaterCatalog { bases: WaterBase[]; additives: WaterAdditive[]; recipes: WaterTemplate[]; errors: string[] }
 
 export class ApiError extends Error {
   constructor(message: string, public status: number, public body: any) {
@@ -83,6 +118,9 @@ export interface Recipe {
   favorite: boolean;
   starter: boolean;
   inventoryId: number | null;
+  /** Default water recipe (name kept if that water is deleted). */
+  waterId: number | null;
+  waterName: string | null;
 }
 
 export interface Brew {
@@ -106,6 +144,9 @@ export interface Brew {
   notes: string | null;
   totalTimeSec: number | null;
   brewedAt: string;
+  /** The water recipe this brew used (name kept if that water is deleted). */
+  waterId: number | null;
+  waterName: string | null;
 }
 
 export interface Bag {

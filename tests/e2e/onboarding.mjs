@@ -365,6 +365,85 @@ try {
   bks = await (await fetch(`${BASE}/api/backups`)).json();
   check(bks.keep === keepDefault && !bks.custom && (await p.inputValue("#backup-keep")) === String(keepDefault), `"Use the default" goes back to ${keepDefault}`);
 
+  // More → Water: a library water, one of your own (a salt + an additive you describe), set as a
+  // recipe's default; Brew setup starts with it; deleting it keeps the name on the recipe.
+  const getJ = async (u) => (await fetch(`${BASE}${u}`)).json();
+  await p.goto(`${BASE}/#/more`);
+  await p.getByRole("link", { name: /Water recipes/ }).click();
+  await p.getByRole("button", { name: "Add water" }).click();
+  await p.getByRole("button", { name: "Add Rao/Perger (Lotus drops)" }).click();
+  await p.locator('[data-testid="water-lib-lotus-rao-perger"] .tag', { hasText: "added" }).waitFor();
+  await p.getByRole("button", { name: "Back" }).last().click();
+  let wl = await getJ("/api/water");
+  check(wl.length === 1 && wl[0].hardness.gh === 90 && wl[0].catalogId === "lotus-rao-perger", `library water added as your copy (GH ${wl[0]?.hardness.gh}, KH ${wl[0]?.hardness.kh})`);
+  await p.getByRole("button", { name: "Make your own" }).click();
+  await p.fill("#wr-name", "E2E soft water");
+  await p.selectOption("#wr-volunit", "gal");
+  await p.getByRole("button", { name: "+ Add an additive" }).click();
+  await p.selectOption("#wr-add-0", "epsom-salt");
+  await p.fill("#wr-amt-0", "0.5");
+  await p.getByRole("button", { name: "+ Add an additive" }).click();
+  await p.selectOption("#wr-add-1", "__custom");
+  await p.fill("#wr-lname-1", "Mystery drops");
+  await p.fill("#wr-amt-1", "3");
+  await p.selectOption("#wr-unit-1", "drops");
+  const wres = p.locator('[data-testid="water-result"]');
+  await p.waitForTimeout(150);
+  check(/GH — · KH —/.test(await wres.innerText()) && /Mystery drops: enter what it adds/.test(await wres.innerText()), "an additive with unknown strength leaves GH/KH unknown and says why");
+  await p.fill("#wr-lgh-1", "5");
+  await p.fill("#wr-lkh-1", "2");
+  await p.waitForTimeout(150);
+  check(/GH 59 · KH 2/.test(await wres.innerText()), `0.5 g Epsom salt in a gallon + what you entered: ${(await wres.innerText()).split("\n")[0]}`);
+  await p.getByRole("button", { name: "Save water" }).click();
+  await p.locator('[data-testid="water-form"]').waitFor({ state: "detached" });
+  wl = await getJ("/api/water");
+  const soft = wl.find((w) => w.name === "E2E soft water");
+  check(soft && soft.additives.length === 2 && soft.hardness.gh === 58.6, `your own water saved (GH ${soft?.hardness.gh})`);
+  // Set it as a recipe's default water
+  const wr = (await getJ("/api/recipes"))[0];
+  await p.goto(`${BASE}/#/brew/recipes`);
+  await p.locator(`[data-testid="recipe-${wr.id}"] [data-testid="recipe-toggle"]`).click();
+  await p.locator(`[data-testid="recipe-${wr.id}"]`).getByRole("button", { name: "Edit" }).click();
+  await p.selectOption("#re-waterrec", { label: "E2E soft water" });
+  await p.getByRole("button", { name: "Save recipe" }).click();
+  await p.locator(`[data-testid="recipe-${wr.id}"] [data-testid="recipe-water"]`, { hasText: "E2E soft water" }).waitFor();
+  check(true, "the recipe shows its default water");
+  await p.locator(`[data-testid="recipe-${wr.id}"] [data-testid="recipe-brew"]`).first().click();
+  await p.locator("#sd-waterrec").waitFor();
+  check((await p.inputValue("#sd-waterrec")) === String(soft.id), "Brew setup starts with the recipe's water");
+  await p.getByRole("button", { name: "Back" }).last().click();
+  // Delete the water: the recipe keeps the name
+  await p.goto(`${BASE}/#/brew/water`);
+  await p.locator(`[data-testid="water-${soft.id}"]`).getByRole("button", { name: "Edit" }).click();
+  p.once("dialog", (d) => d.accept());
+  await p.getByRole("button", { name: "Delete" }).click();
+  await p.locator(`[data-testid="water-${soft.id}"]`).waitFor({ state: "detached" });
+  const wr2 = (await getJ("/api/recipes")).find((x) => x.id === wr.id);
+  check(wr2.waterId === null && wr2.waterName === "E2E soft water", "deleting a water keeps its name on the recipe");
+  // Your own concentrate (a stock solution), then a water that adds it by the gram.
+  await p.getByRole("button", { name: "Make your own" }).click();
+  await p.fill("#wr-name", "E2E Ca stock");
+  await p.check("#wr-concentrate");
+  await p.getByRole("button", { name: "+ Add an additive" }).click();
+  await p.selectOption("#wr-add-0", "calcium-chloride-dihydrate");
+  await p.fill("#wr-amt-0", "6.8");
+  await p.getByRole("button", { name: "Save water" }).click();
+  await p.locator('[data-testid="water-form"]').waitFor({ state: "detached" });
+  const stockW = (await getJ("/api/water")).find((w) => w.name === "E2E Ca stock");
+  check(stockW?.concentrate && stockW.hardness.gh === 4629.4, `a concentrate is saved with its stock strength (GH ${stockW?.hardness.gh})`);
+  await p.getByRole("button", { name: "Make your own" }).click();
+  await p.fill("#wr-name", "E2E Ca water");
+  await p.getByRole("button", { name: "+ Add an additive" }).click();
+  await p.selectOption("#wr-add-0", `c:${stockW.id}`);
+  await p.fill("#wr-amt-0", "10");
+  await p.waitForTimeout(150);
+  check(/GH 46 · KH 0/.test(await p.locator('[data-testid="water-result"]').innerText()), "10 g of the stock in 1 L → GH 46");
+  await p.getByRole("button", { name: "Save water" }).click();
+  await p.locator('[data-testid="water-form"]').waitFor({ state: "detached" });
+  const opts = await (async () => { await p.goto(`${BASE}/#/brew/recipes`); await p.locator(`[data-testid="recipe-${wr.id}"] [data-testid="recipe-brew"]`).first().click(); await p.locator("#sd-waterrec").waitFor(); return p.locator("#sd-waterrec option").allInnerTexts(); })();
+  check(opts.includes("E2E Ca water") && !opts.includes("E2E Ca stock"), `you brew with waters, not concentrates: ${opts.join(" | ")}`);
+  await p.getByRole("button", { name: "Back" }).last().click();
+
   // Discover → Your taste: "always leave out" rules are the user's own.
   await p.goto(`${BASE}/#/discover/taste`);
   const rulesCard = p.locator('[data-testid="avoid-rules"]');

@@ -51,7 +51,7 @@ export async function createBackup(db: DB, kind: "nightly" | "manual") {
   return { name, bytes: fs.statSync(file).size };
 }
 
-const TABLES = ["gear_items", "recipes", "brews", "inventory_items", "board_editions", "picks", "tastings", "avoids", "refresh_state", "refresh_candidates"];
+const TABLES = ["gear_items", "water_recipes", "recipes", "brews", "inventory_items", "board_editions", "picks", "tastings", "avoids", "refresh_state", "refresh_candidates"];
 
 export function exportAll(db: DB) {
   const out: Record<string, unknown> = { app: "brewlab", exportedAt: nowIso() };

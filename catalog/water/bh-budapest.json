@@ -1,0 +1,27 @@
+{
+  "id": "bh-budapest",
+  "version": 1,
+  "name": "WBrC Budapest (Barista Hustle)",
+  "credit": "Barista Hustle",
+  "base": "distilled",
+  "volume": 1,
+  "volumeUnit": "L",
+  "additives": [
+    {
+      "additive": "bh-buffer",
+      "amount": 40.1,
+      "unit": "g"
+    },
+    {
+      "additive": "bh-hardness",
+      "amount": 51.2,
+      "unit": "g"
+    }
+  ],
+  "stated": {
+    "gh": 51,
+    "kh": 40
+  },
+  "source": "https://www.baristahustle.com/diy-water-recipes-redux/",
+  "notes": "In the target range for the World Brewers Cup in Budapest. Weigh 40.1 g Buffer and 51.2 g Hardness concentrate, then 908.7 g deionised water (about 1000 g in all)."
+}

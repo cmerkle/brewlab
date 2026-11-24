@@ -7,7 +7,7 @@
 
 A self-hosted coffee app for home brewers: one Docker container, one SQLite database, no account.
 
-- **Brew:** recipes with a guided brew timer, ratio calculator, a grind guide that **converts settings between your grinders**, your coffee stash, a brew log, and your gear.
+- **Brew:** recipes with a guided brew timer, ratio calculator, a grind guide that **converts settings between your grinders**, your coffee stash, a brew log, your gear, and **water recipes** you can compare in the log.
 - **Discover:** a weekly board of coffees to try. It starts with popular picks and learns from what you rate. An AI provider is optional: with one, Brewlab researches roasters' current offerings; without one, you add candidates and Brewlab filters and ranks them.
 
 It's built for phones first and works just as well on tablets and computers. Install it from the browser to use it like an app.
@@ -77,6 +77,15 @@ Nothing about specific gear is in the code. The **gear library** (`catalog/gear/
 **How conversion works:** a setting keeps its position inside the source grinder's range for that brew method and lands at the same position in the target grinder's range. Halfway through one grinder's pour-over range maps to halfway through the other's. Microns-per-click is never used.
 
 Missing gear, or have a source for a grind range? Add it to your own Brewlab, then use **Suggest to the library** in its gear editor: Brewlab checks it and opens a ready-to-submit pull request on GitHub. Details in [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Water recipes
+
+*More → Water* holds your brewing waters: a base water (distilled, RO, ZeroWater, tap, bottled or your own), how much, and what you add, each with its amount in g, mg, ml, drops, packets, tsp or capsules.
+
+- **Hardness (GH) and alkalinity (KH)** are worked out as you type, in ppm as CaCO₃. Pure salts (Epsom salt, baking soda, potassium bicarbonate, calcium and magnesium chloride) are calculated from their molar mass. Products use the maker's or a published figure (Lotus drops, Third Wave Water). Anything that isn't published, like Third Wave Water's hardness, shows as "—" and is never guessed. Your own additive can say what it adds, if you know.
+- **Concentrates:** mark a water as a concentrate (a stock solution, say 6.8 g calcium chloride in 1 L) and other waters can add it by the gram, with the hardness worked out through it.
+- **A library** of cited recipes (`catalog/water/*.json`, additives in `catalog/water-additives.json`): the Third Wave Water profiles, two Lotus drop recipes (Light & Bright, Rao/Perger) and Barista Hustle's concentrate recipes (Melbourne, Budapest, SCA, Barista Hustle Water, Rao, Hendon, Pretty Hard, Hard dot AF, plus the original filter recipe and an espresso one), with their concentrates. Library entries hold only the numbers and a link to the source. Adding one gives you your own copy.
+- **Linked to brewing:** a recipe can have a default water, Brew setup lets you pick the water you're using, and each brew records it. The Brew Log filters by water and compares how each one rated (for a recipe or coffee too), so you can try one coffee with different waters.
 
 ## Discover and AI providers
 

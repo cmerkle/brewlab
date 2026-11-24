@@ -1,0 +1,18 @@
+{
+  "id": "bh-espresso",
+  "version": 1,
+  "name": "Barista Hustle espresso",
+  "credit": "Barista Hustle",
+  "base": "distilled",
+  "volume": 1003.5,
+  "volumeUnit": "ml",
+  "additives": [
+    {
+      "additive": "bh-espresso-concentrate",
+      "amount": 3.5,
+      "unit": "g"
+    }
+  ],
+  "source": "https://www.baristahustle.com/march-2017-victor-barrera-tabi-from-koppi/",
+  "notes": "From Barista Hustle's March 2017 feature with Koppi: 3.5 g of the espresso concentrate in another 1 L deionised water (1003.5 g in all). Barista Hustle warns against remineralised water in an espresso machine unless you know what you're doing: scale is hard to remove."
+}

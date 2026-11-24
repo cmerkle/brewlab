@@ -1,0 +1,18 @@
+{
+  "id": "tww-cold-brew",
+  "version": 1,
+  "name": "Third Wave Water Cold Brew",
+  "credit": "Third Wave Water",
+  "base": "distilled",
+  "volume": 1,
+  "volumeUnit": "gal",
+  "additives": [
+    {
+      "additive": "tww-cold-brew",
+      "amount": 1,
+      "unit": "packets"
+    }
+  ],
+  "source": "https://support.thirdwavewater.com/en-US/what-is-in-third-wave-water-76575",
+  "notes": "One stick in a gallon of distilled or RO water."
+}

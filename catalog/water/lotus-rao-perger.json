@@ -1,0 +1,37 @@
+{
+  "id": "lotus-rao-perger",
+  "version": 1,
+  "name": "Rao/Perger (Lotus drops)",
+  "credit": "Dan Eils",
+  "base": "distilled",
+  "volume": 1,
+  "volumeUnit": "L",
+  "additives": [
+    {
+      "additive": "lotus-calcium",
+      "amount": 7,
+      "unit": "drops"
+    },
+    {
+      "additive": "lotus-magnesium",
+      "amount": 13,
+      "unit": "drops"
+    },
+    {
+      "additive": "lotus-sodium",
+      "amount": 8,
+      "unit": "drops"
+    },
+    {
+      "additive": "lotus-potassium",
+      "amount": 11,
+      "unit": "drops"
+    }
+  ],
+  "stated": {
+    "gh": 90,
+    "kh": 42
+  },
+  "source": "https://scottrao.com/blog/lotus-water-drops",
+  "notes": "The Rao/Perger water made with Lotus drops (Dan Eils's conversion, per Scott Rao): 90 GH / 42 KH. Distilled or RO water."
+}
