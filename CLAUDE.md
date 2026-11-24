@@ -68,6 +68,13 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   robusta, smoky) and can be edited, deleted, restored or added to; `settings.avoidRules` = ids
   switched on (all off by default). Match = a keyword at the start of a word in name / process /
   tasting notes / notes / "<roast> roast", case and accents folded (`ruleMatch`).
+- **About / updates** (`src/server/about.ts`, More → About): version from package.json (`/api/about`,
+  also in `/api/health`), links to the repo's releases and issue forms (`.github/ISSUE_TEMPLATE`;
+  the bug link pre-fills version and device). `settings.updateCheck` (off by default) asks GitHub's
+  releases API once a day (cron 03:00 + startup, at most daily); "Check now" always works. Repo from
+  `LIBRARY_REPO`; tests point `UPDATE_CHECK_URL` at a local stub. Never send anything about the user.
+- Release: bump `package.json` version, `scripts/upgrade-test.sh` (old tag → this checkout on the
+  same volume), then tag `vX.Y.Z` — the Docker workflow publishes the image.
 
 ## Commands
 
@@ -161,7 +168,7 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   `meta.onboarded` isn't "1"; installs with data are marked onboarded at startup. Preferences in
   the `settings` table (`src/server/settings.ts`): tempUnit (DB always °C — use
   `useTemp`/`TempInput`), waterUnit (instance default; per-device g/oz pref wins), defaultRatio,
-  discoverEnabled, ruleDefs/avoidRules, palateNotes, tasteQuiz, doseNudge. Demo data (`demo/`, fictional) and restore
+  discoverEnabled, ruleDefs/avoidRules, palateNotes, tasteQuiz, doseNudge, updateCheck. Demo data (`demo/`, fictional) and restore
   only go into an empty DB.
 - **Discover taste** (`src/server/taste.ts`): summary from Stash ratings, brew ratings and
   tastings → stage popular (0 rated) / mixed (1–4) / tailored (5+), the research prompt, ranking of

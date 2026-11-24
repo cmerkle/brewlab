@@ -12,6 +12,16 @@ A self-hosted coffee app for home brewers: one Docker container, one SQLite data
 
 It's built for phones first (installable as an app on iPhone and desktop), and works on tablets and desktops too.
 
+<p align="center">
+<picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/recipes-dark.png"><img src="docs/screenshots/recipes-light.png" alt="Recipes, with a recipe opened" width="190"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/timer-dark.png"><img src="docs/screenshots/timer-light.png" alt="The guided brew timer" width="190"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/guide-dark.png"><img src="docs/screenshots/guide-light.png" alt="Grind converter: one setting on every grinder" width="190"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/discover-dark.png"><img src="docs/screenshots/discover-light.png" alt="Discover: the weekly board" width="190"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/stash-dark.png"><img src="docs/screenshots/stash-light.png" alt="Stash: your bags of coffee" width="190"></picture>
+</p>
+
+<sub>Recipes · the brew timer · the grind converter · Discover · your Stash (demo data, all fictional). Screenshots are made by <code>tests/e2e/screenshots.mjs</code>.</sub>
+
 > ⚠️ **There is no login.** Anyone who can reach Brewlab can read and change everything in it. Run it on your home network or behind Tailscale/WireGuard, and if you put it behind a public hostname, **add authentication in your reverse proxy** (an access list, basic auth, Authelia, Cloudflare Access…). Never forward its port on your router.
 
 ---
@@ -38,7 +48,7 @@ Every step can be skipped and redone from **More → Settings → Run setup agai
 |---|---|
 | Logs | `docker compose logs -f` |
 | Health | `curl -s localhost:7642/api/health` |
-| Update | `docker compose pull && docker compose up -d` (or `git pull && docker compose up -d --build`) |
+| Update | `docker compose pull && docker compose up -d` (or `git pull && docker compose up -d --build`). More → About shows your version and can check for new releases (off by default). |
 | Stop | `docker compose down` (keeps your data) |
 
 `docker compose down -v` **deletes the volume and all your data.**
@@ -125,6 +135,7 @@ All optional, set as environment variables. Compose reads a `.env` file next to 
 | `BACKUP_KEEP` | `14` | Snapshots to keep. |
 | `DISABLE_CRON` | *(unset)* | `1` turns off the weekly refresh and nightly backup. |
 | `IMPORT_ALLOW_HOSTS` | *(unset)* | Hosts the link importer may fetch even though they're private addresses (normally refused). |
+| `LIBRARY_REPO` | `cmerkle/brewlab` | The GitHub repo (`owner/name`) used for "Suggest to the library", More → About's links and the optional update check. Set it if you run a fork. |
 | `SEED_DIR` | `/app/seed-data` | Optional starting data for a new install (see [`seed-data/README.md`](seed-data/README.md)). |
 
 ## Development
@@ -150,7 +161,11 @@ BASE=http://localhost:3103 npm run onboarding
 docker run -d --rm --name brewlab-demo -p 127.0.0.1:3104:7642 ghcr.io/cmerkle/brewlab:latest
 curl -XPOST localhost:3104/api/setup/demo && curl -XPOST localhost:3104/api/setup/complete
 ONLY="iPhone SE portrait" BASE=http://localhost:3104 npm run layout   # one viewport per run keeps memory low
+# README screenshots (same demo install):
+BASE=http://localhost:3104 node screenshots.mjs
 ```
+
+Before tagging a release, rehearse the update on an older install: `scripts/upgrade-test.sh [old-ref]` builds the old version and this checkout, loads the demo data into the old one, then starts the new one on the same volume and checks nothing was lost (default old-ref: the latest `v*` tag).
 
 ## License
 

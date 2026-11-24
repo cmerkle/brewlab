@@ -125,9 +125,88 @@ export function More() {
           </p>
         </section>
       )}
+      <About />
       <ScreenInfo />
       {calc && <RatioCalculator onClose={() => setCalc(false)} />}
     </div>
+  );
+}
+
+interface AboutInfo {
+  version: string;
+  repo: string;
+  links: { releases: string; bug: string; gear: string; contributing: string };
+  update: { enabled: boolean; checkedAt: string | null; latest: string | null; url: string | null; error: string | null; newer: boolean };
+}
+
+/** The device line a bug report starts with (shown to the user on GitHub before anything is sent). */
+function deviceSummary() {
+  const i = measureScreen();
+  return `${navigator.userAgent}\nViewport ${i.viewport} · ${i.mode} · ${i.layout} layout`;
+}
+
+/** Version, project links (release notes, bug report, gear request) and the optional update check. */
+function About() {
+  const { settings, saveSettings, act } = useData();
+  const [info, setInfo] = useState<AboutInfo | null>(null);
+  const [checking, setChecking] = useState(false);
+  useEffect(() => {
+    api.get<AboutInfo>("/api/about").then(setInfo).catch(() => {});
+  }, [settings.updateCheck]);
+  const checkNow = async () => {
+    setChecking(true);
+    await act(async () => setInfo(await api.post<AboutInfo>("/api/about/check")));
+    setChecking(false);
+  };
+  if (!info) return null;
+  const u = info.update;
+  const bugUrl = `${info.links.bug}&version=${encodeURIComponent(info.version)}&device=${encodeURIComponent(deviceSummary())}`;
+  return (
+    <section className="card stack" data-testid="about">
+      <h2>About</h2>
+      <p className="about-version">
+        Brewlab <strong data-testid="app-version">{info.version}</strong>{" · "}
+        <a href={info.links.releases} target="_blank" rel="noopener noreferrer">What's new</a>
+      </p>
+      {u.newer && (
+        <div className="ok-note small" data-testid="update-available">
+          <strong>Brewlab {u.latest} is out.</strong>{" "}
+          {u.url && <a href={u.url} target="_blank" rel="noopener noreferrer">Release notes</a>}
+          <br />To update, run this on the server (your data stays):
+          <code className="cmd">docker compose pull &amp;&amp; docker compose up -d</code>
+          or, if you build from source:
+          <code className="cmd">git pull &amp;&amp; docker compose up -d --build</code>
+        </div>
+      )}
+      <label className="toggle-row">
+        <input type="checkbox" checked={settings.updateCheck} data-testid="update-check"
+          onChange={(e) => {
+            const on = e.target.checked;
+            act(async () => {
+              await saveSettings({ updateCheck: on });
+              if (on) await checkNow();
+            });
+          }} />
+        <span>Check for updates once a day</span>
+      </label>
+      <p className="hint">Asks GitHub for the latest release ({info.repo.replace("https://", "")}). Nothing about you or your coffee is sent, but GitHub sees your server's address. Off by default.</p>
+      <div className="row wrap">
+        <button disabled={checking} onClick={checkNow} data-testid="check-now">{checking ? "Checking…" : "Check now"}</button>
+        <span className="small muted" data-testid="update-status" aria-live="polite">
+          {u.checkedAt
+            ? u.error ? `${u.error} (${fmtDate(u.checkedAt)})`
+              : u.latest ? (u.newer ? `${u.latest} available` : `Up to date · checked ${fmtDate(u.checkedAt)}`)
+              : `No releases published yet · checked ${fmtDate(u.checkedAt)}`
+            : "Not checked yet"}
+        </span>
+      </div>
+      <ul className="link-list">
+        <li><a href={bugUrl} target="_blank" rel="noopener noreferrer" data-testid="report-bug">Report a bug <span className="muted">›</span></a></li>
+        <li><a href={info.links.gear} target="_blank" rel="noopener noreferrer" data-testid="request-gear">Ask for gear to be added <span className="muted">›</span></a></li>
+        <li><a href={info.repo} target="_blank" rel="noopener noreferrer">Source code on GitHub <span className="muted">›</span></a></li>
+      </ul>
+      <p className="hint">These open GitHub in your browser; a bug report starts with your Brewlab version and device, and nothing is sent until you submit it there. Have gear of your own with a cited grind chart? Use <strong>Suggest to the library</strong> in its gear editor.</p>
+    </section>
   );
 }
 

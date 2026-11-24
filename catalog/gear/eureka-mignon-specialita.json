@@ -1,11 +1,11 @@
 {
   "id": "eureka-mignon-specialita",
-  "version": 1,
+  "version": 2,
   "name": "Eureka Mignon Specialità",
   "brand": "Eureka",
   "type": "grinder",
   "category": "electric-grinder",
-  "details": "Espresso-focused flat burr grinder, stepless.",
+  "details": "Espresso-focused flat burr grinder with a stepless dial. No grind ranges in the library yet: Eureka's published chart uses a dial notation that couldn't be matched to the dial reliably. Type the settings you use in its gear editor, or suggest a cited chart to the library.",
   "units": "",
   "burrs": null
 }

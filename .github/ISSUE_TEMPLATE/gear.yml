@@ -1,0 +1,33 @@
+name: Add gear to the library
+description: Ask for a grinder or brewer to be added, or for a grind range to be corrected.
+labels: [gear library]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Grind ranges need a **cited source**: the maker's manual or chart, or a published community chart.
+        Already have the gear in your Brewlab? Its gear editor's **Suggest to the library** builds the whole entry for you. See [CONTRIBUTING.md](https://github.com/cmerkle/brewlab/blob/main/CONTRIBUTING.md).
+  - type: input
+    id: gear
+    attributes:
+      label: Gear
+      placeholder: "Acme Hand Grinder 2"
+    validations:
+      required: true
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      options: [Grinder, Brewer]
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Source for grind ranges (grinders)
+      description: A link to the maker's chart or manual, or a published community chart.
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: Settings per brew method from the source, how the dial is numbered, anything else useful.

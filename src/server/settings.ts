@@ -33,13 +33,15 @@ export const SettingsSchema = z.object({
     percent: z.number().min(0).max(100),
     methods: z.array(z.enum(METHODS)).max(METHODS.length),
   }),
+  /** Check GitHub once a day for a newer release (off by default: it's a request to github.com). */
+  updateCheck: z.boolean(),
   /** Avoid-rule suggestions the user said no to. */
   dismissedSuggestions: z.array(z.string().max(40)),
 });
 export type Settings = z.infer<typeof SettingsSchema>;
 export const DEFAULT_SETTINGS: Settings = {
   tempUnit: "C", waterUnit: "g", defaultRatio: 16, discoverEnabled: true,
-  ruleDefs: PRESET_RULES, avoidRules: [], palateNotes: "", tasteQuiz: { loves: [], dislikes: [], processes: [], roasts: [] }, dismissedSuggestions: [],
+  ruleDefs: PRESET_RULES, avoidRules: [], palateNotes: "", tasteQuiz: { loves: [], dislikes: [], processes: [], roasts: [] }, dismissedSuggestions: [], updateCheck: false,
   doseNudge: { ...DEFAULT_DOSE_NUDGE, methods: [...DEFAULT_DOSE_NUDGE.methods] },
 };
 

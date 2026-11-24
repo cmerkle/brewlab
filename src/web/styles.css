@@ -460,3 +460,8 @@ input.short { width: 5.5em; }
 .range-row label.rl input { width: 20px; height: 20px; margin: 0; flex: none; }
 .range-row .cant { grid-column: 2 / -1; }
 .stack-sm { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+
+/* ---------- More → About ---------- */
+.about-version { margin: 0; }
+.ok-note code, .hint code { font-size: .8rem; }
+code.cmd { display: block; margin: 4px 0 6px; overflow-wrap: normal; word-break: normal; }

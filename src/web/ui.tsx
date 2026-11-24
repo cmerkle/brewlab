@@ -38,6 +38,7 @@ export interface Settings {
   tasteQuiz: { loves: string[]; dislikes: string[]; processes: string[]; roasts: string[] };
   dismissedSuggestions: string[];
   doseNudge: DoseNudge;
+  updateCheck: boolean;
 }
 export interface SetupState { onboarded: boolean; empty: boolean; settings: Settings }
 
@@ -63,6 +64,7 @@ export const DEFAULT_SETTINGS: Settings = {
   tempUnit: "C", waterUnit: "g", defaultRatio: 16, discoverEnabled: true,
   ruleDefs: [], avoidRules: [], palateNotes: "", tasteQuiz: { loves: [], dislikes: [], processes: [], roasts: [] }, dismissedSuggestions: [],
   doseNudge: DEFAULT_DOSE_NUDGE,
+  updateCheck: false,
 };
 export const useData = () => useContext(Ctx)!;
 

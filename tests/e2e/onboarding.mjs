@@ -289,6 +289,19 @@ try {
   await dnCard.getByRole("group", { name: "Adjust the grind for the dose" }).getByRole("button", { name: "On" }).click();
   await p.waitForTimeout(300);
 
+  // More → About: version, bug report / gear links, update check off by default (not clicked:
+  // "Check now" would call GitHub).
+  const about = p.locator('[data-testid="about"]');
+  await about.waitFor();
+  const ver = (await (await fetch(`${BASE}/api/about`)).json()).version;
+  check(/^\d+\.\d+\.\d+/.test(ver) && (await about.getByTestId("app-version").innerText()) === ver, `About shows the version (${ver})`);
+  check(!(await about.getByTestId("update-check").isChecked()) && /Not checked yet/.test(await about.getByTestId("update-status").innerText()),
+    "the update check is off by default and hasn't run");
+  const bug = await about.getByTestId("report-bug").getAttribute("href");
+  check(/\/issues\/new\?template=bug_report\.yml&version=/.test(bug) && bug.includes(encodeURIComponent(ver)) && /device=/.test(bug),
+    "Report a bug opens GitHub's bug form with the version and device filled in");
+  check(/template=gear\.yml/.test(await about.getByTestId("request-gear").getAttribute("href")), "Ask for gear opens the gear form");
+
   // Discover → Your taste: "always leave out" rules are the user's own.
   await p.goto(`${BASE}/#/discover/taste`);
   const rulesCard = p.locator('[data-testid="avoid-rules"]');

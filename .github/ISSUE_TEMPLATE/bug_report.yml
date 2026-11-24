@@ -1,0 +1,42 @@
+name: Bug report
+description: Something in Brewlab doesn't work as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! **More → About → Report a bug** in Brewlab fills in the version and device for you.
+        Please leave out anything personal (addresses, keys, your server's hostname).
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: And what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Brew → Recipes
+        2. Tap …
+  - type: input
+    id: version
+    attributes:
+      label: Brewlab version
+      description: More → About.
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: textarea
+    id: device
+    attributes:
+      label: Device and browser
+      description: Phone/computer, browser, and whether Brewlab is installed as an app.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Server log (optional)
+      description: "`docker compose logs --tail 100 brewlab`. Check it for anything private first."
+      render: text

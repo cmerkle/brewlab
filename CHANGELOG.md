@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **More → About:** your Brewlab version, a link to what's new, **Report a bug** (opens GitHub's bug form with the version and device filled in, nothing sent until you submit) and **Ask for gear to be added**. An optional **update check** (off by default) asks GitHub once a day for the latest release and shows the update command when there's a newer one; **Check now** works any time.
+- **The demo has three grinders** (Fellow Ode Gen 2, Comandante C40, 1Zpresso K-Ultra), so the grind converter shows what it does.
+- **README screenshots** (light and dark), made by `tests/e2e/screenshots.mjs` from the demo data.
+- **`scripts/upgrade-test.sh`** rehearses an update: an older version with the demo data, then this one on the same volume; checks nothing is lost.
+- The Eureka Mignon Specialità's library entry explains why it has no grind ranges yet.
+
 - **Refined logo:** the dripper over a carafe whose base is a small server, as the app icon (optically centred, with a safe-zone version for Android round icons and a tab icon), and a "brewlab" wordmark — in the desktop title bar, on the first-run Welcome screen and at the top of the README. The wordmark's text is outlines (Nunito ExtraBold, OFL), so it's identical on every device, and in the app its colours follow light/dark mode. Sources and the generator are in `brand/`.
 - **New app icon:** a pour-over dripper over a lab carafe, in front of a small server rack. Vector sources in `brand/`; a simplified version for browser tabs (`favicon.svg`). On iPhone, remove and re-add the home-screen app to see it (iOS keeps the old icon until then).
 - **Rapid Brewer sits between AeroPress and pour-over** in every table, list and picker (finest → coarsest), and in the library files.

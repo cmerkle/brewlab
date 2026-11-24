@@ -14,6 +14,7 @@ import { tesseractAvailable } from "./imports.js";
 import { setupRouter } from "./routes-setup.js";
 import { markExistingInstallOnboarded, applySeedTaste } from "./settings.js";
 import { SEED_DIR } from "./seed.js";
+import { aboutRouter, dailyUpdateCheck, VERSION } from "./about.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -46,12 +47,13 @@ export function createApp(db = openDb()) {
     res.json({
       ok: true, db: DB_PATH, llm: c.enabled,
       llmProvider: { provider: c.provider, model: c.model, baseUrl: c.baseUrl, researchSupported: c.researchSupported, problem: c.problem },
-      ocr: await tesseractAvailable(), counts: counts(db), tz: process.env.TZ ?? null,
+      ocr: await tesseractAvailable(), counts: counts(db), tz: process.env.TZ ?? null, version: VERSION,
     });
   });
   app.use("/api", brewRouter(db));
   app.use("/api", backupRouter(db));
   app.use("/api", setupRouter(db));
+  app.use("/api", aboutRouter(db));
   app.use("/api/discover", discoverRouter(db));
   app.use("/api", (_req, res) => res.status(404).json({ error: "Not found" }));
   app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
@@ -72,7 +74,7 @@ export function startServer() {
   const { app, db } = createApp();
   const port = Number(process.env.PORT || 7642);
   const host = process.env.HOST || "0.0.0.0";
-  app.listen(port, host, () => console.log(`Brewlab listening on http://${host}:${port} (TZ=${process.env.TZ ?? "system"})`));
+  app.listen(port, host, () => console.log(`Brewlab ${VERSION} listening on http://${host}:${port} (TZ=${process.env.TZ ?? "system"})`));
   const c = llmConfig();
   if (c.problem) console.warn(`[llm] ${c.problem} — LLM features are off; using OCR / manual fallbacks.`);
   else if (c.enabled) console.log(`[llm] ${c.provider} · ${c.model}${c.baseUrl ? ` @ ${c.baseUrl}` : ""} · research ${c.researchSupported ? "on" : "manual (no web search)"}`);
@@ -80,6 +82,8 @@ export function startServer() {
 
   const swept = sweepUploads(db);
   if (swept) console.log(`[uploads] removed ${swept} unused photo(s)`);
+
+  if (process.env.DISABLE_CRON !== "1") dailyUpdateCheck(db).catch(() => {}); // on start too, at most once a day
 
   // Weekly refresh: Mondays 08:00 local time (TZ).
   if (process.env.DISABLE_CRON !== "1") {
@@ -94,6 +98,10 @@ export function startServer() {
           console.error("[backup] failed:", e);
         }
         sweepUploads(db);
+        // Optional (off by default): is there a newer release on GitHub?
+        const u = await dailyUpdateCheck(db);
+        if (u?.error) console.warn(`[update] ${u.error}`);
+        else if (u) console.log(`[update] latest release: ${u.latest ?? "none yet"}`);
       },
       { timezone: process.env.TZ || "UTC" },
     );
