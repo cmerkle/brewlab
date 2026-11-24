@@ -1,7 +1,9 @@
 # CLAUDE.md — Brewlab
 
-Guidance for Claude Code (and humans) working on this repo. A private `CLAUDE.local.md` may sit
-next to it on a maintainer's machine (git-ignored) with deployment-specific notes.
+Guidance for Claude Code and other coding agents (and humans) working on this repo: the rules that
+are easy to break and the reasons behind them. CONTRIBUTING.md is the short version for gear and
+library contributions. A `CLAUDE.local.md` next to this file (git-ignored) can hold notes about
+your own deployment.
 
 ## What this is
 
@@ -45,7 +47,7 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   different dose"): on/off, `percent` of the method range per doubling of dose vs the recipe, and
   which methods (default on, 20%, rapid/pourover/batch — `DEFAULT_DOSE_NUDGE`). Shown with a
   one-tap "Use <recipe grind>"; typing a grind turns it off.
-- **Prefer settings and data over constants.** The owner wants Brewlab highly configurable: a
+- **Prefer settings and data over constants.** Brewlab aims to be highly configurable: a
   behaviour with a tunable number or list belongs in `settings` (with a default) or in `catalog/`,
   not hard-coded. Library gear and custom gear share one shape — every field a library entry can
   carry (ranges, per-method notes, notation, dial divisor, where-from/source/note, estimated rows
@@ -140,13 +142,13 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   0–1 inside the method range, rendered by `renderTemplate`; optional `family` = one per brewer,
   `genericName` = name on a category-matched brewer). Validated by zod in `src/server/catalog.ts`.
   **Ranges need a cited source** (`manufacturer` or `community`); transcribe per-method values.
-  Owner decision 2026-11-23: every method a grinder can do has a range — gaps are filled with
+  Every method a grinder can do has a range — gaps are filled with
   **estimates** extrapolated from the grinder's own cited ranges, listed in `rangeInfo.estimated`
   with `estimateNote` (shown as "est."); methods it can't do are listed in `grindRanges.unsupported`
   (the per-row "can do" box in the gear editor; `canGrind`, `rangeFor` ignores them, conversions say
   "<grinder> can't grind for <method>") with a `notes` entry saying why. `espressoCapable` is retired
-  (`migrateEspressoCapable` at startup/restore; the API maps an old client's `false` to unsupported). Never invent
-  ranges without a cited anchor. **Estimates come from rules that are data**:
+  (`migrateEspressoCapable` at startup/restore; the API maps an old client's `false` to
+  unsupported). Never invent ranges without a cited anchor. **Estimates come from rules that are data**:
   `catalog/estimate-rules.json` (per method, alternatives with `needs` + `low`/`high` expressions,
   evaluated by `src/shared/estimate.ts` — a small parser, never `eval`). The gear editor's
   "Estimate the empty rows" applies them; `npm test` checks every rule-made library estimate equals
