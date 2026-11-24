@@ -65,11 +65,24 @@ function useChime() {
     /** Must be called from a tap (iOS only allows audio after a user gesture). */
     unlock() {
       try {
+        // iOS (Safari 16.4+): "playback" lets the chime sound with the ring/silent switch on silent.
+        // Ignored where the Audio Session API doesn't exist. Set back to "auto" by release().
+        const session = (navigator as any).audioSession;
+        if (session && session.type !== "playback") session.type = "playback";
         const AC = window.AudioContext || (window as any).webkitAudioContext;
         if (!ctx.current && AC) ctx.current = new AC();
         void ctx.current?.resume();
       } catch {
         /* no audio */
+      }
+    },
+    /** The brew screen is closing: give the audio session back to the system default. */
+    release() {
+      try {
+        const session = (navigator as any).audioSession;
+        if (session && session.type === "playback") session.type = "auto";
+      } catch {
+        /* ignore */
       }
     },
     play() {
@@ -155,6 +168,7 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
   const [calc, setCalc] = useState(false);
   const [sound, setSound] = usePref<boolean>("sound", true);
   const chime = useChime();
+  useEffect(() => () => chime.release(), []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Grind: the recipe's (converted to the chosen grinder), nudged for the dose on drip methods —
   // until you type your own number.
@@ -255,7 +269,7 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
   };
   const start = () => {
     chime.unlock();
-    lastIdx.current = null;
+    lastIdx.current = 0; // the first step is on screen; the next change chimes
     setStartAt(Date.now());
     setNow(Date.now());
     setEndAt(null);
@@ -328,7 +342,7 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
         ) : phase === "timer" ? (
           <div className="row">
             <button onClick={() => { setPhase("setup"); setStartAt(null); clearActiveBrew(); }}>Back</button>
-            <button className="icon-btn" aria-pressed={sound} aria-label={sound ? "Mute step chime" : "Unmute step chime"} onClick={() => { chime.unlock(); setSound(!sound); }}><BellIcon off={!sound} /></button>
+            <button className="icon-btn" aria-pressed={sound} aria-label={sound ? "Mute step chime" : "Unmute step chime"} onClick={() => { chime.unlock(); if (!sound) chime.play(); setSound(!sound); }}><BellIcon off={!sound} /></button>
             {startAt ? (
               <button className="primary grow" onClick={finish}>Finish</button>
             ) : (

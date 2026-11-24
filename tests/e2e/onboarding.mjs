@@ -84,6 +84,37 @@ try {
   check(r?.grindSetting === 24 && r?.grinderName === "Comandante C40", `recipe saved with ${r?.grinderName} ${r?.grindSetting}`);
   check((await (await fetch(`${BASE}/api/setup`)).json()).onboarded === true, "onboarded");
 
+  // Step chime: every step change chimes (including the first one after Start), the bell mutes
+  // it, and unmuting plays it once. A fake clock and a counter on the oscillators (2 per chime).
+  {
+    const steps = r.steps.filter((s) => s.atSec != null).map((s) => s.atSec);
+    const cctx = await browser.newContext({ ...devices["iPhone 13"] });
+    const cp = await cctx.newPage();
+    await cp.clock.install();
+    await cp.addInitScript(() => {
+      window.__osc = 0;
+      const AC = window.AudioContext || window.webkitAudioContext;
+      const orig = AC.prototype.createOscillator;
+      AC.prototype.createOscillator = function () { window.__osc++; return orig.call(this); };
+    });
+    const chimes = async () => (await cp.evaluate(() => window.__osc)) / 2;
+    await cp.goto(`${BASE}/#/brew/recipes`);
+    await cp.locator(`[data-testid="recipe-${r.id}"] [data-testid="recipe-brew"]`).click();
+    await cp.getByRole("button", { name: "Ready to brew" }).click();
+    await cp.getByRole("button", { name: "Start timer" }).click();
+    await cp.clock.runFor((steps[1] + 1) * 1000);
+    await cp.waitForTimeout(100);
+    check(steps.length >= 3 && (await chimes()) === 1, `chime when step 1 → 2 (${await chimes()} chime(s) by ${steps[1] + 1}s)`);
+    await cp.getByRole("button", { name: "Mute step chime" }).click();
+    await cp.clock.runFor((steps[2] - steps[1]) * 1000);
+    await cp.waitForTimeout(100);
+    check((await chimes()) === 1, "muted: no chime at the next step");
+    await cp.getByRole("button", { name: "Unmute step chime" }).click();
+    await cp.waitForTimeout(100);
+    check((await chimes()) === 2, "unmuting plays the chime once");
+    await cctx.close();
+  }
+
   // Brew setup: numeric grind, nudged for the dose (drip); temperature editable; timer waits for Start.
   await p.goto(`${BASE}/#/brew/recipes`);
   await p.locator(`[data-testid="recipe-${r.id}"] [data-testid="recipe-brew"]`).click();
