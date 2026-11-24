@@ -135,3 +135,28 @@ test("grind settings are numbers: older text is converted at startup; the API ta
   assert.equal(bad.status, 400); assert.match(bad.body.error, /Grind setting must be a number/);
   server.closeAllConnections(); server.close();
 });
+
+test("every library entry can be rebuilt as custom gear with the same fields (nothing is library-only)", async () => {
+  const { server, call } = await start("replicate.db");
+  try {
+    const { loadCatalog } = await import("../dist/server/catalog.js");
+    const FIELDS = ["name", "brand", "type", "category", "details", "units", "burrs", "espressoCapable", "variants", "defaultMethod", "grindRanges", "rangeInfo"];
+    const norm = (v) => Array.isArray(v) ? (v.length ? v.map(norm) : undefined)
+      : v && typeof v === "object" ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, norm(v[k])]).filter(([, x]) => x !== undefined))
+      : v === null || v === "" ? undefined : v;
+    const entries = loadCatalog().gear;
+    assert.ok(entries.length > 40);
+    for (const e of entries) {
+      const lib = (await call("POST", "/api/gear/from-catalog", { catalogId: e.id })).body;
+      // A custom item made from the same JSON the library file holds (minus id/version).
+      const { id, version, ...fields } = e;
+      const made = await call("POST", "/api/gear", fields);
+      assert.ok(made.status < 300 && made.body.id, `${e.id}: ${JSON.stringify(made.body)}`);
+      const mine = (await call("GET", "/api/gear")).body.find((g) => g.id === made.body.id);
+      for (const k of FIELDS) assert.deepEqual(norm(mine[k]), norm(lib[k]), `${e.id}.${k}`);
+      assert.equal(mine.catalogId ?? null, null);
+    }
+  } finally {
+    server.close();
+  }
+});

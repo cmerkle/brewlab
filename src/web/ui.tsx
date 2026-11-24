@@ -158,13 +158,16 @@ export function NumInput(props: {
   placeholder?: string;
   "aria-label"?: string;
   className?: string;
+  /** Also accept fractions like "1/3" (kept exact), and show such values that way. */
+  fractions?: boolean;
 }) {
   const { value, onChange, decimals = 2 } = props;
-  const [text, setText] = useState(fmtNum(value, decimals));
+  const show = (v: number | null | undefined) => (props.fractions ? fmtFraction(v, decimals) : fmtNum(v, decimals));
+  const [text, setText] = useState(show(value));
   const focused = useRef(false);
   useEffect(() => {
-    if (!focused.current) setText(fmtNum(value, decimals));
-  }, [value, decimals]);
+    if (!focused.current) setText(show(value));
+  }, [value, decimals]); // eslint-disable-line react-hooks/exhaustive-deps
   const outOfRange = (() => {
     const n = parseFloat(text);
     if (text.trim() === "" || Number.isNaN(n)) return false;
@@ -184,13 +187,16 @@ export function NumInput(props: {
       onFocus={() => (focused.current = true)}
       onBlur={() => {
         focused.current = false;
-        setText(fmtNum(value, decimals));
+        setText(show(value));
       }}
       onChange={(e) => {
         const t = e.target.value.replace(",", ".");
-        if (!/^-?\d*\.?\d*$/.test(t)) return;
+        const frac = props.fractions ? /^(\d+)\/(\d*)$/.exec(t) : null;
+        if (!frac && !/^-?\d*\.?\d*$/.test(t)) return;
         setText(t);
-        if (t.trim() === "" || t === "." || t === "-") onChange(null);
+        if (frac) {
+          if (Number(frac[2]) > 0) onChange(Number(frac[1]) / Number(frac[2]));
+        } else if (t.trim() === "" || t === "." || t === "-") onChange(null);
         else {
           const n = parseFloat(t);
           if (!Number.isNaN(n)) onChange(n);
@@ -198,6 +204,19 @@ export function NumInput(props: {
       }}
     />
   );
+}
+
+/** "1/3" for values that decimals can't show exactly (thirds, sixths …); otherwise like fmtNum. */
+function fmtFraction(v: number | null | undefined, decimals: number): string {
+  if (v == null || !Number.isFinite(v)) return "";
+  const f = 10 ** decimals;
+  if (Math.abs(Math.round(v * f) / f - v) > 1e-9) {
+    for (const den of [3, 6, 7, 9, 12]) {
+      const num = Math.round(v * den);
+      if (num > 0 && Math.abs(num / den - v) < 1e-9) return `${num}/${den}`;
+    }
+  }
+  return fmtNum(v, decimals);
 }
 
 export type WaterUnit = "g" | "oz";

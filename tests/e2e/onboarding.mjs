@@ -171,7 +171,8 @@ try {
   await p.selectOption("#ge-notation", "decimal");
   await p.fill("#ge-divisor", "");
   const src = p.locator('[data-testid="range-source"]');
-  check(/Your ranges — Calibrated against my V60\./.test(await src.innerText()) && (await src.locator("a").getAttribute("href")) === "https://example.com/my-c40-chart",
+  await src.locator("details").evaluate((d) => { d.open = true; });
+  check(/Your ranges[\s\S]*Calibrated against my V60\./.test(await src.innerText()) && (await src.locator("a").getAttribute("href")) === "https://example.com/my-c40-chart",
     `source saved and shown: ${(await src.innerText()).replace(/\s+/g, " ")}`);
   await p.getByRole("button", { name: "Save", exact: true }).click();
   await p.locator(`[data-testid="gear-${c40.id}"]`).waitFor();
@@ -179,7 +180,11 @@ try {
   const k6 = await (await fetch(`${BASE}/api/gear/from-catalog`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ catalogId: "k6" }) })).json();
   await p.reload();
   await p.locator(`[data-testid="gear-${k6.id}"]`).getByRole("button", { name: "Edit" }).click();
-  const k6src = await p.locator('[data-testid="range-source"]').innerText();
+  const k6box = p.locator('[data-testid="range-source"]');
+  check(/est\.: Drip coffee maker/.test(await k6box.innerText()) && !/Fellow|1Zpresso|manual/i.test(await k6box.locator("summary").innerText()) && (await k6box.innerText()).length < 200,
+    `the source box is short until opened: ${(await k6box.innerText()).replace(/\s+/g, " ").slice(0, 120)}`);
+  await k6box.locator("details").evaluate((d) => { d.open = true; });
+  const k6src = await k6box.innerText();
   check(/From the gear library — the maker's chart/.test(k6src) && /Estimated \(est\.\): Drip coffee maker, French press \/ immersion, Cold brew, Rapid Brewer/.test(k6src), `K6 source + estimates: ${k6src.replace(/\s+/g, " ").slice(0, 160)}`);
   check((await p.locator('[data-testid="range-table"] .est-badge').count()) === 4, "est. badges on the four estimated rows");
   check((await p.getByLabel("Turkish low").inputValue()) === "28", "Turkish from the K6 manual (28–40)");
@@ -188,12 +193,64 @@ try {
   check((await p.locator('[data-testid="range-table"] .est-badge').count()) === 3, "typing your own value clears that row's est. badge");
   await p.getByRole("button", { name: "Cancel" }).click();
 
+  // Library gear is fully replicable: install an entry, rebuild it by hand in the gear editor,
+  // and every field matches.
+  const LABEL = { turkish: "Turkish", espresso: "Espresso", moka: "Moka pot", aeropress: "AeroPress", pourover: "Pour-over (V60)",
+    batch: "Drip coffee maker", immersion: "French press / immersion", coldbrew: "Cold brew", rapid: "Rapid Brewer" };
+  const FIELDS = ["brand", "type", "category", "details", "units", "burrs", "espressoCapable", "variants", "defaultMethod", "grindRanges", "rangeInfo"];
+  const norm = (v) => Array.isArray(v) ? (v.length ? v.map(norm) : undefined)
+    : v && typeof v === "object" ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, norm(v[k])]).filter(([, x]) => x !== undefined))
+    : v === null || v === "" ? undefined : typeof v === "number" ? Math.round(v * 1e9) / 1e9 : v;
+  const numText = (n) => { for (const d of [1, 3, 6, 7, 9, 12]) { const k = Math.round(n * d); if (Math.abs(k / d - n) < 1e-9) return d === 1 ? String(k) : Math.abs(Math.round(n * 1000) / 1000 - n) < 1e-9 ? String(n) : `${k}/${d}`; } return String(n); };
+  for (const libId of ["k-ultra", "ode-gen2", "df64-gen2", "hario-v60-02"]) {
+    const lib = await (await fetch(`${BASE}/api/gear/from-catalog`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ catalogId: libId }) })).json();
+    const name = `${lib.name} (by hand)`;
+    await p.goto(`${BASE}/#/brew/gear`);
+    await p.getByRole("button", { name: "Add gear" }).click();
+    await p.getByRole("button", { name: "Add custom gear" }).click();
+    await p.fill("#ge-name", name);
+    await p.selectOption("#ge-type", lib.type);
+    await p.selectOption("#ge-cat", lib.category);
+    await p.fill("#ge-brand", lib.brand ?? "");
+    await p.fill("#ge-details", lib.details ?? "");
+    if (lib.type === "grinder") {
+      const r = lib.grindRanges, i = lib.rangeInfo;
+      await p.selectOption("#ge-units", lib.units ?? "");
+      await p.selectOption("#ge-esp", lib.espressoCapable == null ? "" : lib.espressoCapable ? "yes" : "no");
+      await p.fill("#ge-burrs", lib.burrs ?? "");
+      for (const [m, v] of Object.entries(r.methods)) {
+        await p.getByLabel(`${LABEL[m]} low`).fill(numText(v.low));
+        await p.getByLabel(`${LABEL[m]} high`).fill(numText(v.high));
+      }
+      for (const [m, t] of Object.entries(r.notes ?? {})) await p.getByLabel(`${LABEL[m]} note`).fill(t);
+      await p.selectOption("#ge-confidence", i.confidence ?? "");
+      await p.fill("#ge-source", i.source ?? "");
+      await p.fill("#ge-source-note", i.note ?? "");
+      for (const m of i.estimated ?? []) await p.getByLabel(`${LABEL[m]} is estimated`).check();
+      if (i.estimated?.length) await p.fill("#ge-estimate-note", i.estimateNote ?? "");
+      if (r.step != null) await p.fill("#ge-step", numText(r.step));
+      if (r.min != null) await p.fill("#ge-min", numText(r.min));
+      if (r.max != null) await p.fill("#ge-max", numText(r.max));
+      await p.fill("#ge-scale", r.scale ?? "");
+      await p.selectOption("#ge-notation", r.notation ?? "decimal");
+      if (r.dialDivisor != null) await p.fill("#ge-divisor", numText(r.dialDivisor));
+    } else {
+      await p.fill("#ge-var", (lib.variants ?? []).join(", "));
+      await p.selectOption("#ge-dm", lib.defaultMethod);
+    }
+    await p.getByRole("button", { name: "Save", exact: true }).click();
+    await p.locator(".card h3", { hasText: name }).waitFor({ timeout: 5000 }).catch(() => {});
+    const mine = (await (await fetch(`${BASE}/api/gear`)).json()).find((g) => g.name === name);
+    const diff = mine ? FIELDS.filter((k) => JSON.stringify(norm(mine[k])) !== JSON.stringify(norm(lib[k]))) : ["(not saved)"];
+    check(diff.length === 0, `${libId} rebuilt by hand in the gear editor matches the library copy${diff.length ? ` — differs: ${diff.map((k) => `${k}: ${JSON.stringify(norm(mine?.[k]))} ≠ ${JSON.stringify(norm(lib[k]))}`).join("; ").slice(0, 600)}` : ""}`);
+  }
+
   // More → Grind for a different dose: on/off, how much, which methods.
   await p.goto(`${BASE}/#/more`);
   const dnCard = p.locator('[data-testid="dose-nudge-settings"]');
   await dnCard.waitFor();
   const dnTable = await dnCard.locator('[data-testid="dose-nudge-table"]').innerText();
-  check(/1½×\s+\+11\.7%/.test(dnTable) && /½×\s+−20%/.test(dnTable) && /Comandante C40/.test(dnTable),
+  check(/1½×\s+\+11\.7%/.test(dnTable) && /½×\s+−20%/.test(dnTable) && /clicks/.test(dnTable),
     `the setting explains the scaling with a table on your gear: ${dnTable.replace(/\s+/g, " ").slice(0, 160)}`);
   await p.fill("#dn-percent", "40");
   await dnCard.getByLabel("French press / immersion").check();

@@ -103,7 +103,6 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
     return out;
   });
   const [info, setInfo] = useState<RangeInfo>(() => ({ ...(item?.rangeInfo ?? {}), estimated: item?.rangeInfo?.estimated ?? [] }));
-  const origSource = item?.rangeInfo?.source ?? "";
   const setRange = (m: Method, patch: { low?: number | null; high?: number | null }) => {
     setRanges((r) => ({ ...r, [m]: { low: r[m]?.low ?? null, high: r[m]?.high ?? null, ...patch } }));
     // A range you type yourself is no longer the library's estimate.
@@ -142,8 +141,7 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
       category: f.category || null,
       ...(f.type === "grinder"
         ? { rangeInfo: {
-            // A different source is yours, not the library's chart.
-            confidence: (info.source ?? "") === origSource ? info.confidence ?? null : null,
+            confidence: info.confidence ?? null,
             source: info.source?.trim() || null, note: info.note?.trim() || null,
             estimated: info.estimated ?? [], estimateNote: info.estimateNote ?? null,
           } }
@@ -244,14 +242,36 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
                 </div>
               ))}
             </div>
-            <Field label="Source link" htmlFor="ge-source" hint="Where these ranges come from: the maker's manual or chart, or a community chart.">
+            <Field label="Where these ranges come from" htmlFor="ge-confidence">
+              <select id="ge-confidence" value={info.confidence ?? ""} onChange={(e) => setInfo((i) => ({ ...i, confidence: (e.target.value || null) as RangeInfo["confidence"] }))}>
+                <option value="">My own (measured or dialled in)</option>
+                <option value="manufacturer">The maker's chart or manual</option>
+                <option value="community">A community chart</option>
+              </select>
+            </Field>
+            <Field label="Source link" htmlFor="ge-source" hint="The maker's manual or chart, or the community chart.">
               <input id="ge-source" type="url" inputMode="url" placeholder="https://…" value={info.source ?? ""} onChange={(e) => setInfo((i) => ({ ...i, source: e.target.value }))} />
             </Field>
             <Field label="Notes about these ranges" htmlFor="ge-source-note">
               <textarea id="ge-source-note" rows={2} value={info.note ?? ""} onChange={(e) => setInfo((i) => ({ ...i, note: e.target.value }))} />
             </Field>
+            <fieldset className="checks" data-testid="estimated-rows">
+              <legend>Estimated rows <span className="muted small">(worked out from the others, not from the source — shown as “est.”)</span></legend>
+              {METHODS.filter((m) => ranges[m]?.low != null && ranges[m]?.high != null).map((m) => (
+                <label key={m} className="check">
+                  <input type="checkbox" aria-label={`${METHOD_LABELS[m]} is estimated`} checked={Boolean(info.estimated?.includes(m))}
+                    onChange={(e) => setInfo((i) => ({ ...i, estimated: e.target.checked ? METHODS.filter((x) => x === m || i.estimated?.includes(x)) : (i.estimated ?? []).filter((x) => x !== m) }))} />
+                  {METHOD_LABELS[m]}
+                </label>
+              ))}
+            </fieldset>
+            {(info.estimated?.length ?? 0) > 0 && (
+              <Field label="How the estimates were worked out" htmlFor="ge-estimate-note">
+                <textarea id="ge-estimate-note" rows={2} value={info.estimateNote ?? ""} onChange={(e) => setInfo((i) => ({ ...i, estimateNote: e.target.value }))} />
+              </Field>
+            )}
             <div className="grid3">
-              <Field label="Step (rounding)" htmlFor="ge-step"><NumInput id="ge-step" value={f.step} onChange={(n) => set("step", n)} decimals={3} /></Field>
+              <Field label="Step (rounding)" htmlFor="ge-step" hint="1 click, 0.1 rotation, 1/3 for thirds."><NumInput id="ge-step" value={f.step} onChange={(n) => set("step", n)} decimals={3} fractions /></Field>
               <Field label="Physical min" htmlFor="ge-min"><NumInput id="ge-min" value={f.min} onChange={(n) => set("min", n)} decimals={2} /></Field>
               <Field label="Physical max" htmlFor="ge-max"><NumInput id="ge-max" value={f.max} onChange={(n) => set("max", n)} decimals={2} /></Field>
             </div>
@@ -300,13 +320,25 @@ function RangeSourceNote({ info, fromLibrary }: { info: RangeInfo; fromLibrary: 
   const lead = kind ? `${fromLibrary ? "From the gear library — " : ""}${kind}` : info.source || info.note ? "Your ranges" : null;
   if (!lead && !est.length)
     return <div className="note small" data-testid="range-source">No source yet. Add a link below to where these ranges come from.</div>;
+  const href = info.source && /^https?:\/\//.test(info.source) ? info.source : null;
+  const link = href && <a href={href} target="_blank" rel="noreferrer noopener">Source ↗</a>;
+  const summary = `${lead ?? "Ranges"}${est.length > 0 ? ` · est.: ${est.join(", ")}` : ""}`;
   return (
     <div className="note small" data-testid="range-source">
-      {lead}{info.note ? ` — ${info.note}` : ""}
-      {info.source && /^https?:\/\//.test(info.source) && <> <a href={info.source} target="_blank" rel="noreferrer noopener">Source ↗</a></>}
-      {est.length > 0 && (
-        <div data-testid="range-estimated"><strong>Estimated (est.):</strong> {est.join(", ")}.{info.estimateNote ? ` ${info.estimateNote}` : ""}</div>
+      {info.note || info.estimateNote ? (
+        // Short by default (the notes can run long on a phone); tap for the details. The link
+        // stays outside the tap target.
+        <details>
+          <summary>{summary}</summary>
+          {info.note && <p>{info.note}</p>}
+          {est.length > 0 && (
+            <div data-testid="range-estimated"><strong>Estimated (est.):</strong> {est.join(", ")}.{info.estimateNote ? ` ${info.estimateNote}` : ""}</div>
+          )}
+        </details>
+      ) : (
+        <div>{summary}</div>
       )}
+      {link && <div>{link}</div>}
     </div>
   );
 }

@@ -48,7 +48,11 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
 - **Prefer settings and data over constants.** The owner wants Brewlab highly configurable: a
   behaviour with a tunable number or list belongs in `settings` (with a default) or in `catalog/`,
   not hard-coded. Library gear and custom gear share one shape — every field a library entry can
-  carry (ranges, per-method notes, notation, dial divisor, source) is editable in the gear editor.
+  carry (ranges, per-method notes, notation, dial divisor, where-from/source/note, estimated rows
+  and how they were estimated) is editable in the gear editor. Two tests hold this: every library
+  entry POSTed as custom gear matches its installed copy (`tests/setup.test.mjs`), and the
+  onboarding e2e rebuilds four entries by hand in the editor. A new catalog field needs an editor
+  field too.
 - Brew flow: **Brew setup** (dose/water/ratio/temp/bag/grinder) → *Ready to brew* → timer screen
   idle at 0:00 → *Start timer* → *Finish* → log (temp and grind still editable). The active brew is
   persisted only once the timer runs.
