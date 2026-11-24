@@ -37,13 +37,18 @@ const PAGES = [
   { name: "Brew Log", hash: "brew/log" },
   { name: "Gear", hash: "brew/gear" },
   { name: "Water", hash: "brew/water" },
+  { name: "Stash archive", hash: "brew/stash/archive" },
   { name: "Discover board", hash: "discover/board" },
   { name: "Past editions", hash: "discover/archive" },
   { name: "Tasting log", hash: "discover/tastings" },
   { name: "Avoid list", hash: "discover/avoid" },
   { name: "Refresh", hash: "discover/refresh" },
   { name: "Your taste", hash: "discover/taste" },
-  { name: "Your taste (editing a rule)", hash: "discover/taste", act: async (p) => { await p.getByRole("button", { name: "Edit rule Cinnamon-forward coffees" }).click(); await p.getByRole("button", { name: "+ Add a rule" }).click(); } },
+  { name: "Your taste (tags on, long own tag)", hash: "discover/taste", act: async (p) => {
+    await p.locator('[data-testid="pref-notes-prefer"]').getByRole("button", { name: "Berries", exact: true }).click();
+    await p.fill("#pref-roasters-prefer", "A rather long roaster name for wrapping, Coffee Co.");
+    await p.press("#pref-roasters-prefer", "Enter");
+  } },
   { name: "Your taste (research prompt open)", hash: "discover/taste", act: async (p) => p.getByRole("button", { name: /Show what the weekly research is told/ }).click() },
   { name: "More", hash: "more" },
   { name: "dialog: Brew setup", hash: "brew/recipes", dialog: true, act: async (p) => p.locator('[data-testid="recipe-1001"] [data-testid="recipe-brew"]').click() },
@@ -53,6 +58,7 @@ const PAGES = [
   { name: "dialog: Ratio calculator", hash: "more", dialog: true, act: async (p) => p.getByRole("button", { name: /Ratio calculator/ }).click() },
   { name: "dialog: Recipe editor", hash: "brew/recipes", dialog: true, act: async (p) => { await p.locator('[data-testid="recipe-1001"] [data-testid="recipe-toggle"]').click(); await p.locator('[data-testid="recipe-1001"]').getByRole("button", { name: "Edit" }).click(); } },
   { name: "dialog: Add a bag", hash: "brew/stash", dialog: true, act: async (p) => p.getByRole("button", { name: "Add a bag" }).click() },
+  { name: "dialog: Edit bag", hash: "brew/stash", dialog: true, act: async (p) => { await p.locator('[data-testid="bag-1"] .menu .icon-btn').click(); await p.getByRole("menuitem", { name: "Edit" }).click(); await p.locator("#bf-left").waitFor(); } },
   { name: "dialog: Duplicate bag", hash: "brew/stash", dialog: true, act: async (p) => { await p.locator('[data-testid="bag-1"] .menu .icon-btn').click(); await p.getByRole("menuitem", { name: "Duplicate" }).click(); await p.locator('[data-testid="bag-copy-note"]').waitFor(); } },
   { name: "dialog: Finish bag", hash: "brew/stash", dialog: true, act: async (p) => p.locator('[data-testid="bag-1"]').getByRole("button", { name: "Mark finished" }).click() },
   { name: "dialog: Brew log form", hash: "brew/log", dialog: true, act: async (p) => p.locator('[data-testid="brew-1"]').getByRole("button", { name: "Edit" }).click() },

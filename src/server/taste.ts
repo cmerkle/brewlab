@@ -4,8 +4,10 @@
 // of entered candidates. Nothing here is guessed: every line cites the ratings behind it.
 import type { DB } from "./db.js";
 import type { Candidate } from "./schemas.js";
-import { sameCoffee, ruleText, ruleMatch } from "./rules.js";
-import { getSettings, enabledRules, type Settings } from "./settings.js";
+import { sameCoffee } from "./rules.js";
+import { getSettings, type Settings } from "./settings.js";
+import { PREF_SECTIONS, SECTION_LABELS, activeTags, matchList, tagHit, sectionText, type PrefList, type PrefSection, type Prefs } from "../shared/prefs.js";
+import { parseTags } from "./bags.js";
 
 const VERDICT_SCORE: Record<string, number> = { loved: 5, liked: 4, not_for_me: 2, disliked: 1 };
 
@@ -66,7 +68,10 @@ export function ratedCoffees(db: DB): RatedCoffee[] {
       hit.notes = [hit.notes, c.notes].filter(Boolean).join(" · ") || null;
     } else out.push({ ...c, parts: [score], sources: [source], score: 0 });
   };
-  const bags = db.prepare("SELECT id, name, roaster, origin, processMethod, roastLevel, notes, rating FROM inventory_items").all() as any[];
+  // A bag's tasting-note tags count as its notes (that's how they shape the taste summary).
+  const bags = (db.prepare("SELECT id, name, roaster, origin, processMethod, roastLevel, notes, tastingNotes, rating FROM inventory_items").all() as any[]).map(
+    ({ tastingNotes, ...b }) => ({ ...b, notes: [b.notes, parseTags(tastingNotes).join(", ")].filter(Boolean).join(" · ") || null }),
+  );
   for (const b of bags) if (b.rating) add(b, b.rating, `Stash ${b.rating}★`);
   const brews = db.prepare("SELECT inventoryId, coffee, AVG(rating) avg, COUNT(*) n FROM brews WHERE rating IS NOT NULL GROUP BY inventoryId, coffee").all() as any[];
   for (const r of brews) {
@@ -119,7 +124,6 @@ export function tasteSummary(db: DB): TasteSummary {
   };
 }
 
-const QUIZ_LABELS: Record<keyof Settings["tasteQuiz"], string> = { loves: "Says they love", dislikes: "Says they dislike", processes: "Preferred processes", roasts: "Preferred roasts" };
 
 /** The "about this drinker" block of the research prompt. */
 export function tasteProfileText(s: TasteSummary, settings: Settings): string {
@@ -140,14 +144,20 @@ export function tasteProfileText(s: TasteSummary, settings: Settings): string {
   if (s.dislikes.length) lines.push("", "Rated poorly (from their own ratings):", ...s.dislikes.map((a) => `- ${describe(a)}`));
   if (s.coffees.length)
     lines.push("", "Rated coffees:", ...s.coffees.slice(0, 25).map((c) => `- ${c.name}${c.roaster ? ` (${c.roaster})` : ""}: ${c.score}★ [${c.sources.join(", ")}]`));
-  const q = settings.tasteQuiz;
-  const quiz = (Object.keys(QUIZ_LABELS) as (keyof typeof QUIZ_LABELS)[]).filter((k) => q[k].length).map((k) => `- ${QUIZ_LABELS[k]}: ${q[k].join(", ")}`);
-  if (quiz.length) lines.push("", "From their taste quiz:", ...quiz);
+  // Preferences: switched-on tags, by list and section.
+  const listLines = (list: PrefList) =>
+    PREF_SECTIONS.map((sec) => [sec, settings.prefs[sec][list].filter((t) => t.on).map((t) => t.label)] as const)
+      .filter(([, l]) => l.length)
+      .map(([sec, l]) => `- ${SECTION_LABELS[sec]}: ${l.join(", ")}`);
+  const prefer = listLines("prefer");
+  const avoid = listLines("avoid");
+  if (prefer.length) lines.push("", "They prefer (favour these):", ...prefer);
+  if (avoid.length) lines.push("", "They'd rather avoid (steer away, but not a hard rule):", ...avoid);
   if (settings.palateNotes.trim()) lines.push("", "In their own words:", settings.palateNotes.trim());
-  const rules = enabledRules(settings);
-  if (rules.length)
-    lines.push("", "Never pick (their “always leave out” rules — any of these words in the name, process or tasting notes):",
-      ...rules.map((r) => `- ${r.label}: ${r.keywords.join(", ")}`));
+  const never = activeTags(settings.prefs, "exclude");
+  if (never.length)
+    lines.push("", "Never pick (their “do not include” tags — any of these words):",
+      ...never.map(({ section, tag }) => `- ${SECTION_LABELS[section]}: ${tag.label}${tag.words?.length ? ` (${tag.words.join(", ")})` : ""}`));
   lines.push(
     "",
     "In whyFit, when a pick relates to their ratings, say so concretely using the numbers above (e.g. \"you rated two natural Ethiopians 5★\").",
@@ -156,31 +166,40 @@ export function tasteProfileText(s: TasteSummary, settings: Settings): string {
   return lines.join("\n");
 }
 
-/** Without an AI provider: score an entered candidate against the summary, with a reason. */
-export function scoreCandidate(c: Candidate, s: TasteSummary): { score: number; reason: string | null } {
+/** Without an AI provider: score an entered candidate against the summary and your preferences, with a reason. */
+export function scoreCandidate(c: Candidate, s: TasteSummary, prefs?: Prefs): { score: number; reason: string | null } {
   const feats = featuresOf(c);
   const hits = [...s.likes, ...s.dislikes].filter((a) => feats.some((f) => f.kind === a.kind && f.name === a.name));
-  const score = hits.reduce((t, a) => t + (a.avg - 3) * Math.min(a.n, 3), 0);
+  let score = hits.reduce((t, a) => t + (a.avg - 3) * Math.min(a.n, 3), 0);
+  const p = prefs ? matchList(c, prefs, "prefer") : null;
+  const v = prefs ? matchList(c, prefs, "avoid") : null;
+  const pref = p ? `Matches your preferred ${SECTION_LABELS[p.section].toLowerCase()}: ${p.tag.label}.` : null;
+  const avoid = v ? `Heads-up: on your rather-avoid list (${SECTION_LABELS[v.section].toLowerCase()}: ${v.tag.label}).` : null;
+  if (pref) score += 3;
+  if (avoid) score -= 3;
+  if (avoid) return { score, reason: avoid };
   const best = hits.filter((a) => a.avg >= 4).sort((a, b) => b.avg * b.n - a.avg * a.n)[0];
   const worst = hits.filter((a) => a.avg <= 2.5)[0];
-  const reason = best
+  const rated = best
     ? `You rated ${best.n === 1 ? "a" : best.n} ${label(best)} coffee${best.n === 1 ? "" : "s"} ${best.avg}★ on average.`
     : worst
       ? `Heads-up: you rated ${label(worst)} coffees ${worst.avg}★ on average.`
       : null;
-  return { score, reason };
+  return { score, reason: [pref, rated].filter(Boolean).join(" ") || null };
 }
 
-export interface Suggestion { id: string; ruleId: string; text: string; coffees: string[] }
+export interface Suggestion { id: string; section: PrefSection; tagId: string; text: string; coffees: string[] }
 
-/** "Avoid cinnamon? You rated 2 cinnamon-forward coffees ≤2★" — offered, never applied silently. */
+/** "Leave out cinnamon-forward coffees? You rated 2 of them ≤2★" — offered, never switched on silently. */
 export function avoidSuggestions(db: DB, s: TasteSummary = tasteSummary(db), settings = getSettings(db)): Suggestion[] {
   const out: Suggestion[] = [];
-  for (const r of settings.ruleDefs) {
-    if (settings.avoidRules.includes(r.id) || settings.dismissedSuggestions.includes(r.id)) continue;
-    const low = s.coffees.filter((c) => c.score <= 2 && ruleMatch(r, ruleText(c)));
-    if (low.length >= 2)
-      out.push({ id: r.id, ruleId: r.id, coffees: low.map((c) => c.name), text: `Avoid ${r.label.toLowerCase()}? You rated ${low.length} of them 2★ or lower (${low.map((c) => c.name).join(", ")}).` });
-  }
+  for (const section of PREF_SECTIONS)
+    for (const t of settings.prefs[section].exclude) {
+      const id = `${section}:${t.id}`;
+      if (t.on || settings.dismissedSuggestions.includes(id)) continue;
+      const low = s.coffees.filter((c) => c.score <= 2 && tagHit(t, sectionText(c, section)));
+      if (low.length >= 2)
+        out.push({ id, section, tagId: t.id, coffees: low.map((c) => c.name), text: `Leave out ${t.label.toLowerCase()}? You rated ${low.length} of them 2★ or lower (${low.map((c) => c.name).join(", ")}).` });
+    }
   return out;
 }

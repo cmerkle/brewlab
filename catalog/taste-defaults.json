@@ -1,0 +1,555 @@
+{
+  "about": "Discover → Your taste: the tags each section starts with, all switched off. 'prefer' and 'avoid' steer the research and ranking; 'exclude' (Do not include) leaves a coffee out. `words` are extra words that count as a match (start of a word, any case); without them the label is the word. Users can switch tags on, remove them and add their own.",
+  "version": 1,
+  "sections": {
+    "roasters": {
+      "prefer": [],
+      "avoid": [],
+      "exclude": []
+    },
+    "processes": {
+      "prefer": [
+        {
+          "label": "Washed",
+          "words": [
+            "washed",
+            "wet process",
+            "fully washed"
+          ]
+        },
+        {
+          "label": "Natural",
+          "words": [
+            "natural",
+            "dry process",
+            "sun dried"
+          ]
+        },
+        {
+          "label": "Honey",
+          "words": [
+            "honey",
+            "pulped natural"
+          ]
+        },
+        {
+          "label": "Anaerobic",
+          "words": [
+            "anaerobic"
+          ]
+        },
+        {
+          "label": "Experimental",
+          "words": [
+            "experimental",
+            "thermal shock",
+            "extended ferment",
+            "double ferment"
+          ]
+        },
+        {
+          "label": "Carbonic",
+          "words": [
+            "carbonic"
+          ]
+        },
+        {
+          "label": "Wet-hulled",
+          "words": [
+            "wet hulled",
+            "giling"
+          ]
+        }
+      ],
+      "avoid": [
+        {
+          "label": "Anaerobic",
+          "words": [
+            "anaerobic"
+          ]
+        },
+        {
+          "label": "Experimental",
+          "words": [
+            "experimental",
+            "thermal shock",
+            "extended ferment",
+            "double ferment"
+          ]
+        }
+      ],
+      "exclude": [
+        {
+          "id": "coferment",
+          "label": "Co-ferment",
+          "words": [
+            "co-ferment",
+            "coferment"
+          ]
+        },
+        {
+          "label": "Infused",
+          "words": [
+            "infused"
+          ]
+        },
+        {
+          "label": "Flavoured",
+          "words": [
+            "flavoured",
+            "flavored"
+          ]
+        },
+        {
+          "id": "decaf",
+          "label": "Decaf",
+          "words": [
+            "decaf",
+            "decaffeinated",
+            "swiss water",
+            "sugarcane process",
+            "ea process"
+          ]
+        }
+      ]
+    },
+    "roasts": {
+      "prefer": [
+        {
+          "label": "Ultra light",
+          "words": [
+            "ultra light",
+            "ultralight",
+            "extra light"
+          ]
+        },
+        {
+          "label": "Light"
+        },
+        {
+          "label": "Medium-light",
+          "words": [
+            "medium light",
+            "light medium"
+          ]
+        },
+        {
+          "label": "Medium"
+        },
+        {
+          "label": "Medium-dark",
+          "words": [
+            "medium dark",
+            "full city"
+          ]
+        },
+        {
+          "label": "Dark",
+          "words": [
+            "dark",
+            "french",
+            "italian",
+            "vienna"
+          ]
+        }
+      ],
+      "avoid": [],
+      "exclude": [
+        {
+          "id": "dark-roast",
+          "label": "Dark roast",
+          "words": [
+            "dark roast",
+            "french roast",
+            "italian roast",
+            "vienna roast"
+          ]
+        }
+      ]
+    },
+    "origins": {
+      "prefer": [],
+      "avoid": [],
+      "exclude": [
+        {
+          "id": "blends",
+          "label": "Blend",
+          "words": [
+            "blend"
+          ]
+        },
+        {
+          "id": "robusta",
+          "label": "Robusta",
+          "words": [
+            "robusta",
+            "canephora"
+          ]
+        }
+      ]
+    },
+    "notes": {
+      "prefer": [
+        {
+          "label": "Berries",
+          "words": [
+            "berry",
+            "berries",
+            "strawberry",
+            "raspberry",
+            "blueberry",
+            "blackberry",
+            "cranberry",
+            "boysenberry",
+            "mulberry",
+            "blackcurrant",
+            "redcurrant",
+            "cassis"
+          ]
+        },
+        {
+          "label": "Citrus",
+          "words": [
+            "citrus",
+            "lemon",
+            "lime",
+            "orange",
+            "grapefruit",
+            "bergamot",
+            "mandarin",
+            "yuzu"
+          ]
+        },
+        {
+          "label": "Stone fruit",
+          "words": [
+            "stone fruit",
+            "peach",
+            "apricot",
+            "nectarine",
+            "plum",
+            "cherry",
+            "cherries"
+          ]
+        },
+        {
+          "label": "Tropical",
+          "words": [
+            "tropical",
+            "mango",
+            "pineapple",
+            "papaya",
+            "passion fruit",
+            "lychee",
+            "guava"
+          ]
+        },
+        {
+          "label": "Apple"
+        },
+        {
+          "label": "Pear"
+        },
+        {
+          "label": "Grape"
+        },
+        {
+          "label": "Dried fruit",
+          "words": [
+            "dried fruit",
+            "raisin",
+            "fig",
+            "date",
+            "prune"
+          ]
+        },
+        {
+          "label": "Floral",
+          "words": [
+            "floral",
+            "jasmine",
+            "rose",
+            "lavender",
+            "hibiscus",
+            "blossom"
+          ]
+        },
+        {
+          "label": "Tea-like",
+          "words": [
+            "tea",
+            "black tea",
+            "earl grey",
+            "oolong"
+          ]
+        },
+        {
+          "label": "Herbal",
+          "words": [
+            "herbal",
+            "mint",
+            "chamomile",
+            "sage"
+          ]
+        },
+        {
+          "label": "Chocolate",
+          "words": [
+            "chocolate",
+            "cocoa",
+            "cacao"
+          ]
+        },
+        {
+          "label": "Caramel",
+          "words": [
+            "caramel",
+            "toffee",
+            "butterscotch"
+          ]
+        },
+        {
+          "label": "Honey"
+        },
+        {
+          "label": "Vanilla"
+        },
+        {
+          "label": "Brown sugar",
+          "words": [
+            "brown sugar",
+            "demerara",
+            "panela"
+          ]
+        },
+        {
+          "label": "Molasses"
+        },
+        {
+          "label": "Maple"
+        },
+        {
+          "label": "Nutty",
+          "words": [
+            "nutty",
+            "nuts",
+            "almond",
+            "hazelnut",
+            "pecan",
+            "walnut",
+            "macadamia",
+            "peanut",
+            "cashew",
+            "pistachio"
+          ]
+        },
+        {
+          "label": "Malty",
+          "words": [
+            "malt",
+            "malty"
+          ]
+        },
+        {
+          "label": "Cereal",
+          "words": [
+            "cereal",
+            "grain",
+            "biscuit"
+          ]
+        },
+        {
+          "label": "Spice",
+          "words": [
+            "spice",
+            "clove",
+            "nutmeg",
+            "cardamom"
+          ]
+        },
+        {
+          "label": "Funky",
+          "words": [
+            "funk",
+            "ferment"
+          ]
+        },
+        {
+          "label": "Boozy",
+          "words": [
+            "boozy",
+            "rum",
+            "whiskey",
+            "whisky",
+            "liqueur"
+          ]
+        },
+        {
+          "label": "Winey",
+          "words": [
+            "wine",
+            "winey"
+          ]
+        }
+      ],
+      "avoid": [
+        {
+          "label": "Funky",
+          "words": [
+            "funk",
+            "ferment"
+          ]
+        },
+        {
+          "label": "Boozy",
+          "words": [
+            "boozy",
+            "rum",
+            "whiskey",
+            "whisky",
+            "liqueur"
+          ]
+        },
+        {
+          "label": "Winey",
+          "words": [
+            "wine",
+            "winey"
+          ]
+        },
+        {
+          "label": "Bitter"
+        },
+        {
+          "label": "Roasty"
+        },
+        {
+          "label": "Smoky",
+          "words": [
+            "smoky",
+            "smokey"
+          ]
+        },
+        {
+          "label": "Burnt",
+          "words": [
+            "burnt",
+            "ashy"
+          ]
+        },
+        {
+          "label": "Sour"
+        },
+        {
+          "label": "Earthy",
+          "words": [
+            "earthy",
+            "tobacco",
+            "cedar"
+          ]
+        },
+        {
+          "label": "Grassy",
+          "words": [
+            "grassy",
+            "vegetal"
+          ]
+        },
+        {
+          "label": "Spicy",
+          "words": [
+            "spicy",
+            "spice",
+            "cinnamon",
+            "clove"
+          ]
+        },
+        {
+          "label": "Flavoured",
+          "words": [
+            "flavoured",
+            "flavored",
+            "infused"
+          ]
+        },
+        {
+          "label": "Heavy body",
+          "words": [
+            "heavy",
+            "full body"
+          ]
+        },
+        {
+          "label": "Thin",
+          "words": [
+            "thin",
+            "watery"
+          ]
+        }
+      ],
+      "exclude": [
+        {
+          "id": "cinnamon",
+          "label": "Cinnamon",
+          "words": [
+            "cinnamon"
+          ]
+        },
+        {
+          "id": "funk",
+          "label": "Funky",
+          "words": [
+            "funk",
+            "fermenty",
+            "overfermented"
+          ]
+        },
+        {
+          "label": "Boozy",
+          "words": [
+            "boozy"
+          ]
+        },
+        {
+          "label": "Winey",
+          "words": [
+            "winey"
+          ]
+        },
+        {
+          "label": "Barrel-aged",
+          "words": [
+            "barrel aged",
+            "barrel-aged",
+            "rum barrel",
+            "whiskey barrel",
+            "whisky barrel"
+          ]
+        },
+        {
+          "label": "Solvent",
+          "words": [
+            "solvent"
+          ]
+        },
+        {
+          "id": "smoky",
+          "label": "Smoky",
+          "words": [
+            "smoky",
+            "smokey",
+            "smoke"
+          ]
+        },
+        {
+          "label": "Burnt",
+          "words": [
+            "burnt",
+            "charred",
+            "ashy"
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -4,6 +4,8 @@ import assert from "node:assert/strict";
 import { convertSetting, parseSetting, validateRanges, recommend, canGrind, rangeFor, toGrindNumber, dialToValue, valueToDial, fmtGrind, doseAdjustedGrind } from "../dist/shared/grind.js";
 import { scaleSteps, applyRatio } from "../dist/shared/brew.js";
 import { applyMatchingRules } from "../dist/server/rules.js";
+import { switchOnExcludes } from "../dist/server/settings.js";
+import { loadTasteDefaults } from "../dist/server/catalog.js";
 import fs from "node:fs";
 import { catalogRecipe } from "../dist/server/catalog.js";
 
@@ -120,11 +122,12 @@ test("ratio toggles hold whichever amount was edited last (coffee by default)", 
   assert.deepEqual(applyRatio(20, 320, 13, "water"), { doseG: 24.6, waterG: 320 });
 });
 
-test("matching rules drop tried, avoided, cinnamon / co-ferment / funk", () => {
+test("matching rules drop tried, avoided, and whatever switched-on Do-not-include tags match (cinnamon / co-ferment / funk)", () => {
   const ctx = {
     tastings: [{ name: "Finca Ejemplo", roaster: "Salt & Pepper Coffee Roasters" }],
     avoids: [{ name: "'Tis the Sample 2026", roaster: "Salt & Pepper Coffee Roasters" }],
     stash: [{ name: "Holiday Blend 2026", roaster: "Equator Coffees", status: "unopened" }],
+    prefs: switchOnExcludes(loadTasteDefaults().prefs, ["cinnamon", "coferment", "funk"]),
   };
   const c = (o) => ({ kind: "pick", name: "X", roaster: "R", ...o });
   const { kept, dropped } = applyMatchingRules(

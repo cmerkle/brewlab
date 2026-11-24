@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+- **Stash archive:** a finished bag leaves the Stash and moves to its Archive (newest first), with its brews and tasting notes kept. *Back to stash* undoes a finish.
+- **Sort and search the Stash and its Archive:** sort by name, roaster, origin, process, roast / purchase / opened / finished date, rating, price or coffee left, and flip the direction with one tap. Bags missing that value go last either way. Each tab remembers its sort on the device. Search matches every word against the name, roaster, origin, process, roast level, notes, dates ("2026-10", "october", "Nov 4"), rating ("5★") and price ("$18").
+- **Bag details from lists:** roast level is a list (ultra light, light, medium-light, medium, medium-dark, dark). Process and origin are lists with *Custom…* for your own words. The lists live in `catalog/coffee-vocab.json`. Roast levels written another way ("light-medium") are matched to the list.
+- **Tasting-note tags** on Stash bags (strawberry, citrus …), searchable and shown on the card. Tasting notes from a bag photo, a roaster link or Discover arrive as tags. Older bags with a "Tasting notes: …" line in their notes have it moved into tags once. Tags on rated bags feed Discover's taste summary.
+- **Rest and peak window per roast level** (More): days to rest and days at its best, starting from rules of thumb (ultra light 14/60 days down to dark 3/21). The Stash's freshness notes use them.
+- **Discover → Your taste is all tags now:** five sections (roasters, processes, roast level, origins, tasting notes), each with *Preferred*, *Rather avoid* and *Do not include*. Tap a tag to switch it on or off, × removes it, and you can type your own. The quiz's flavours, processes and roasts (now with ultra light) and the old "always leave out" rules are built-in tags of one or two words each, all off to start (`catalog/taste-defaults.json`). Long ones are split, so the old funk rule is now Funky, Boozy, Winey, Barrel-aged and Solvent. Preferred and Rather avoid steer the research and the ranking; Do not include leaves a coffee out. Your existing rules, quiz answers and likes move over once, and what was on stays on. On wide screens the three lists sit side by side with their inputs lined up.
+- **Stash sort:** "Open first" is now "Default (open, then unopened)".
+- **First-run setup:** *Select all* and *Deselect all* for starter recipes (recipes you already have are never added twice). The search boxes no longer leave a big gap below them, and neither does the gear library's.
+- **Reset preferences** (Discover → Your taste, and setup's Discover step): after asking, every section goes back to the built-in tags, all off. Running setup again leaves your tags alone.
+- **Edit what's left in a bag** (the bag editor's *Coffee left*): for coffee used without logging a brew. Logged brews keep counting down from the number you set, and the card says how much was used without a brew.
+
 ## 0.2.0
 
 - **Brew setup holds the ratio:** change the coffee and the water follows, change the water and the coffee follows. Only the ratio field and the ratio buttons change the ratio.

@@ -39,9 +39,9 @@ All files are optional.
   ```json
   { "palateNotes": "Bright, fruity filter coffee; no dark roasts.", "avoidRules": ["cinnamon", "dark-roast"] }
   ```
-  `avoidRules` are ids of the starter "always leave out" rules: `cinnamon`, `coferment`, `funk`, `decaf`, `dark-roast`, `blends`, `robusta`, `smoky`.
+  `avoidRules` are ids of built-in "Do not include" tags to switch on (Discover → Your taste): `cinnamon`, `coferment`, `funk`, `decaf`, `dark-roast`, `blends`, `robusta`, `smoky`.
 - **`water.json`**: water recipes, from the library by id or written out in full. Recipes and brews link to them with `waterId`.
   ```json
   { "water": [{ "id": 1, "library": "lotus-rao-perger" }, { "id": 2, "name": "My soft water", "baseId": "distilled", "volume": 1, "volumeUnit": "L", "additives": [{ "additiveId": "epsom-salt", "name": "Epsom salt", "amount": 0.1, "unit": "g" }] }] }
   ```
-- **`assistant-inventory.json`** (bags in the Stash), **`assistant-recipes.json`** (your own recipes), **`assistant-brews.json`** (the brew log) and **`recommendations-board.json`** (a Discover board). `demo/` has an example of each format except recipes, with fictional data.
+- **`assistant-inventory.json`** (bags in the Stash; `tastingNotes` can be a list of tags or text like "peach, jasmine"), **`assistant-recipes.json`** (your own recipes), **`assistant-brews.json`** (the brew log) and **`recommendations-board.json`** (a Discover board). `demo/` has an example of each format except recipes, with fictional data.

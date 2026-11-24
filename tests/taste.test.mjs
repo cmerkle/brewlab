@@ -91,47 +91,54 @@ test("without AI: entered candidates are ranked by the taste summary, each with 
   stop();
 });
 
-test("avoid rules are toggles (off on a new install) and suggestions are offered, never applied", async () => {
+const P = (db) => getSettings(db).prefs;
+const tag = (p, sec, list, id) => p[sec][list].find((t) => t.id === id);
+const withTag = (p, sec, list, id, patch) => ({ ...p, [sec]: { ...p[sec], [list]: p[sec][list].map((t) => (t.id === id ? { ...t, ...patch } : t)) } });
+
+test("Do not include: built-in tags start off; suggestions are offered, never switched on silently", async () => {
   const { db, call, stop } = await start("rules.db");
-  assert.deepEqual(getSettings(db).avoidRules, []);
+  const p0 = P(db);
+  assert.ok(tag(p0, "notes", "exclude", "cinnamon") && !tag(p0, "notes", "exclude", "cinnamon").on, "starts with the built-in tags, off");
+  assert.ok(tag(p0, "processes", "exclude", "decaf") && tag(p0, "roasts", "prefer", "ultra-light"), "decaf under processes; ultra light under roasts");
   let check = (await call("POST", "/api/discover/rules/check", cand("Cinnamon Co-ferment", "Colombia", "Co-ferment", "cinnamon"))).body;
-  assert.equal(check.kept.length, 1, "nothing excluded until the user turns rules on");
+  assert.equal(check.kept.length, 1, "nothing excluded until the user switches tags on");
   tasting(db, "Cinnamon Bomb", "A", "Colombia", "Washed", "disliked", "very cinnamon");
   tasting(db, "Spice Cake", "B", "Colombia", "Washed", "not_for_me", "cinnamon heavy");
-  const taste = (await call("GET", "/api/discover/taste")).body;
-  const sug = taste.suggestions.find((x) => x.id === "cinnamon");
-  assert.ok(sug, "suggests avoiding cinnamon");
+  const sug = (await call("GET", "/api/discover/taste")).body.suggestions.find((x) => x.id === "notes:cinnamon");
+  assert.ok(sug, "suggests leaving cinnamon out");
   assert.match(sug.text, /You rated 2 of them 2★ or lower/);
-  assert.deepEqual(getSettings(db).avoidRules, [], "not applied silently");
-  await call("POST", "/api/discover/suggestions/cinnamon", { accept: true });
-  assert.deepEqual(getSettings(db).avoidRules, ["cinnamon"]);
+  assert.equal(tag(P(db), "notes", "exclude", "cinnamon").on, false, "not applied silently");
+  await call("POST", "/api/discover/suggestions/notes:cinnamon", { accept: true });
+  assert.equal(tag(P(db), "notes", "exclude", "cinnamon").on, true);
   check = (await call("POST", "/api/discover/rules/check", cand("Cinnamon Thing", "Colombia", "Washed", "cinnamon"))).body;
-  assert.equal(check.dropped[0].reason, "profile: cinnamon-forward coffees (“cinnamon”)");
-  assert.ok(!(await call("GET", "/api/discover/taste")).body.suggestions.some((x) => x.id === "cinnamon"));
+  assert.equal(check.dropped[0].reason, "profile: tasting notes: cinnamon (“cinnamon”)");
+  assert.ok(!(await call("GET", "/api/discover/taste")).body.suggestions.some((x) => x.id === "notes:cinnamon"));
+  assert.equal((await call("POST", "/api/discover/suggestions/notes:nope", { accept: true })).status, 404);
   stop();
 });
 
-test("always-leave-out rules are the user's own: add one, edit a preset's words, delete one", async () => {
+test("tags are yours: add, switch on or off, remove; each section looks at its own fields", async () => {
   const { db, call, stop } = await start("own-rules.db");
-  const s0 = getSettings(db);
-  assert.ok(s0.ruleDefs.some((r) => r.id === "decaf") && s0.ruleDefs.some((r) => r.id === "funk"), "starts with the presets, all off");
-  const defs = [
-    ...s0.ruleDefs.filter((r) => r.id !== "blends").map((r) => (r.id === "cinnamon" ? { ...r, keywords: ["cinnamon", "cardamom"] } : r)),
-    { id: "my-peaberry", label: "Peaberries", keywords: ["peaberry"] },
-  ];
-  let r = await call("PUT", "/api/settings", { ruleDefs: defs, avoidRules: ["cinnamon", "my-peaberry", "blends"] });
+  let p = P(db);
+  p = withTag(p, "notes", "exclude", "cinnamon", { on: true, words: ["cinnamon", "cardamom"] });
+  p = { ...p, origins: { ...p.origins, exclude: [...p.origins.exclude.filter((t) => t.id !== "blends"), { id: "peaberries", label: "Peaberries", on: true, words: ["peaberry"] }] } };
+  p = { ...p, roasts: { ...p.roasts, exclude: [...p.roasts.exclude, { id: "dark", label: "Dark", on: true }] } };
+  let r = await call("PUT", "/api/settings", { prefs: p });
   assert.equal(r.status, 200, r.text);
-  assert.deepEqual(getSettings(db).avoidRules, ["cinnamon", "my-peaberry"], "a deleted rule can't stay switched on");
-  const drop = async (...a) => (await call("POST", "/api/discover/rules/check", cand(...a))).body;
-  assert.match((await drop("Kenya AA Peaberry", "Kenya", "Washed", "blackcurrant")).dropped[0].reason, /peaberries \(“peaberry”\)/);
-  assert.match((await drop("Spice Route", "Guatemala", "Washed", "Cardamom, orange")).dropped[0].reason, /cardamom/);
-  assert.equal((await drop("House Blend", "Brazil", "Natural", "chocolate")).kept.length, 1, "deleted rule no longer applies");
-  assert.equal((await drop("Co-Fermented Lychee", "Colombia", "Co-Fermented", "lychee")).kept.length, 1, "rules that are off don't apply");
-  r = await call("PUT", "/api/settings", { ruleDefs: [...defs, { id: "x", label: "", keywords: [] }] });
-  assert.equal(r.status, 400, "a rule needs a name and words");
+  const drop = async (o) => (await call("POST", "/api/discover/rules/check", { kind: "pick", name: "X", roaster: "R", ...o })).body;
+  assert.match((await drop({ name: "Kenya AA Peaberry", origin: "Kenya" })).dropped[0].reason, /peaberries \(“peaberry”\)/);
+  assert.match((await drop({ name: "Spice Route", tastingNotes: "Cardamom, orange" })).dropped[0].reason, /cardamom/);
+  assert.equal((await drop({ name: "House Blend", origin: "Brazil" })).kept.length, 1, "a removed tag no longer applies");
+  assert.equal((await drop({ name: "Co-Fermented Lychee", processMethod: "Co-Fermented" })).kept.length, 1, "tags that are off don't apply");
+  assert.match((await drop({ name: "Night Owl", roastLevel: "Dark" })).dropped[0].reason, /roast level: dark/);
+  assert.equal((await drop({ name: "Choc", tastingNotes: "dark chocolate", roastLevel: "Light" })).kept.length, 1, "a roast tag doesn't look at tasting notes");
+  r = await call("PUT", "/api/settings", { prefs: { ...p, notes: { ...p.notes, prefer: [{ id: "x", label: "", on: true }] } } });
+  assert.equal(r.status, 400, "a tag needs a name");
+  r = await call("PUT", "/api/settings", { prefs: { ...p, notes: { ...p.notes, prefer: [{ id: "x", label: "A", on: true }, { id: "x", label: "B", on: true }] } } });
+  assert.equal(r.status, 400, "ids are unique in a list");
   const prompt = (await call("GET", "/api/discover/taste")).body.prompt;
-  assert.match(prompt, /Peaberries: peaberry/);
-  assert.match(prompt, /Cinnamon-forward coffees: cinnamon, cardamom/);
+  assert.match(prompt, /Origins: Peaberries \(peaberry\)/);
+  assert.match(prompt, /Tasting notes: Cinnamon \(cinnamon, cardamom\)/);
   stop();
 });
 
@@ -141,10 +148,43 @@ test("an install's taste settings carry over once from its seed taste.json", asy
   assert.equal(applySeedTaste(db, dir), true);
   const s = getSettings(db);
   assert.match(s.palateNotes, /bright, juicy washed/);
-  assert.deepEqual(s.avoidRules, ["cinnamon", "coferment", "funk"]);
-  setSettings(db, { avoidRules: [] });
+  const onIds = (p) => ["notes", "processes"].flatMap((sec) => p[sec].exclude.filter((t) => t.on).map((t) => t.id)).sort();
+  // An old rule id switches on all the short tags that now cover it.
+  assert.deepEqual(onIds(s.prefs), ["barrel-aged", "boozy", "cinnamon", "coferment", "flavoured", "funk", "infused", "solvent", "winey"]);
+  setSettings(db, { prefs: withTag(s.prefs, "notes", "exclude", "cinnamon", { on: false }) });
   assert.equal(applySeedTaste(db, dir), false, "only once — later edits stick");
-  assert.deepEqual(getSettings(db).avoidRules, []);
+  assert.deepEqual(onIds(getSettings(db).prefs), ["barrel-aged", "boozy", "coferment", "flavoured", "funk", "infused", "solvent", "winey"]);
+  db.close();
+});
+
+test("old taste settings move to tags once: what was on stays on, edits and deletions kept", async () => {
+  const { migrateTastePrefs } = await import("../dist/server/settings.js");
+  const db = openDb(path.join(tmp, "migrate-taste.db"));
+  const put = db.prepare("INSERT INTO settings (key, value) VALUES (?, ?)");
+  put.run("ruleDefs", JSON.stringify([
+    { id: "cinnamon", label: "Cinnamon-forward coffees", keywords: ["cinnamon", "cardamom"] },
+    { id: "decaf", label: "Decaf", keywords: ["decaf"] },
+    { id: "my-peaberry", label: "Peaberries", keywords: ["peaberry"] },
+  ])); // blends, robusta, smoky … deleted
+  put.run("avoidRules", JSON.stringify(["cinnamon", "my-peaberry"]));
+  put.run("tasteQuiz", JSON.stringify({ loves: ["Berries", "Strawberry jam"], dislikes: ["Earthy"], processes: ["Washed", "Not sure"], roasts: ["Light"] }));
+  put.run("tastePrefs", JSON.stringify({ roasters: { prefer: ["Good Roasters"], avoid: [] }, origins: { prefer: [], avoid: ["Sumatra"] } }));
+  put.run("dismissedSuggestions", JSON.stringify(["decaf"]));
+  assert.equal(migrateTastePrefs(db), true);
+  const s = getSettings(db);
+  const on = (sec, list) => s.prefs[sec][list].filter((t) => t.on).map((t) => t.label);
+  assert.deepEqual(tag(s.prefs, "notes", "exclude", "cinnamon"), { id: "cinnamon", label: "Cinnamon", on: true, words: ["cinnamon", "cardamom"] });
+  assert.equal(tag(s.prefs, "processes", "exclude", "decaf").on, false);
+  assert.ok(!tag(s.prefs, "origins", "exclude", "blends"), "deleted starter rules stay gone");
+  assert.equal(tag(s.prefs, "notes", "exclude", "my-peaberry").on, true, "your own rule becomes a tag");
+  assert.deepEqual(on("notes", "prefer"), ["Berries", "Strawberry jam"]);
+  assert.deepEqual(on("notes", "avoid"), ["Earthy"]);
+  assert.deepEqual(on("processes", "prefer"), ["Washed"]);
+  assert.deepEqual(on("roasts", "prefer"), ["Light"]);
+  assert.deepEqual(on("roasters", "prefer"), ["Good Roasters"]);
+  assert.deepEqual(on("origins", "avoid"), ["Sumatra"]);
+  assert.deepEqual(s.dismissedSuggestions, ["processes:decaf"]);
+  assert.equal(migrateTastePrefs(db), false, "only once");
   db.close();
 });
 

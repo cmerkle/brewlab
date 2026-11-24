@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "./api";
-import { useData, fmtDate, NumInput } from "./ui";
+import { useData, fmtDate, NumInput, useVocab } from "./ui";
 import { METHODS, METHOD_LABELS, DEFAULT_DOSE_NUDGE, rangeFor, fmtGrindNumber, type DoseNudge } from "../shared/grind";
 import { RatioCalculator } from "./brew/RatioCalculator";
 import { PrefsForm } from "./Setup";
@@ -58,6 +58,7 @@ export function More() {
       </section>
 
       <DoseNudgeSettings />
+      <RestSettings />
 
       <section className="card" data-testid="ai-card">
         <h2>AI provider</h2>
@@ -251,6 +252,53 @@ export function ScreenInfo() {
 }
 
 /** Brew setup's "grind for a different dose" adjustment: on/off, how much, which methods. */
+/** How long each roast level rests, and when its peak window ends (days off roast). */
+function RestSettings() {
+  const { settings, saveSettings, act } = useData();
+  const vocab = useVocab();
+  const [draft, setDraft] = useState<Record<string, { rest: number | null; peakEnd: number | null }>>({});
+  const value = (id: string, k: "rest" | "peakEnd") => {
+    const lv = vocab.roastLevels.find((l) => l.id === id)!;
+    return draft[id]?.[k] !== undefined ? draft[id][k] : settings.restWindows[id]?.[k] ?? lv[k];
+  };
+  const edit = (id: string, k: "rest" | "peakEnd", n: number | null) => setDraft((d) => ({ ...d, [id]: { rest: value(id, "rest"), peakEnd: value(id, "peakEnd"), [k]: n } }));
+  const bad = vocab.roastLevels.filter((l) => { const r = value(l.id, "rest"), p = value(l.id, "peakEnd"); return r == null || p == null || r >= p; });
+  const save = () => {
+    const next = { ...settings.restWindows };
+    for (const l of vocab.roastLevels) {
+      const w = { rest: value(l.id, "rest")!, peakEnd: value(l.id, "peakEnd")! };
+      if (w.rest === l.rest && w.peakEnd === l.peakEnd) delete next[l.id]; // same as the default: keep following it
+      else next[l.id] = w;
+    }
+    act(async () => { await saveSettings({ restWindows: next }); setDraft({}); }, "Saved");
+  };
+  const custom = Object.keys(settings.restWindows).length > 0;
+  return (
+    <section className="card stack" data-testid="rest-settings">
+      <h2>Rest and peak window</h2>
+      <p className="muted small">Days off roast, by roast level: beans rest until the first day, then stay at their best until the second. The Stash's freshness notes use these. The starting values are common rules of thumb; lighter roasts usually want longer.</p>
+      <table className="rest-table">
+        <thead><tr><th>Roast</th><th>Best from day</th><th>Best until day</th></tr></thead>
+        <tbody>
+          {vocab.roastLevels.map((l) => (
+            <tr key={l.id}>
+              <td>{l.label}</td>
+              <td><NumInput className="short" aria-label={`${l.label}: best from day`} value={value(l.id, "rest")} onChange={(n) => edit(l.id, "rest", n)} min={0} max={365} decimals={0} /></td>
+              <td><NumInput className="short" aria-label={`${l.label}: best until day`} value={value(l.id, "peakEnd")} onChange={(n) => edit(l.id, "peakEnd", n)} min={1} max={730} decimals={0} /></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {bad.length > 0 && <div className="note" role="status">{bad.map((l) => l.label).join(", ")}: the best-until day has to come after the best-from day.</div>}
+      <div className="row wrap">
+        {Object.keys(draft).length > 0 && <button className="primary" disabled={bad.length > 0} onClick={save}>Save</button>}
+        {Object.keys(draft).length > 0 && <button onClick={() => setDraft({})}>Cancel</button>}
+        {custom && !Object.keys(draft).length && <button className="link" onClick={() => act(() => saveSettings({ restWindows: {} }), "Back to the starting values")}>Back to the starting values</button>}
+      </div>
+    </section>
+  );
+}
+
 function BackupsCard() {
   const { act, reloadSetup } = useData();
   const [b, setB] = useState<Backups | null>(null);

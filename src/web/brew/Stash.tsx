@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api, type Bag, type Brew, type Recipe } from "../api";
-import { useData, Field, FullScreen, ErrorBox, NumInput, Stars, Menu, fmtDate, daysSince, useAction } from "../ui";
+import { useData, Field, FullScreen, ErrorBox, NumInput, Stars, Menu, fmtDate, daysSince, useAction, usePref, SearchInput, useVocab, TagInput } from "../ui";
+import { BAG_SORTS, sortBags, bagMatches, freshnessNote, splitTags, type BagSort, type SortDir, type RestOverrides, type RoastLevelDef } from "../../shared/stash";
 import { grindLabel } from "../grindui";
 import { RecipeCard } from "./Recipes";
 import { ScaleDialog, type BrewPlan } from "./ScaleDialog";
@@ -12,17 +13,59 @@ const VERDICTS = [
   { id: "disliked", label: "Disliked" },
 ];
 
-export function Stash() {
+/** The Stash shows bags you have (unopened, open); finished bags go to the Archive (#/brew/stash/archive). */
+export function Stash({ view }: { view?: string }) {
   const { bags, loaded } = useData();
   const [editing, setEditing] = useState<Bag | "new" | null>(null);
   const [copying, setCopying] = useState<Bag | null>(null);
   useAction("add-bag", () => setEditing("new"));
+  const archive = view === "archive";
+  const current = bags.filter((b) => b.status !== "finished");
+  const finished = bags.filter((b) => b.status === "finished");
+  // Each tab keeps its own sort (per device); search applies to whichever tab is showing.
+  const [stashSort, setStashSort] = usePref<{ by: BagSort; dir: SortDir }>("stash.sort", { by: "status", dir: "asc" });
+  const [archiveSort, setArchiveSort] = usePref<{ by: BagSort; dir: SortDir }>("stash.archiveSort", { by: "finishedDate", dir: "desc" });
+  const [sort, setSort] = archive ? [archiveSort, setArchiveSort] : [stashSort, setStashSort];
+  const by: BagSort = sort.by in BAG_SORTS ? sort.by : "status";
+  const [q, setQ] = useState("");
+  const pool = archive ? finished : current;
+  const shown = sortBags(pool.filter((b) => bagMatches(b, q, fmtDate)), by, sort.dir);
+  const kind = BAG_SORTS[by].kind;
+  const dirLabel = (d: SortDir) =>
+    kind === "text" ? (d === "asc" ? "A → Z" : "Z → A") : kind === "date" ? (d === "asc" ? "oldest first" : "newest first")
+      : kind === "number" ? (d === "asc" ? "lowest first" : "highest first") : d === "asc" ? "open first" : "unopened first";
   return (
     <div className="stack">
+      <div className="tabs small" role="tablist" aria-label="Stash or archive">
+        <button role="tab" aria-selected={!archive} className={!archive ? "on" : ""} onClick={() => { location.hash = "#/brew/stash"; }}>In your stash ({current.length})</button>
+        <button role="tab" aria-selected={archive} className={archive ? "on" : ""} onClick={() => { location.hash = "#/brew/stash/archive"; }}>Archive ({finished.length})</button>
+      </div>
+      {pool.length > 0 && (
+        <div className="toolbar">
+          <SearchInput placeholder="Search name, roaster, origin, dates…" label={archive ? "Search the archive" : "Search your stash"} value={q} onChange={setQ} />
+          <div className="sort-row">
+            <select className="pill-select" aria-label="Sort by" value={by}
+              onChange={(e) => { const b = e.target.value as BagSort; setSort({ by: b, dir: BAG_SORTS[b].dir }); }}>
+              {(Object.keys(BAG_SORTS) as BagSort[]).filter((k) => archive ? k !== "status" && k !== "remainingG" : k !== "finishedDate").map((k) => <option key={k} value={k}>{BAG_SORTS[k].label}</option>)}
+            </select>
+            <button type="button" className="icon-btn sort-dir" data-testid="sort-dir"
+              aria-label={`Sort direction: ${dirLabel(sort.dir)}. Switch to ${dirLabel(sort.dir === "asc" ? "desc" : "asc")}`} title={dirLabel(sort.dir)}
+              onClick={() => setSort({ by, dir: sort.dir === "asc" ? "desc" : "asc" })}>
+              <span aria-hidden="true">{sort.dir === "asc" ? "↑" : "↓"}</span>
+            </button>
+          </div>
+        </div>
+      )}
       {!loaded && <p className="muted">Loading…</p>}
-      {loaded && bags.length === 0 && <p className="muted">No bags yet.</p>}
+      {loaded && pool.length === 0 && (
+        <p className="muted" data-testid="stash-empty">
+          {archive ? "No finished bags yet. When you mark a bag finished, it moves here." : finished.length ? "Nothing in your stash: every bag is finished. Add one with +." : "No bags yet."}
+        </p>
+      )}
+      {loaded && pool.length > 0 && shown.length === 0 && <p className="muted" data-testid="stash-no-match">No bags match “{q}”.</p>}
+      {archive && finished.length > 0 && !q && <p className="muted small">Finished bags. Their brews and tasting notes are kept.</p>}
       <div className="cards">
-        {bags.map((b) => <BagCard key={b.id} b={b} onEdit={() => setEditing(b)} onDuplicate={() => setCopying(b)} />)}
+        {shown.map((b) => <BagCard key={b.id} b={b} onEdit={() => setEditing(b)} onDuplicate={() => setCopying(b)} />)}
       </div>
       {editing && <BagForm bag={editing === "new" ? null : editing} onClose={() => setEditing(null)} />}
       {copying && <BagForm bag={null} copyOf={copying} onClose={() => setCopying(null)} />}
@@ -31,12 +74,10 @@ export function Stash() {
 }
 
 /** Rest / peak guidance from the roast date (filter coffee; espresso usually wants a little longer). */
-export function freshness(b: Pick<Bag, "roastDate" | "status">): { text: string; tone: "info" | "ok" | "warn" } | null {
-  const d = daysSince(b.roastDate);
-  if (d == null || b.status === "finished" || d < 0) return null;
-  if (d < 7) return { text: `Day ${d} off roast — resting; usually best from about day 7`, tone: "info" };
-  if (d <= 30) return { text: `Day ${d} off roast — in its peak window`, tone: "ok" };
-  return { text: `Day ${d} off roast — past the usual peak window`, tone: "warn" };
+/** Rest / peak guidance from the roast date and roast level; the windows are a setting (More). */
+export function freshness(b: Pick<Bag, "roastDate" | "status" | "roastLevel">, levels: RoastLevelDef[], overrides?: RestOverrides): { text: string; tone: "info" | "ok" | "warn" } | null {
+  if (b.status === "finished") return null;
+  return freshnessNote(daysSince(b.roastDate), b.roastLevel, levels, overrides);
 }
 
 /** Low-stock estimate from the bag's own average dose (20 g if it has no brews yet). */
@@ -51,7 +92,7 @@ export function stock(b: Bag, brews: Brew[]): { text: string; tone: "warn" } | n
 }
 
 function BagCard({ b, onEdit, onDuplicate }: { b: Bag; onEdit: () => void; onDuplicate: () => void }) {
-  const { reload, act, brews, limits, gear } = useData();
+  const { reload, act, brews, limits, gear, settings } = useData();
   const [open, setOpen] = useState(false);
   const [detail, setDetail] = useState<{ recipes: Recipe[]; brews: Brew[] } | null>(null);
   const [brewing, setBrewing] = useState<BrewPlan | null>(null);
@@ -60,7 +101,8 @@ function BagCard({ b, onEdit, onDuplicate }: { b: Bag; onEdit: () => void; onDup
   const [size, setSize] = useState<number | null>(null);
   const roast = daysSince(b.roastDate);
   const opened = daysSince(b.openedDate);
-  const fresh = freshness(b);
+  const vocab = useVocab();
+  const fresh = freshness(b, vocab.roastLevels, settings.restWindows);
   const low = stock(b, brews);
 
   const loadDetail = () => api.get<{ recipes: Recipe[]; brews: Brew[] }>(`/api/inventory/${b.id}`).then(setDetail);
@@ -81,6 +123,12 @@ function BagCard({ b, onEdit, onDuplicate }: { b: Bag; onEdit: () => void; onDup
       await reload(["bags", "recipes", "brews"]);
     }, "Bag deleted");
   };
+  // Finished by mistake: clear the finished date and it's back in the Stash.
+  const unfinish = () =>
+    act(async () => {
+      await api.put(`/api/inventory/${b.id}`, { finishedDate: null });
+      await reload(["bags"]);
+    }, `${b.name} is back in your stash`);
   const saveSize = () =>
     act(async () => {
       await api.put(`/api/inventory/${b.id}`, { amountG: size });
@@ -97,6 +145,7 @@ function BagCard({ b, onEdit, onDuplicate }: { b: Bag; onEdit: () => void; onDup
         <Menu label={`More actions for ${b.name}`} items={[{ label: "Edit", onClick: onEdit }, { label: "Duplicate", onClick: onDuplicate }, { label: "Delete", onClick: del, danger: true }]} />
       </header>
       <div className="muted">{[b.roaster, b.origin, b.processMethod, b.roastLevel].filter(Boolean).join(" · ")}</div>
+      {b.tastingNotes.length > 0 && <ul className="tag-list" aria-label="Tasting notes" data-testid="bag-tags">{b.tastingNotes.map((t) => <li key={t}>{t}</li>)}</ul>}
       {(fresh || low) && (
         <div className="nudges">
           {low && <span className="nudge warn" data-testid="bag-low">{low.text}</span>}
@@ -109,13 +158,22 @@ function BagCard({ b, onEdit, onDuplicate }: { b: Bag; onEdit: () => void; onDup
         <div>
           <dt>Remaining</dt>
           <dd data-testid="bag-remaining">
-            {b.remainingG != null ? `${Math.max(0, b.remainingG)} g of ${b.amountG}` : sizing ? null : (
+            {b.remainingG != null ? (
+              <>
+                {Math.max(0, b.remainingG)} g of {b.amountG}
+              </>
+            ) : sizing ? null : (
               <button className="link" onClick={() => { setSize(null); setSizing(true); }}>Add bag size</button>
             )}
           </dd>
         </div>
         <div><dt>Price</dt><dd>{b.price != null ? `$${b.price}` : "—"}</dd></div>
       </dl>
+      {b.unloggedG !== 0 && b.remainingG != null && (
+        <div className="muted small" data-testid="bag-unlogged">
+          {b.unloggedG > 0 ? `Includes ${b.unloggedG} g used without a logged brew.` : `${-b.unloggedG} g more than the logged brews leave.`}
+        </div>
+      )}
       {sizing && (
         <div className="row inline-edit">
           <NumInput aria-label="Bag size in grams" placeholder="e.g. 340" value={size} onChange={setSize} min={limits?.amountG.min} max={limits?.amountG.max} decimals={0} />
@@ -138,6 +196,7 @@ function BagCard({ b, onEdit, onDuplicate }: { b: Bag; onEdit: () => void; onDup
         {b.status === "open" && <button className="primary" onClick={() => setFinishing(true)}>Mark finished</button>}
         <button onClick={toggle} aria-expanded={open}>{open ? "Hide" : "Recipes & brews"}</button>
         {b.status === "unopened" && <button onClick={() => setFinishing(true)}>Mark finished</button>}
+        {b.status === "finished" && <button onClick={unfinish}>Back to stash</button>}
       </div>
       {open && detail && (
         <div className="expand">
@@ -170,7 +229,7 @@ function FinishDialog({ bag, onClose }: { bag: Bag; onClose: () => void }) {
     try {
       const r = await api.post<{ alreadyLogged: boolean; tasting: unknown }>(`/api/inventory/${bag.id}/finish`, withVerdict ? { verdict, notes } : {});
       await reload(["bags"]);
-      toast(!withVerdict ? "Marked finished" : r.alreadyLogged ? "Marked finished — it was already in your tasting log" : "Marked finished and added to the tasting log");
+      toast(!withVerdict ? "Finished — moved to the Archive" : r.alreadyLogged ? "Finished and moved to the Archive — it was already in your tasting log" : "Finished, moved to the Archive and added to the tasting log");
       onClose();
     } catch (e: any) {
       setError(e.message);
@@ -314,7 +373,11 @@ function BagForm({ bag, copyOf, onClose }: { bag: Bag | null; copyOf?: Bag; onCl
     openedDate: bag?.openedDate ?? "", finishedDate: bag?.finishedDate ?? "", amountG: src?.amountG ?? null as number | null,
     price: src?.price ?? null as number | null, url: src?.url ?? "", rating: bag?.rating ?? null as number | null, notes: src?.notes ?? "",
     photo: src?.photo ?? null as string | null,
+    tastingNotes: src?.tastingNotes ?? ([] as string[]),
   });
+  const vocab = useVocab();
+  const { bags } = useData();
+  const usedTags = [...new Set(bags.flatMap((x) => x.tastingNotes))];
   const [error, setError] = useState<string | null>(null);
   const [imp, setImp] = useState<ImportRes | null>(null);
   const [busy, setBusy] = useState<"" | "photo" | "link" | "lookup">("");
@@ -337,7 +400,7 @@ function BagForm({ bag, copyOf, onClose }: { bag: Bag | null; copyOf?: Bag; onCl
       if (d.amountG != null) n.amountG = Number(d.amountG);
       if (d.price != null) n.price = Number(d.price);
       if (d.url) n.url = String(d.url);
-      if (d.tastingNotes) n.notes = [n.notes, `Tasting notes: ${d.tastingNotes}`].filter(Boolean).join(" · ");
+      if (d.tastingNotes) n.tastingNotes = [...new Set([...n.tastingNotes, ...splitTags(String(d.tastingNotes))])];
       if (d.details) n.notes = [n.notes, String(d.details)].filter(Boolean).join(" · ");
       return n;
     });
@@ -358,7 +421,7 @@ function BagForm({ bag, copyOf, onClose }: { bag: Bag | null; copyOf?: Bag; onCl
           if (d.amountG != null && n.amountG == null) { n.amountG = Number(d.amountG); filled.push("amountG"); }
           if (d.price != null && n.price == null) { n.price = Number(d.price); filled.push("price"); }
           if (d.url && !n.url) { n.url = String(d.url); filled.push("url"); }
-          if (d.tastingNotes && !/tasting notes/i.test(n.notes)) { n.notes = [n.notes, `Tasting notes: ${d.tastingNotes}`].filter(Boolean).join(" · "); filled.push("tastingNotes"); }
+          if (d.tastingNotes && !n.tastingNotes.length) { n.tastingNotes = splitTags(String(d.tastingNotes)); filled.push("tastingNotes"); }
           if (d.details && !n.notes.includes(String(d.details))) { n.notes = [n.notes, String(d.details)].filter(Boolean).join(" · "); filled.push("details"); }
           return n;
         });
@@ -404,11 +467,20 @@ function BagForm({ bag, copyOf, onClose }: { bag: Bag | null; copyOf?: Bag; onCl
       setBusy("");
     }
   };
+  // Coffee left: follows the bag size until you type your own (coffee used without logging a brew).
+  const [leftTyped, setLeftTyped] = useState<number | null | undefined>(undefined);
+  const leftAuto = bag && f.amountG != null ? Math.round((f.amountG - bag.usedG - (bag.unloggedG ?? 0)) * 10) / 10 : null;
+  const left = leftTyped !== undefined ? leftTyped : leftAuto == null ? null : Math.max(0, leftAuto);
   const save = async () => {
     setError(null);
     const body = { ...f, url: f.url || null, notes: f.notes || null };
+    if (leftTyped !== undefined && (leftTyped == null || leftTyped < 0 || f.amountG == null || leftTyped > f.amountG))
+      return setError(`Coffee left must be between 0 and the bag size${f.amountG != null ? ` (${f.amountG} g)` : ""}.`);
     try {
-      if (bag) await api.put(`/api/inventory/${bag.id}`, body);
+      if (bag) {
+        await api.put(`/api/inventory/${bag.id}`, body);
+        if (leftTyped !== undefined) await api.post(`/api/inventory/${bag.id}/remaining`, { remainingG: leftTyped });
+      }
       else await api.post("/api/inventory", { ...body, source: "manual" });
       await reload(["bags", "recipes"]);
       toast(bag ? "Bag updated" : copyOf ? "Another bag added to the Stash" : "Bag added to the Stash");
@@ -485,7 +557,19 @@ function BagForm({ bag, copyOf, onClose }: { bag: Bag | null; copyOf?: Bag; onCl
           <ImagePicker id="bf-attach" label="Photo (optional)" disabled={!!busy} onImage={(file) => fromPhoto(file, false)} />
         ) : null}
         <div className="grid2">{text("name", "Coffee / bean name")}{text("roaster", "Roaster")}</div>
-        <div className="grid3">{text("origin", "Origin")}{text("processMethod", "Process")}{text("roastLevel", "Roast level")}</div>
+        <div className="grid3">
+          <ChoiceField id="bf-origin" label="Origin" value={f.origin} options={vocab.origins} onChange={(v) => set("origin", v)} />
+          <ChoiceField id="bf-processMethod" label="Process" value={f.processMethod} options={vocab.processes} onChange={(v) => set("processMethod", v)} />
+          <Field label="Roast level" htmlFor="bf-roastLevel">
+            <select id="bf-roastLevel" value={f.roastLevel} onChange={(e) => set("roastLevel", e.target.value)}>
+              <option value="">—</option>
+              {vocab.roastLevels.map((l) => <option key={l.id} value={l.label}>{l.label}</option>)}
+              {f.roastLevel && !vocab.roastLevels.some((l) => l.label === f.roastLevel) && <option value={f.roastLevel}>{f.roastLevel} (as entered)</option>}
+            </select>
+          </Field>
+        </div>
+        <TagInput id="bf-tags" label="Tasting notes" tags={f.tastingNotes} onChange={(t) => set("tastingNotes", t)}
+          suggestions={[...new Set([...usedTags, ...vocab.tastingNotes])]} placeholder="e.g. strawberry, then Enter" />
         <div className="dates">
           {dateF("roastDate", "Roast date")}{dateF("purchaseDate", "Purchase date")}{dateF("openedDate", "Opened date")}{dateF("finishedDate", "Finished date")}
         </div>
@@ -493,11 +577,40 @@ function BagForm({ bag, copyOf, onClose }: { bag: Bag | null; copyOf?: Bag; onCl
           <Field label="Bag size (g)" htmlFor="bf-amount"><NumInput id="bf-amount" value={f.amountG} onChange={(n) => set("amountG", n)} min={limits?.amountG.min} max={limits?.amountG.max} decimals={0} /></Field>
           <Field label="Price ($)" htmlFor="bf-price"><NumInput id="bf-price" value={f.price} onChange={(n) => set("price", n)} min={limits?.price.min} max={limits?.price.max} decimals={2} /></Field>
         </div>
+        {bag && f.amountG != null && (
+          <Field label="Coffee left (g)" htmlFor="bf-left"
+            hint={`${bag.usedG ? `${bag.usedG} g went into logged brews. ` : ""}Change it for coffee used without logging a brew; logged brews keep counting down from here.`}>
+            <NumInput id="bf-left" value={left} onChange={setLeftTyped} min={0} max={f.amountG} decimals={1} />
+          </Field>
+        )}
         <Field label="Roaster / product link" htmlFor="bf-url"><input id="bf-url" type="url" value={f.url} onChange={(e) => set("url", e.target.value)} /></Field>
         <Field label="Rating"><Stars value={f.rating} onChange={(n) => set("rating", n)} /></Field>
         <Field label="Notes" htmlFor="bf-notes"><textarea id="bf-notes" rows={3} value={f.notes} onChange={(e) => set("notes", e.target.value)} /></Field>
         <ErrorBox error={error} />
       </div>
     </FullScreen>
+  );
+}
+
+const CUSTOM = "__custom";
+/** A list to pick from, plus "Custom…" for your own words (a value not on the list shows as custom). */
+function ChoiceField({ id, label, value, options, onChange }: { id: string; label: string; value: string; options: string[]; onChange: (v: string) => void }) {
+  const known = options.find((o) => o.toLowerCase() === value.trim().toLowerCase());
+  const [custom, setCustom] = useState(Boolean(value.trim()) && !known);
+  useEffect(() => {
+    if (value.trim() && !known && options.length) setCustom(true);
+  }, [options.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <Field label={label} htmlFor={id}>
+      <select id={id} value={custom ? CUSTOM : known ?? ""} onChange={(e) => {
+        if (e.target.value === CUSTOM) { setCustom(true); if (known) onChange(""); }
+        else { setCustom(false); onChange(e.target.value); }
+      }}>
+        <option value="">—</option>
+        {options.map((o) => <option key={o} value={o}>{o}</option>)}
+        <option value={CUSTOM}>Custom…</option>
+      </select>
+      {custom && <input id={`${id}-custom`} aria-label={`${label} (your own)`} value={value} onChange={(e) => onChange(e.target.value)} placeholder={`Your own ${label.toLowerCase()}`} />}
+    </Field>
   );
 }

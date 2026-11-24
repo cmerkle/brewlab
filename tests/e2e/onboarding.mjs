@@ -12,6 +12,17 @@ const p = await ctx.newPage();
 const errors = [];
 p.on("pageerror", (e) => errors.push(e.message));
 let pass = 0, fail = 0;
+// Closing a dialog goes back one history entry; a reload racing that navigation is aborted.
+// Wait for dialogs to close and the page to settle, and retry once if the reload is aborted.
+const reload = async () => {
+  await p.locator('[role="dialog"]').first().waitFor({ state: "detached", timeout: 5000 }).catch(() => {});
+  await p.waitForLoadState("load");
+  await p.reload().catch(async (e) => {
+    if (!/ERR_ABORTED|detached/.test(e.message)) throw e;
+    await p.waitForTimeout(300);
+    await reload();
+  });
+};
 const check = (ok, msg) => { console.log(`${ok ? "✓" : "✗"} ${msg}`); ok ? pass++ : fail++; };
 const step = () => p.locator('[data-testid="setup"]').getAttribute("data-step");
 const next = () => p.locator(".setup-nav").getByRole("button").first().click();
@@ -66,16 +77,23 @@ try {
   check(/°F/.test(detail), "temperatures shown in °F");
   check(!(await p.locator('li[data-template="aeropress-default"]').count()), "no recipes for gear they don't have");
   check(await hoff.locator("input").isChecked(), "pre-ticked");
+  const tplBoxes = p.locator('li[data-template] input[type=checkbox]:not([disabled])');
+  await p.getByTestId("tpl-bulk").getByRole("button", { name: "Deselect all" }).click();
+  check((await p.locator('li[data-template] input:checked').count()) === 0 && (await p.locator(".setup-nav").getByRole("button", { name: "Next" }).isVisible()), "Deselect all unticks every recipe");
+  await p.getByTestId("tpl-bulk").getByRole("button", { name: "Select all", exact: true }).click();
+  check((await p.locator('li[data-template] input:checked').count()) === (await tplBoxes.count()), "Select all ticks every recipe you don't have yet");
   await p.locator(".setup-nav").getByRole("button", { name: /^Add \d+ recipes?$/ }).click();
 
   // Discover
   await p.waitForFunction(() => document.querySelector('[data-testid="setup"]')?.getAttribute("data-step") === "Discover");
   check(true, "step: Discover");
-  await p.getByRole("group", { name: "Processes you enjoy" }).getByRole("button", { name: "Washed" }).click();
+  check(await p.getByTestId("reset-prefs").isVisible(), "setup's Discover step has Reset preferences");
+  await p.locator('[data-testid="pref-processes-prefer"]').getByRole("button", { name: "Washed", exact: true }).click();
   await p.waitForTimeout(300);
-  check((await (await fetch(`${BASE}/api/setup`)).json()).settings.tasteQuiz.processes.includes("Washed"), "optional taste quiz saves");
+  const sp = (await (await fetch(`${BASE}/api/setup`)).json()).settings.prefs;
+  check(sp.processes.prefer.find((t) => t.label === "Washed")?.on === true, "optional taste tags save (tap Washed under preferred processes)");
   check(await p.locator('[data-testid="ai-provider"]').isVisible(), "AI provider can be set up here (optional)");
-  check((await (await fetch(`${BASE}/api/setup`)).json()).settings.avoidRules.length === 0, "a new install starts with no keyword exclusions");
+  check(Object.values(sp).every((x) => x.exclude.every((t) => !t.on)), "a new install starts with nothing under Do not include");
   await p.getByRole("button", { name: "Finish setup" }).click();
   await p.locator("main").getByText("Hoffmann V60").first().waitFor();
   check(true, "setup finished → Recipes, with the starter recipes");
@@ -148,10 +166,14 @@ try {
   const logged = (await (await fetch(`${BASE}/api/brews`)).json())[0];
   check(logged.grindSetting === 25.5 && Math.round(logged.tempC * 10) / 10 === 95, `brew logged with grind ${logged.grindSetting} and ${logged.tempC} °C (203 °F)`);
 
-  // Settings: run setup again keeps data
+  // Settings: run setup again keeps data — and Discover's taste tags (resetting them is a separate button)
+  const before = (await (await fetch(`${BASE}/api/setup`)).json()).settings.prefs;
+  before.notes.prefer[0].on = true;
+  await fetch(`${BASE}/api/settings`, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ prefs: before }) });
   await p.goto(`${BASE}/#/more`);
   await p.getByRole("button", { name: "Run setup again" }).click();
   await p.locator('[data-testid="setup"]').waitFor();
+  check((await (await fetch(`${BASE}/api/setup`)).json()).settings.prefs.notes.prefer[0].on === true, "re-running setup keeps Discover's taste tags");
   check(/Nothing you already have is removed/.test(await p.locator("main").innerText()), "re-run explains nothing is removed");
   await p.getByRole("button", { name: "Exit setup" }).click();
   await p.locator('[data-testid="settings"]').waitFor({ timeout: 5000 }).catch(() => {});
@@ -211,7 +233,7 @@ try {
   await p.locator(`[data-testid="gear-${c40.id}"]`).waitFor();
   // A library grinder brings its source and marks the extrapolated rows.
   const k6 = await (await fetch(`${BASE}/api/gear/from-catalog`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ catalogId: "k6" }) })).json();
-  await p.reload();
+  await reload();
   await p.locator(`[data-testid="gear-${k6.id}"]`).getByRole("button", { name: "Edit" }).click();
   check((await p.inputValue("#ge-confidence")) === "manufacturer" && /^https:/.test(await p.inputValue("#ge-source")) && (await p.locator('[data-testid="library-same"]').count()) === 1,
     "a library grinder brings where its ranges come from, in the fields");
@@ -444,33 +466,150 @@ try {
   check(opts.includes("E2E Ca water") && !opts.includes("E2E Ca stock"), `you brew with waters, not concentrates: ${opts.join(" | ")}`);
   await p.getByRole("button", { name: "Back" }).last().click();
 
-  // Discover → Your taste: "always leave out" rules are the user's own.
+  // Stash → Archive: a finished bag leaves the Stash and waits in the Archive; "Back to stash" undoes it.
+  const arcBag = await (await fetch(`${BASE}/api/inventory`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: "E2E Archive Bag", openedDate: "2026-01-02" }) })).json();
+  await p.goto(`${BASE}/#/brew/stash`);
+  await reload(); // the bag was added through the API
+  const arcCard = p.locator(`[data-testid="bag-${arcBag.id}"]`);
+  await arcCard.getByRole("button", { name: "Mark finished" }).click();
+  await p.getByRole("button", { name: "Finish without logging" }).click();
+  await arcCard.waitFor({ state: "detached" });
+  check(/Archive \(1\)/.test(await p.getByRole("tab", { name: /Archive/ }).innerText()), "a finished bag leaves the Stash (Archive (1))");
+  await p.getByRole("tab", { name: /Archive/ }).click();
+  await arcCard.waitFor();
+  check(p.url().endsWith("#/brew/stash/archive") && /finished/i.test(await arcCard.locator('[data-testid="bag-status"]').innerText()), "…and is in the Archive, marked finished");
+  await arcCard.getByRole("button", { name: "Back to stash" }).click();
+  await arcCard.waitFor({ state: "detached" });
+  await p.getByRole("tab", { name: /In your stash/ }).click();
+  await arcCard.waitFor();
+  const back = (await (await fetch(`${BASE}/api/inventory`)).json()).find((b) => b.id === arcBag.id);
+  check(back.status === "open" && back.finishedDate === null, `"Back to stash" undoes it (${back.status})`);
+  // Edit what's left (coffee used without logging a brew)
+  await fetch(`${BASE}/api/inventory/${arcBag.id}`, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ amountG: 250 }) });
+  await reload();
+  await arcCard.getByRole("button", { name: "More actions for E2E Archive Bag" }).click();
+  await p.getByRole("menuitem", { name: "Edit" }).click();
+  check((await p.inputValue("#bf-left")) === "250", `the bag editor shows the coffee left (${await p.inputValue("#bf-left")} g)`);
+  await p.fill("#bf-amount", "300");
+  check((await p.inputValue("#bf-left")) === "300", "…which follows the bag size until you type your own");
+  await p.fill("#bf-amount", "250");
+  await p.fill("#bf-left", "180");
+  await p.getByRole("button", { name: "Save bag" }).click();
+  await arcCard.locator('[data-testid="bag-unlogged"]').waitFor();
+  check((await arcCard.locator('[data-testid="bag-remaining"]').innerText()).startsWith("180 g of 250") && /Includes 70 g used without a logged brew/.test(await arcCard.locator('[data-testid="bag-unlogged"]').innerText()),
+    "coffee left is edited in the bag editor; the card says how much was used without a brew");
+  // Sort and search the Stash
+  for (const [name, roaster, roastDate] of [["E2E Zebra Natural", "Aardvark Roasters", "2026-10-01"], ["E2E Apple Washed", "Zulu Coffee", "2026-11-05"]])
+    await fetch(`${BASE}/api/inventory`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name, roaster, roastDate }) });
+  await reload();
+  const firstBag = async () => (await p.locator(".cards .bag h3").first().innerText()).trim();
+  await p.getByLabel("Search your stash").fill("e2e");
+  await p.selectOption('select[aria-label="Sort by"]', "name");
+  const n1 = await firstBag();
+  await p.getByTestId("sort-dir").click();
+  const n2 = await firstBag();
+  await p.selectOption('select[aria-label="Sort by"]', "roaster");
+  const r1 = await firstBag();
+  await p.selectOption('select[aria-label="Sort by"]', "roastDate");
+  const d1 = await firstBag();
+  check(n1 === "E2E Apple Washed" && n2 === "E2E Zebra Natural" && r1 === "E2E Zebra Natural" && d1 === "E2E Apple Washed",
+    `sort by name (A→Z, then Z→A), roaster, roast date (newest first): ${[n1, n2, r1, d1].join(" / ")}`);
+  await p.getByLabel("Search your stash").fill("zulu");
+  check((await p.locator(".cards .bag").count()) === 1 && (await firstBag()) === "E2E Apple Washed", "search finds a bag by its roaster");
+  await p.getByLabel("Search your stash").fill("october");
+  check((await p.locator(".cards .bag").count()) === 1 && (await firstBag()) === "E2E Zebra Natural", "…and by its roast month");
+  await p.getByLabel("Search your stash").fill("no such coffee");
+  check(await p.getByTestId("stash-no-match").isVisible(), "no match says so");
+  await reload();
+  check((await p.inputValue('select[aria-label="Sort by"]')) === "roastDate", "the sort is remembered on this device");
+  // A bag with the lists: roast level, a listed process, your own origin, tasting-note tags
+  await p.getByRole("button", { name: "Add a bag" }).click();
+  await p.fill("#bf-name", "E2E Tagged");
+  await p.selectOption("#bf-roastLevel", "Light");
+  await p.selectOption("#bf-processMethod", "Washed");
+  await p.selectOption("#bf-origin", "__custom");
+  await p.fill("#bf-origin-custom", "Finca Imaginaria, Huila");
+  await p.fill("#bf-tags", "Strawberry");
+  await p.press("#bf-tags", "Enter");
+  await p.fill("#bf-tags", "citrus,");
+  const rd = new Date(Date.now() - 5 * 86400000).toLocaleDateString("en-CA");
+  await p.fill("#bf-roastDate", rd);
+  await p.getByRole("button", { name: "Save bag" }).click();
+  await p.locator('[data-testid="bag-form"], [role="dialog"]').first().waitFor({ state: "detached" });
+  const tb = (await (await fetch(`${BASE}/api/inventory`)).json()).find((b) => b.name === "E2E Tagged");
+  check(tb && tb.roastLevel === "Light" && tb.processMethod === "Washed" && tb.origin === "Finca Imaginaria, Huila" && tb.tastingNotes.join() === "strawberry,citrus",
+    `roast level, process, your own origin and tags saved: ${JSON.stringify(tb && [tb.roastLevel, tb.processMethod, tb.origin, tb.tastingNotes])}`);
+  await p.getByLabel("Search your stash").fill("strawberry");
+  const tcard = p.locator(`[data-testid="bag-${tb.id}"]`);
+  await tcard.waitFor();
+  check(/resting; usually best from about day 10 for a light roast/.test(await tcard.innerText()) && /strawberry/.test(await tcard.locator('[data-testid="bag-tags"]').innerText()),
+    "the card shows the tags and a light roast's rest (day 10); search finds a tag");
+  // Your own rest window for light roasts
+  await p.goto(`${BASE}/#/more`);
+  const rest = p.locator('[data-testid="rest-settings"]');
+  await rest.getByLabel("Light: best from day", { exact: true }).fill("4");
+  await rest.getByRole("button", { name: "Save" }).click();
+  await rest.getByRole("button", { name: "Back to the starting values" }).waitFor();
+  await p.goto(`${BASE}/#/brew/stash`);
+  await p.getByLabel("Search your stash").fill("strawberry");
+  check(/in its peak window for a light roast/.test(await tcard.innerText()), "with light roasts resting 4 days, the 5-day-old bag is in its peak window");
+  await p.goto(`${BASE}/#/more`);
+  await rest.getByRole("button", { name: "Back to the starting values" }).click();
+  await rest.getByRole("button", { name: "Back to the starting values" }).waitFor({ state: "detached" });
+  // Discover → Your taste: five tag sections × Preferred / Rather avoid / Do not include.
+  await fetch(`${BASE}/api/discover/prefs/reset`, { method: "POST" }); // start from the built-in tags
   await p.goto(`${BASE}/#/discover/taste`);
-  const rulesCard = p.locator('[data-testid="avoid-rules"]');
-  await rulesCard.waitFor();
-  check(/Hard filters/.test(await rulesCard.innerText()) && /— decaf, decaffeinated/.test(await rulesCard.innerText()), "rules explain themselves and show their words (starter rules incl. Decaf)");
-  check((await rulesCard.locator("input[type=checkbox]:checked").count()) === 0, "starter rules are all off");
-  await rulesCard.getByRole("button", { name: "+ Add a rule" }).click();
-  await p.fill("#rn-label", "Peaberries");
-  await p.fill("#rn-words", "peaberry, pea berry");
-  await rulesCard.getByRole("button", { name: "Add rule" }).click();
-  await p.locator('[data-testid="rule-my-peaberries"] input[type=checkbox]:checked').waitFor();
-  let st = (await (await fetch(`${BASE}/api/setup`)).json()).settings;
-  check(st.avoidRules.includes("my-peaberries") && st.ruleDefs.find((r) => r.id === "my-peaberries")?.keywords.join("|") === "peaberry|pea berry", "a new rule is saved with its words and switched on");
-  await rulesCard.getByRole("button", { name: "Edit rule Cinnamon-forward coffees" }).click();
-  await p.fill("#rw-cinnamon", "cinnamon, clove");
-  await p.locator('[data-testid="rule-cinnamon"]').getByRole("button", { name: "Save" }).click();
-  const edited = await p.locator('[data-testid="rule-cinnamon"] .rule-words', { hasText: "cinnamon, clove" }).waitFor({ timeout: 5000 }).then(() => true, () => false);
-  check(edited, "a starter rule's words can be edited");
-  p.once("dialog", (d) => d.accept());
-  await rulesCard.getByRole("button", { name: "Edit rule Blends" }).click();
-  await p.locator('[data-testid="rule-blends"]').getByRole("button", { name: "Remove rule" }).click();
-  await p.locator('[data-testid="rule-blends"]').waitFor({ state: "detached" });
-  check(await rulesCard.getByRole("button", { name: /Restore starter rules you removed \(Blends\)/ }).isVisible(), "a removed starter rule can be restored");
+  await reload();
+  await p.locator('[data-testid="prefs-notes"]').waitFor();
+  for (const sec of ["roasters", "processes", "roasts", "origins", "notes"]) check(await p.locator(`[data-testid="prefs-${sec}"]`).isVisible(), `section: ${sec}`);
+  check(!(await p.locator('[data-testid="avoid-rules"], [data-testid="taste-quiz"]').count()), "no separate quiz or always-leave-out sections");
+  check((await p.locator('[data-testid="prefs-notes"] .ptag.on').count()) === 0 && (await p.locator('[data-testid="prefs-notes"] .ptag').count()) > 20, "built-in tags are there, all off");
+  check(await p.locator('[data-testid="pref-roasts-prefer"]').getByRole("button", { name: "Ultra light", exact: true }).isVisible(), "roast level includes Ultra light");
+  const tagIn = (id) => p.locator(`[data-testid="${id}"]`);
+  // Toggle a built-in "Do not include" tag on
+  await tagIn("pref-notes-exclude").getByRole("button", { name: "Cinnamon", exact: true }).click();
+  // Add your own tags
+  for (const [id, text] of [["pref-origins-exclude", "Peaberries"], ["pref-roasters-prefer", "Good Roasters"], ["pref-origins-avoid", "Sumatra"], ["pref-notes-prefer", "Strawberry jam"]]) {
+    await p.fill(`#${id}`, text);
+    await p.press(`#${id}`, "Enter");
+  }
+  // Remove a built-in tag, then restore it
+  await tagIn("pref-origins-exclude").getByRole("button", { name: "Remove Blend" }).click();
+  await p.waitForTimeout(500);
+  let pr = (await (await fetch(`${BASE}/api/setup`)).json()).settings.prefs;
+  const onL = (sec, list) => pr[sec][list].filter((t) => t.on).map((t) => t.label);
+  check(onL("notes", "exclude").join() === "Cinnamon" && onL("origins", "exclude").join() === "Peaberries" && onL("roasters", "prefer").join() === "Good Roasters"
+    && onL("origins", "avoid").join() === "Sumatra" && onL("notes", "prefer").join() === "Strawberry jam" && !pr.origins.exclude.some((t) => t.id === "blends"),
+    "tap toggles a tag, Enter adds one (switched on), × removes one");
+  await p.locator('[data-testid="prefs-origins"]').getByRole("button", { name: /Restore 1 built-in tag you removed/ }).click();
+  await p.waitForTimeout(400);
+  pr = (await (await fetch(`${BASE}/api/setup`)).json()).settings.prefs;
+  check(pr.origins.exclude.find((t) => t.id === "blends")?.on === false, "a removed built-in tag can be restored (off)");
+  await tagIn("pref-roasters-prefer").getByRole("button", { name: "Good Roasters", exact: true }).click();
+  await p.waitForTimeout(400);
+  pr = (await (await fetch(`${BASE}/api/setup`)).json()).settings.prefs;
+  check(pr.roasters.prefer.find((t) => t.label === "Good Roasters")?.on === false, "your own tags toggle off too");
+  await tagIn("pref-roasters-prefer").getByRole("button", { name: "Good Roasters", exact: true }).click();
+  await p.waitForTimeout(400);
   const dropped = await (await fetch(`${BASE}/api/discover/rules/check`, { method: "POST", headers: { "content-type": "application/json" },
     body: JSON.stringify({ kind: "pick", name: "Kenya Peaberry", roaster: "R", origin: "Kenya", processMethod: "Washed", tastingNotes: "blackcurrant", roastLevel: "Light", priceAmount: 20, priceText: "$20", url: "", whyFit: "", brewTip: "", funkRisk: "low" }) })).json();
-  check(/peaberries/.test(dropped.dropped?.[0]?.reason ?? ""), `your rule leaves matching coffees out: ${dropped.dropped?.[0]?.reason}`);
-  check(await p.getByRole("group", { name: "Flavours you love" }).getByRole("button", { name: "Apple & pear" }).isVisible(), "quiz covers more of the flavour wheel");
+  check(/peaberries/.test(dropped.dropped?.[0]?.reason ?? ""), `Do not include leaves matching coffees out: ${dropped.dropped?.[0]?.reason}`);
+  await p.reload();
+  await p.getByRole("button", { name: /Show what the weekly research is told/ }).click();
+  const told = await p.locator('[data-testid="taste-prompt"]').innerText();
+  check(/Roasters: Good Roasters/.test(told) && /Origins: Sumatra/.test(told) && /Tasting notes: Strawberry jam/.test(told) && /Peaberries/.test(told), "the research is told about the tags that are on");
+  // Reset preferences: cancel keeps them; OK puts every section back to the built-in tags, all off
+  p.once("dialog", (d) => d.dismiss());
+  await p.getByTestId("reset-prefs").click();
+  await p.waitForTimeout(300);
+  check((await (await fetch(`${BASE}/api/setup`)).json()).settings.prefs.roasters.prefer.length === 1, "cancelling Reset preferences keeps them");
+  let resetMsg = "";
+  p.once("dialog", (d) => { resetMsg = d.message(); d.accept(); });
+  await p.getByTestId("reset-prefs").click();
+  await p.locator('[data-testid="pref-roasters-prefer"] .ptag').first().waitFor({ state: "detached" });
+  const rp = (await (await fetch(`${BASE}/api/setup`)).json()).settings.prefs;
+  check(/Reset your Discover preferences/.test(resetMsg) && rp.roasters.prefer.length === 0 && Object.values(rp).every((x) => Object.values(x).every((l) => l.every((t) => !t.on)))
+    && rp.origins.exclude.some((t) => t.id === "blends"), "Reset preferences (after asking): built-in tags back, all off, your own removed");
 
   // Bag photos: take / choose / paste (no camera-only), converted to JPEG on the device.
   await p.goto(`${BASE}/#/brew/stash`);
@@ -508,7 +647,7 @@ try {
     body: JSON.stringify({ name: "Twin Peaks", roaster: "Sample Roasters", origin: "Kenya", processMethod: "Washed", roastDate: "2026-11-01",
       purchaseDate: "2026-11-05", openedDate: "2026-11-06", amountG: 250, price: 19, rating: 4, notes: "Two bags bought", source: "manual" }) })).json();
   await p.goto(`${BASE}/#/brew/stash`);
-  await p.reload(); // the bag was created through the API — load it
+  await reload(); // the bag was created through the API — load it
   await p.locator(`[data-testid="bag-${orig.id}"] .menu .icon-btn`).click();
   await p.getByRole("menuitem", { name: "Duplicate" }).click();
   await p.locator('[data-testid="bag-copy-note"]').waitFor();

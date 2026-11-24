@@ -4,11 +4,15 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const { loadCatalog, loadWaterCatalog, CATALOG_DIR } = await import(new URL("../dist/server/catalog.js", import.meta.url));
+const { loadCatalog, loadWaterCatalog, loadVocab, loadTasteDefaults, CATALOG_DIR } = await import(new URL("../dist/server/catalog.js", import.meta.url));
 const { hardness } = await import(new URL("../dist/shared/water.js", import.meta.url));
 const c = loadCatalog(CATALOG_DIR, true);
 const w = loadWaterCatalog(CATALOG_DIR, true);
-const problems = [...c.errors, ...w.errors];
+const v = loadVocab(CATALOG_DIR, true);
+const td = loadTasteDefaults(CATALOG_DIR, true);
+const problems = [...c.errors, ...w.errors, ...(v.error ? [`coffee-vocab.json: ${v.error}`] : []), ...(td.error ? [`taste-defaults.json: ${td.error}`] : [])];
+const levelIds = v.vocab.roastLevels.map((l) => l.id);
+if (new Set(levelIds).size !== levelIds.length) problems.push("coffee-vocab.json: two roast levels share an id");
 
 // A water recipe's published GH/KH must match what its additives add up to (within 10%).
 for (const t of w.recipes) {

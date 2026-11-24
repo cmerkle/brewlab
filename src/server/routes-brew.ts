@@ -9,6 +9,9 @@ import { loadCatalog, catalogGear, gearFromCatalog, libraryEntryFor, rangeInfoFr
 import { importFromLink, importFromPhoto, lookupOnline } from "./imports.js";
 import { sameCoffee } from "./rules.js";
 import { waterNameFor } from "./routes-water.js";
+import { normalizeRoastLevel, parseTags, cleanTags } from "./bags.js";
+import { splitTags } from "../shared/stash.js";
+import { loadVocab } from "./catalog.js";
 import type { z } from "zod";
 
 const j = (v: unknown) => (v == null ? null : JSON.stringify(v));
@@ -90,9 +93,11 @@ export function inventoryRow(db: DB, r: any) {
   const used = (db.prepare("SELECT COALESCE(SUM(doseG),0) s FROM brews WHERE inventoryId=?").get(r.id) as { s: number }).s;
   return {
     ...r,
+    tastingNotes: parseTags(r.tastingNotes),
     status: deriveStatus(r),
     usedG: used,
-    remainingG: r.amountG == null ? null : Math.round((r.amountG - used) * 10) / 10,
+    unloggedG: r.unloggedG ?? 0,
+    remainingG: r.amountG == null ? null : Math.round((r.amountG - used - (r.unloggedG ?? 0)) * 10) / 10,
   };
 }
 
@@ -132,17 +137,16 @@ export function addToInventory(db: DB, rec: Recommendation): { added: boolean; i
   const existing = open.find((i) => sameCoffee({ name: rec.name, roaster: rec.roaster }, i));
   if (existing) return { added: false, item: inventoryRow(db, existing) };
   const notesParts = [];
-  if (rec.tastingNotes) notesParts.push(`Tasting notes: ${rec.tastingNotes}`);
   if (rec.priceText) notesParts.push(`Listed at ${rec.priceText}`);
   const t = nowIso();
   const info = db
     .prepare(
-      `INSERT INTO inventory_items (name, roaster, origin, processMethod, roastLevel, purchaseDate, amountG, price, url, notes, source, status, createdAt, updatedAt)
-       VALUES (@name, @roaster, @origin, @processMethod, @roastLevel, @purchaseDate, NULL, @price, @url, @notes, 'Coffee Recommendations', 'unopened', @t, @t)`,
+      `INSERT INTO inventory_items (name, roaster, origin, processMethod, roastLevel, purchaseDate, amountG, price, url, notes, tastingNotes, source, status, createdAt, updatedAt)
+       VALUES (@name, @roaster, @origin, @processMethod, @roastLevel, @purchaseDate, NULL, @price, @url, @notes, @tags, 'Coffee Recommendations', 'unopened', @t, @t)`,
     )
     .run({
       name: rec.name, roaster: rec.roaster ?? null, origin: rec.origin ?? null, processMethod: rec.processMethod ?? null,
-      roastLevel: rec.roastLevel || null, purchaseDate: todayLocal(), price: rec.priceAmount ?? null, url: rec.url || null,
+      roastLevel: normalizeRoastLevel(rec.roastLevel), purchaseDate: todayLocal(), tags: JSON.stringify(splitTags(rec.tastingNotes)), price: rec.priceAmount ?? null, url: rec.url || null,
       notes: notesParts.join(" · ") || null, t,
     });
   const item = db.prepare("SELECT * FROM inventory_items WHERE id=?").get(info.lastInsertRowid);
@@ -188,6 +192,8 @@ export function brewRouter(db: DB) {
 
   /* ---------- schema ---------- */
   r.get("/schema", (_req, res) => res.json({ limits: LIMITS, methods: METHODS }));
+  /** Words for bags: roast levels (with rest windows), processes, origins, tasting-note suggestions. */
+  r.get("/vocab", (_req, res) => res.json(loadVocab().vocab));
 
   /* ---------- gear ---------- */
   r.get("/gear", (_req, res) => {
@@ -503,7 +509,8 @@ export function brewRouter(db: DB) {
     if (d.openedDate && d.roastDate && d.openedDate < d.roastDate) throw new Error("Opened date can't be before the roast date.");
     if (d.finishedDate && d.openedDate && d.finishedDate < d.openedDate) throw new Error("Finished date can't be before the opened date.");
     return {
-      name: d.name, roaster: d.roaster ?? null, origin: d.origin ?? null, processMethod: d.processMethod ?? null, roastLevel: d.roastLevel ?? null,
+      name: d.name, roaster: d.roaster ?? null, origin: d.origin ?? null, processMethod: d.processMethod ?? null, roastLevel: normalizeRoastLevel(d.roastLevel),
+      tastingNotes: JSON.stringify(cleanTags(d.tastingNotes)),
       roastDate: d.roastDate ?? null, purchaseDate: d.purchaseDate ?? null, openedDate: d.openedDate ?? null, finishedDate: d.finishedDate ?? null,
       amountG: d.amountG ?? null, price: d.price ?? null, url: d.url ?? null, rating: d.rating ?? null, notes: d.notes ?? null,
       source: d.source ?? "manual", status: deriveStatus(d), photo: d.photo ?? null,
@@ -517,8 +524,8 @@ export function brewRouter(db: DB) {
       const t = nowIso();
       const info = db
         .prepare(
-          `INSERT INTO inventory_items (name, roaster, origin, processMethod, roastLevel, roastDate, purchaseDate, openedDate, finishedDate, amountG, price, url, rating, notes, source, status, photo, createdAt, updatedAt)
-           VALUES (@name, @roaster, @origin, @processMethod, @roastLevel, @roastDate, @purchaseDate, @openedDate, @finishedDate, @amountG, @price, @url, @rating, @notes, @source, @status, @photo, @t, @t)`,
+          `INSERT INTO inventory_items (name, roaster, origin, processMethod, roastLevel, roastDate, purchaseDate, openedDate, finishedDate, amountG, price, url, rating, notes, tastingNotes, source, status, photo, createdAt, updatedAt)
+           VALUES (@name, @roaster, @origin, @processMethod, @roastLevel, @roastDate, @purchaseDate, @openedDate, @finishedDate, @amountG, @price, @url, @rating, @notes, @tastingNotes, @source, @status, @photo, @t, @t)`,
         )
         .run({ ...v, t });
       res.json(inventoryRow(db, db.prepare("SELECT * FROM inventory_items WHERE id=?").get(info.lastInsertRowid)));
@@ -530,14 +537,14 @@ export function brewRouter(db: DB) {
     const id = Number(req.params.id);
     const ex = db.prepare("SELECT * FROM inventory_items WHERE id=?").get(id) as any;
     if (!ex) return bad(res, "Bag not found", 404);
-    const p = InventorySchema.safeParse({ ...ex, ...req.body });
+    const p = InventorySchema.safeParse({ ...ex, tastingNotes: parseTags(ex.tastingNotes), ...req.body });
     if (!p.success) return bad(res, firstError(p.error));
     try {
       const v = invValues(p.data);
       db.prepare(
         `UPDATE inventory_items SET name=@name, roaster=@roaster, origin=@origin, processMethod=@processMethod, roastLevel=@roastLevel, roastDate=@roastDate,
          purchaseDate=@purchaseDate, openedDate=@openedDate, finishedDate=@finishedDate, amountG=@amountG, price=@price, url=@url, rating=@rating,
-         notes=@notes, source=@source, status=@status, photo=@photo, updatedAt=@t WHERE id=@id`,
+         notes=@notes, tastingNotes=@tastingNotes, source=@source, status=@status, photo=@photo, updatedAt=@t WHERE id=@id`,
       ).run({ ...v, id, t: nowIso() });
       if (ex.photo && ex.photo !== v.photo) removeUpload(db, ex.photo);
       res.json(inventoryRow(db, db.prepare("SELECT * FROM inventory_items WHERE id=?").get(id)));
@@ -578,6 +585,19 @@ export function brewRouter(db: DB) {
     res.json(field === "finishedDate" ? { ...bag, tasting, alreadyLogged } : bag);
   };
   r.post("/inventory/:id/open", stamp("openedDate"));
+  /** "Edit what's left": the gap to the logged brews is recorded as coffee used without a brew. */
+  r.post("/inventory/:id/remaining", (req, res) => {
+    const id = Number(req.params.id);
+    const ex = db.prepare("SELECT * FROM inventory_items WHERE id=?").get(id) as any;
+    if (!ex) return bad(res, "Bag not found", 404);
+    if (ex.amountG == null) return bad(res, "Add the bag size first.");
+    const left = req.body?.remainingG;
+    if (typeof left !== "number" || !Number.isFinite(left) || left < 0 || left > ex.amountG)
+      return bad(res, `What's left must be between 0 and the bag size (${ex.amountG} g).`);
+    const used = (db.prepare("SELECT COALESCE(SUM(doseG),0) s FROM brews WHERE inventoryId=?").get(id) as { s: number }).s;
+    db.prepare("UPDATE inventory_items SET unloggedG=?, updatedAt=? WHERE id=?").run(Math.round((ex.amountG - used - left) * 10) / 10, nowIso(), id);
+    res.json(inventoryRow(db, db.prepare("SELECT * FROM inventory_items WHERE id=?").get(id)));
+  });
   r.post("/inventory/:id/finish", stamp("finishedDate"));
   r.delete("/inventory/:id", (req, res) => {
     const id = Number(req.params.id);

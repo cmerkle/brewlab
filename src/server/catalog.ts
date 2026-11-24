@@ -7,6 +7,7 @@ import path from "node:path";
 import { z } from "zod";
 import { METHODS, valueToDial, rangeFor, type GrindRanges, type Method } from "../shared/grind.js";
 import { evalExpr, type EstimateRules } from "../shared/estimate.js";
+import { PREF_SECTIONS, PREF_LISTS, emptyPrefs, slug, type PrefSection, type Prefs } from "../shared/prefs.js";
 import { AMOUNT_UNITS, VOLUME_UNITS, convertAmount, type WaterAdditive, type WaterBase, type WaterLine } from "../shared/water.js";
 
 export const CATALOG_DIR = process.env.CATALOG_DIR || path.resolve("catalog");
@@ -463,4 +464,70 @@ export function waterFromTemplate(t: WaterTemplateT) {
     notes: [t.notes, t.credit ? `By ${t.credit}.` : null].filter(Boolean).join(" ") || null,
     source: t.source, catalogId: t.id, catalogVersion: t.version,
   };
+}
+
+/* ---------- coffee words (catalog/coffee-vocab.json): roast levels, processes, origins, notes ---------- */
+
+const VocabSchema = z.object({
+  about: z.string().optional(),
+  version: z.number().int().positive(),
+  roastLevels: z.array(z.object({
+    id: z.string().regex(/^[a-z0-9-]+$/), label: z.string().min(1), aliases: z.array(z.string()),
+    rest: z.number().int().min(0).max(365), peakEnd: z.number().int().min(1).max(730),
+  }).refine((l) => l.rest < l.peakEnd, "rest must be before peakEnd")).min(1),
+  processes: z.array(z.string().min(1)),
+  origins: z.array(z.string().min(1)),
+  tastingNotes: z.array(z.string().min(1)),
+});
+export type CoffeeVocab = z.infer<typeof VocabSchema>;
+let vocabCache: { vocab: CoffeeVocab; error: string | null } | null = null;
+const EMPTY_VOCAB: CoffeeVocab = { version: 1, roastLevels: [], processes: [], origins: [], tastingNotes: [] };
+export function loadVocab(dir = CATALOG_DIR, fresh = false): { vocab: CoffeeVocab; error: string | null } {
+  if (vocabCache && !fresh && dir === CATALOG_DIR) return vocabCache;
+  let out: { vocab: CoffeeVocab; error: string | null };
+  try {
+    const p = VocabSchema.safeParse(JSON.parse(fs.readFileSync(path.join(dir, "coffee-vocab.json"), "utf8")));
+    out = p.success ? { vocab: p.data, error: null } : { vocab: EMPTY_VOCAB, error: p.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ") };
+  } catch (e: any) {
+    out = { vocab: EMPTY_VOCAB, error: e.message };
+  }
+  if (dir === CATALOG_DIR) vocabCache = out;
+  return out;
+}
+
+/* ---------- Discover taste defaults (catalog/taste-defaults.json) ---------- */
+
+const DefaultTag = z.object({ id: z.string().regex(/^[a-z0-9-]{1,40}$/).optional(), label: z.string().min(1).max(80), words: z.array(z.string().min(1).max(60)).max(30).optional() });
+const DefaultLists = z.object({ prefer: z.array(DefaultTag), avoid: z.array(DefaultTag), exclude: z.array(DefaultTag) });
+const TasteDefaultsSchema = z.object({
+  about: z.string().optional(),
+  version: z.number().int().positive(),
+  sections: z.object(Object.fromEntries(PREF_SECTIONS.map((s) => [s, DefaultLists])) as Record<PrefSection, typeof DefaultLists>),
+});
+let tasteDefaultsCache: { prefs: Prefs; error: string | null } | null = null;
+/** The tags each section starts with, all switched off (ids from the label unless given). */
+export function loadTasteDefaults(dir = CATALOG_DIR, fresh = false): { prefs: Prefs; error: string | null } {
+  if (tasteDefaultsCache && !fresh && dir === CATALOG_DIR) return tasteDefaultsCache;
+  let out: { prefs: Prefs; error: string | null };
+  try {
+    const p = TasteDefaultsSchema.safeParse(JSON.parse(fs.readFileSync(path.join(dir, "taste-defaults.json"), "utf8")));
+    if (!p.success) out = { prefs: emptyPrefs(), error: p.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ") };
+    else {
+      const prefs = emptyPrefs();
+      const errors: string[] = [];
+      for (const s of PREF_SECTIONS)
+        for (const l of PREF_LISTS) {
+          for (const t of p.data.sections[s][l]) {
+            const id = t.id ?? slug(t.label);
+            if (prefs[s][l].some((x) => x.id === id)) errors.push(`sections.${s}.${l}: two tags have the id "${id}"`);
+            prefs[s][l].push({ id, label: t.label, on: false, ...(t.words ? { words: t.words } : {}) });
+          }
+        }
+      out = { prefs, error: errors.join("; ") || null };
+    }
+  } catch (e: any) {
+    out = { prefs: emptyPrefs(), error: e.message };
+  }
+  if (dir === CATALOG_DIR) tasteDefaultsCache = out;
+  return out;
 }

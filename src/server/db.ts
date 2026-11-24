@@ -203,6 +203,9 @@ function migrate(db: DB) {
   if (!has("gear_items", "category")) db.exec("ALTER TABLE gear_items ADD COLUMN category TEXT");
   if (!has("gear_items", "rangeInfo")) db.exec("ALTER TABLE gear_items ADD COLUMN rangeInfo TEXT"); // JSON: where the ranges come from
   // Water recipes: a recipe's default water and the water a brew used (name kept if the water is deleted).
+  // Coffee used without a logged brew (set via "edit what's left"); remaining = size − brews − this.
+  if (!has("inventory_items", "tastingNotes")) db.exec("ALTER TABLE inventory_items ADD COLUMN tastingNotes TEXT NOT NULL DEFAULT '[]'"); // JSON tags
+  if (!has("inventory_items", "unloggedG")) db.exec("ALTER TABLE inventory_items ADD COLUMN unloggedG REAL NOT NULL DEFAULT 0");
   if (!has("water_recipes", "concentrate")) db.exec("ALTER TABLE water_recipes ADD COLUMN concentrate INTEGER NOT NULL DEFAULT 0");
   for (const t of ["recipes", "brews"]) {
     if (!has(t, "waterId")) db.exec(`ALTER TABLE ${t} ADD COLUMN waterId INTEGER REFERENCES water_recipes(id) ON DELETE SET NULL`);

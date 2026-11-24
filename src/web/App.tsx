@@ -215,7 +215,7 @@ export function App() {
       <main>
         {route.section === "brew" && route.tab === "recipes" && <Recipes onEditGrinder={editGrinder} />}
         {route.section === "brew" && route.tab === "guide" && <Guide onEditGrinder={editGrinder} />}
-        {route.section === "brew" && route.tab === "stash" && <Stash />}
+        {route.section === "brew" && route.tab === "stash" && <Stash view={route.arg} />}
         {route.section === "brew" && route.tab === "log" && <BrewLog />}
         {route.section === "brew" && route.tab === "gear" && <Gear editId={route.arg || null} onEditDone={() => route.arg && go("brew", "gear")} />}
         {route.section === "brew" && route.tab === "water" && <Water />}

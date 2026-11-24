@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { type DB, nowIso, deriveStatus } from "./db.js";
 import { toGrindNumber } from "../shared/grind.js";
+import { splitTags } from "../shared/stash.js";
 import { loadCatalog, catalogGear, catalogRecipe, gearFromCatalog, renderTemplate, rangeInfoFromCatalog, catalogWater, waterFromTemplate, type OwnedGear, type GearRangeInfo } from "./catalog.js";
 import type { GrindRanges, Method } from "../shared/grind.js";
 
@@ -117,6 +118,7 @@ export function runSeed(db: DB, dir = SEED_DIR): SeedReport {
         id: i.id, name: i.name, roaster: i.roaster ?? null, origin: i.origin ?? null, processMethod: i.processMethod ?? null,
         roastLevel: i.roastLevel ?? null, roastDate: i.roastDate ?? null, purchaseDate: i.purchaseDate ?? null,
         openedDate: i.openedDate ?? null, finishedDate: i.finishedDate ?? null, amountG: i.amountG ?? null,
+        tastingNotes: JSON.stringify(Array.isArray(i.tastingNotes) ? i.tastingNotes : splitTags(i.tastingNotes)),
         price: i.price ?? null, url: i.url ?? null, rating: i.rating ?? null, notes: i.notes ?? null,
         source: i.source ?? "manual", status: deriveStatus(i), createdAt: i.createdAt ?? t, updatedAt: i.updatedAt ?? t,
       });

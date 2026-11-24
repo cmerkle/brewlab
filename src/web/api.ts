@@ -169,6 +169,10 @@ export interface Bag {
   status: "unopened" | "open" | "finished";
   photo: string | null;
   usedG: number;
+  /** Tasting-note tags ("strawberry", "milk chocolate"). */
+  tastingNotes: string[];
+  /** Coffee used without a logged brew (from editing what's left; can be negative). */
+  unloggedG: number;
   remainingG: number | null;
 }
 

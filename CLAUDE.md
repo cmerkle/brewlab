@@ -62,15 +62,36 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   the water and typing water moves the coffee; only the ratio field and quick-toggles (1:13–1:17
   plus 1:2) change it, and they hold whichever of coffee/water was edited last (coffee by default).
 - The brew timer reads **grams only**, even when the water field is in oz.
-- Stash status is derived from dates: unopened → open → finished. Deleting a bag keeps linked
-  recipes/brews (name kept, link nulled). Same for gear.
+- Stash status is derived from dates: unopened → open → finished. Finished bags leave the Stash for
+  its Archive (`#/brew/stash/archive`); "Back to stash" clears `finishedDate`. Remaining =
+  `amountG` − logged brew doses − `unloggedG` (set by "edit what's left",
+  `POST /api/inventory/:id/remaining`; can be negative; kept when the bag size changes). Sorting and
+  search are client-side (`src/shared/stash.ts`: `BAG_SORTS`, `sortBags` with missing values last,
+  `bagMatches` = every word must match); each tab's sort is a per-device pref.
+- **Coffee words are data** (`catalog/coffee-vocab.json`, `GET /api/vocab`): roast levels (id, label,
+  aliases, rest, peakEnd), processes, origins, tasting-note suggestions. Roast level is a list
+  (`normalizeRoastLevel` matches aliases on save; unknown text kept "as entered"); process/origin
+  are lists + Custom. `settings.restWindows` = your overrides by level id (defaults from the vocab);
+  `freshnessNote` uses the nearest level. Bags have `tastingNotes` tags (JSON array); imports and
+  Discover adds split tasting-note text into tags; `tidyBags` (startup, restore) matches roast
+  levels and moves a "Tasting notes: …" notes part into tags once. Tags feed `ratedCoffees` as notes.
+- Deleting a bag keeps linked recipes/brews (name kept, link nulled). Same for gear.
 - Add-to-inventory dedupes on name + roaster.
-- Discover refresh drops tried, avoided and already-stashed coffees, plus whatever the user's
-  "always leave out" rules exclude. Rules are user data: `settings.ruleDefs` ({id, label, keywords})
-  starts as `PRESET_RULES` (rules.ts: cinnamon, co-ferment, funk, decaf, dark roast, blends,
-  robusta, smoky) and can be edited, deleted, restored or added to; `settings.avoidRules` = ids
-  switched on (all off by default). Match = a keyword at the start of a word in name / process /
-  tasting notes / notes / "<roast> roast", case and accents folded (`ruleMatch`).
+- **Discover preferences are tags** (`src/shared/prefs.ts`, Discover → Your taste): `settings.prefs`
+  = five sections (roasters, processes, roasts, origins, notes) × three lists — `prefer` / `avoid`
+  (soft: prompt lines + `scoreCandidate` ±3 with a reason) and `exclude` ("Do not include", hard:
+  the refresh drops a match). Tags `{id, label, on, words?}` can be switched on/off and removed;
+  built-in ones come from `catalog/taste-defaults.json`, all off (the old always-leave-out presets
+  keep their ids and words: cinnamon, coferment, funk, decaf, dark-roast, blends, robusta, smoky).
+  A tag matches when one of its words (else its label or the label's singular) starts a word in
+  its section's fields (`sectionText`: a roast tag never looks at tasting notes); exclude reasons
+  check notes first. `migrateTastePrefs` moved the old ruleDefs/avoidRules/tasteQuiz/tastePrefs
+  once (old keys left in the table); an old rule id (also in seed taste.json) switches on every short
+  tag that now covers it (`OLD_RULES`). Built-in labels are one or two words. Suggestions offer to
+  switch an exclude tag on, never silently. *Reset preferences* (`POST /api/discover/prefs/reset`, asks
+  first; Your taste and setup's Discover step) restores the defaults; running setup again doesn't.
+- Discover refresh drops tried, avoided and already-stashed coffees, plus whatever switched-on
+  "Do not include" tags match.
 - **Water recipes** (`src/shared/water.ts`, `src/server/routes-water.ts`, More → Water): base + volume
   + additives (amount + unit). GH/KH (ppm as CaCO₃) come from additive strengths that are **data**
   (`catalog/water-additives.json`: `ref` = what `amount` `unit` adds to `volume`; salts `calculated`
@@ -189,7 +210,7 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   `meta.onboarded` isn't "1"; installs with data are marked onboarded at startup. Preferences in
   the `settings` table (`src/server/settings.ts`): tempUnit (DB always °C — use
   `useTemp`/`TempInput`), waterUnit (instance default; per-device g/oz pref wins), defaultRatio,
-  discoverEnabled, ruleDefs/avoidRules, palateNotes, tasteQuiz, doseNudge, updateCheck, backupKeep. Demo data (`demo/`, fictional) and restore
+  discoverEnabled, prefs, palateNotes, dismissedSuggestions, doseNudge, updateCheck, backupKeep, restWindows. Demo data (`demo/`, fictional) and restore
   only go into an empty DB.
 - **Discover taste** (`src/server/taste.ts`): summary from Stash ratings, brew ratings and
   tastings → stage popular (0 rated) / mixed (1–4) / tailored (5+), the research prompt, ranking of

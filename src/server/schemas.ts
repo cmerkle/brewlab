@@ -132,6 +132,8 @@ export const InventorySchema = z.object({
   notes: str(5000),
   source: z.enum(["manual", "Coffee Recommendations"]).optional(),
   photo: z.string().regex(/^\/uploads\/bag-[\w.-]+\.(jpg|png)$/, "Invalid photo reference").nullable().optional(),
+  /** Tasting-note tags ("strawberry", "milk chocolate"). */
+  tastingNotes: z.array(z.string().trim().min(1).max(60, "A tasting note can be at most 60 characters")).max(40).optional(),
 });
 
 /** Exactly a recommendation's fields. */

@@ -2,6 +2,7 @@
 import express, { type Response } from "express";
 import path from "node:path";
 import { type DB, nowIso } from "./db.js";
+import { tidyBags } from "./bags.js";
 import { getSettings, setSettings, isOnboarded, setOnboarded } from "./settings.js";
 import { compatibleTemplates, renderTemplate, catalogRecipe } from "./catalog.js";
 import { ownedGear, runSeed, linkGearToCatalog, normalizeGrindSettings, migrateEspressoCapable } from "./seed.js";
@@ -173,6 +174,7 @@ export function setupRouter(db: DB) {
       })();
       linkGearToCatalog(db); // exports from before the gear library
       normalizeGrindSettings(db); // exports from before numeric grind settings
+      tidyBags(db); // … and from before roast-level lists and tasting-note tags
       migrateEspressoCapable(db); // … and from before per-method "can do"
       setOnboarded(db, true);
       res.json({ ok: true, counts });

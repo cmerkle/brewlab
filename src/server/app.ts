@@ -9,11 +9,12 @@ import { loadCatalog, loadWaterCatalog } from "./catalog.js";
 import { brewRouter, dedupeRecipes, sweepUploads } from "./routes-brew.js";
 import { backupRouter, createBackup } from "./backup.js";
 import { waterRouter } from "./routes-water.js";
+import { tidyBags } from "./bags.js";
 import { discoverRouter, runRefresh } from "./routes-discover.js";
 import { llmConfig } from "./llm.js";
 import { tesseractAvailable } from "./imports.js";
 import { setupRouter } from "./routes-setup.js";
-import { markExistingInstallOnboarded, applySeedTaste } from "./settings.js";
+import { markExistingInstallOnboarded, applySeedTaste, migrateTastePrefs } from "./settings.js";
 import { SEED_DIR } from "./seed.js";
 import { aboutRouter, dailyUpdateCheck, VERSION } from "./about.js";
 
@@ -33,11 +34,15 @@ export function createApp(db = openDb()) {
   for (const id of synced.updated) console.log(`[catalog] ${id}: ranges updated from the gear library`);
   for (const m of synced.merged) console.log(`[catalog] ${m}: methods added from the gear library (your own ranges kept)`);
   for (const id of migrateEspressoCapable(db)) console.log(`[gear] ${id}: "not espresso-capable" is now "can't do espresso"`);
+  const tidied = tidyBags(db);
+  if (tidied.roast) console.log(`[stash] ${tidied.roast} roast level(s) matched to the roast list`);
+  if (tidied.tags) console.log(`[stash] tasting notes moved into tags on ${tidied.tags} bag(s)`);
   const grinds = normalizeGrindSettings(db);
   if (grinds) console.log(`[grind] ${grinds} grind setting(s) converted to plain numbers`);
   if (seeded) console.log("First run — seed imported:", seeded);
   // Installs that already have data (seeded, or from before first-run setup existed) skip it.
   if (markExistingInstallOnboarded(db)) console.log("[setup] existing data — first-run setup skipped");
+  if (migrateTastePrefs(db)) console.log("[discover] taste settings moved to tag-based preferences (what was on stays on)");
   if (applySeedTaste(db, SEED_DIR)) console.log("[discover] taste settings applied from seed data (taste.json)");
   const removed = dedupeRecipes(db);
   if (removed) console.log(`Removed ${removed} duplicate recipe(s).`);

@@ -30,8 +30,8 @@ test("fresh install: empty, not onboarded, default settings", async () => {
   assert.equal(s.onboarded, false);
   assert.equal(s.empty, true);
   assert.deepEqual(
-    { tempUnit: s.settings.tempUnit, waterUnit: s.settings.waterUnit, defaultRatio: s.settings.defaultRatio, discoverEnabled: s.settings.discoverEnabled, avoidRules: s.settings.avoidRules },
-    { tempUnit: "C", waterUnit: "g", defaultRatio: 16, discoverEnabled: true, avoidRules: [] },
+    { tempUnit: s.settings.tempUnit, waterUnit: s.settings.waterUnit, defaultRatio: s.settings.defaultRatio, discoverEnabled: s.settings.discoverEnabled, onExcludes: Object.values(s.settings.prefs).flatMap((x) => x.exclude.filter((t) => t.on)).length },
+    { tempUnit: "C", waterUnit: "g", defaultRatio: 16, discoverEnabled: true, onExcludes: 0 },
   );
   assert.equal((await call("PUT", "/api/settings", { tempUnit: "F", defaultRatio: 15 })).body.tempUnit, "F");
   assert.equal((await call("PUT", "/api/settings", { tempUnit: "K" })).status, 400);

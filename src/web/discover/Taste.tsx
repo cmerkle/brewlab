@@ -1,8 +1,11 @@
-// Discover → Your taste: what Brewlab has learned from your ratings, the avoid rules,
-// suggestions, the optional quiz and your own words. All of it shapes the weekly board.
-import { useCallback, useEffect, useState } from "react";
+// Discover → Your taste: what Brewlab has learned from your ratings, suggestions, and your
+// preferences as tags — five sections (roasters, processes, roast level, origins, tasting notes),
+// each with Preferred / Rather avoid / Do not include. Every tag can be switched on or off and
+// removed; built-in ones start off. Plus your own words. All of it shapes the weekly board.
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../api";
-import { useData, type Settings, type AvoidRuleDef } from "../ui";
+import { useData, useVocab } from "../ui";
+import { PREF_SECTIONS, PREF_LISTS, SECTION_LABELS, LIST_LABELS, newTag, type Prefs, type PrefSection, type PrefList, type PrefTag } from "../../shared/prefs";
 
 interface Aff { kind: string; name: string; n: number; avg: number; text: string }
 interface TasteView {
@@ -11,11 +14,9 @@ interface TasteView {
   likes: Aff[];
   dislikes: Aff[];
   coffees: { name: string; roaster: string | null; score: number; sources: string[] }[];
-  rules: (AvoidRuleDef & { on: boolean; preset: boolean })[];
-  presets: AvoidRuleDef[];
   suggestions: { id: string; text: string }[];
+  defaults: Prefs;
   palateNotes: string;
-  tasteQuiz: Settings["tasteQuiz"];
   prompt: string;
 }
 
@@ -25,45 +26,123 @@ const STAGES = {
   tailored: { title: "Tailored to you", text: "Picks follow what you rate well, plus one wildcard." },
 };
 
-export const QUIZ: { key: keyof Settings["tasteQuiz"]; q: string; options: string[] }[] = [
-  // Covers the families of the SCA coffee taster's flavour wheel (fruity, floral, sweet, nutty/cocoa,
-  // spice, roasted, sour/fermented, green/vegetative). Saved answers are plain strings, so options
-  // can be added without breaking anyone's earlier picks.
-  { key: "loves", q: "Flavours you love", options: [
-    "Berries", "Citrus", "Stone fruit", "Tropical fruit", "Apple & pear", "Grape & wine-like", "Dried fruit",
-    "Floral", "Tea-like", "Herbal",
-    "Chocolate", "Caramel & sweet", "Honey", "Vanilla", "Brown sugar & molasses",
-    "Nutty", "Malty & cereal", "Subtle spice", "Funky / fermented", "Boozy / winey",
-  ] },
-  { key: "dislikes", q: "Flavours you'd rather avoid", options: [
-    "Funky / fermented", "Boozy / winey", "Bitter / roasty", "Smoky / burnt", "Very sour", "Earthy",
-    "Herbal / grassy", "Spice-forward", "Flavoured coffees", "Heavy body", "Thin / watery",
-  ] },
-  { key: "processes", q: "Processes you enjoy", options: ["Washed", "Natural", "Honey", "Anaerobic / experimental", "Co-fermented", "Wet-hulled", "Not sure"] },
-  { key: "roasts", q: "Roast", options: ["Light", "Medium-light", "Medium", "Medium-dark", "Dark"] },
-];
+const LIST_HINTS: Record<PrefList, string> = {
+  prefer: "Favoured in the weekly research and the ranking.",
+  avoid: "Steered away from, but not blocked.",
+  exclude: "Left out of the board entirely.",
+};
 
-/** The optional quiz — saves on every tap. Also used in first-run setup. */
-export function TasteQuiz() {
-  const { settings, saveSettings, act } = useData();
-  const q = settings.tasteQuiz;
-  const toggle = (k: keyof Settings["tasteQuiz"], v: string) => {
-    const has = q[k].includes(v);
-    return act(() => saveSettings({ tasteQuiz: { ...q, [k]: has ? q[k].filter((x) => x !== v) : [...q[k], v] } }));
-  };
+let defaultsCache: Prefs | null = null;
+
+/** Every section back to the built-in tags, all off — after asking. */
+export function ResetPrefs() {
+  const { act, saveSettings } = useData();
   return (
-    <div className="stack" data-testid="taste-quiz">
-      {QUIZ.map((s) => (
-        <div key={s.key}>
-          <div className="small"><strong>{s.q}</strong></div>
-          <div className="chips" role="group" aria-label={s.q}>
-            {s.options.map((o) => {
-              const on = q[s.key].includes(o);
-              return <button key={o} type="button" className={`chip ${on ? "on" : ""}`} aria-pressed={on} onClick={() => toggle(s.key, o)}>{o}</button>;
-            })}
-          </div>
-        </div>
-      ))}
+    <button type="button" data-testid="reset-prefs" onClick={() => {
+      if (!confirm("Reset your Discover preferences? Every section goes back to the built-in tags, all switched off, and your own tags are removed. Your ratings and your own words stay.")) return;
+      act(async () => { await api.post("/api/discover/prefs/reset"); await saveSettings({}); }, "Preferences reset");
+    }}>Reset preferences</button>
+  );
+}
+
+/**
+ * The tag sections. Changes show at once and save in order, so quick taps never undo each other.
+ * Also used in first-run setup (with fewer sections).
+ */
+export function PrefsEditor({ sections = PREF_SECTIONS, defaults }: { sections?: readonly PrefSection[]; defaults?: Prefs | null }) {
+  const { settings, saveSettings, act, bags } = useData();
+  const vocab = useVocab();
+  const [p, setP] = useState<Prefs>(settings.prefs);
+  const latest = useRef(p);
+  const queue = useRef<Promise<unknown>>(Promise.resolve());
+  const saved = JSON.stringify(settings.prefs);
+  useEffect(() => {
+    latest.current = settings.prefs;
+    setP(settings.prefs);
+  }, [saved]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [defs, setDefs] = useState<Prefs | null>(defaults ?? defaultsCache);
+  useEffect(() => {
+    if (defaults) { defaultsCache = defaults; setDefs(defaults); return; }
+    if (!defaultsCache) api.get<TasteView>("/api/discover/taste").then((v) => { defaultsCache = v.defaults; setDefs(v.defaults); }).catch(() => {});
+  }, [defaults]);
+
+  const update = (sec: PrefSection, list: PrefList, f: (l: PrefTag[]) => PrefTag[]) => {
+    const next: Prefs = { ...latest.current, [sec]: { ...latest.current[sec], [list]: f(latest.current[sec][list]) } };
+    latest.current = next;
+    setP(next);
+    queue.current = queue.current.then(() => act(() => saveSettings({ prefs: next })));
+  };
+  const suggestions: Record<PrefSection, string[]> = {
+    roasters: [...new Set(bags.map((b) => b.roaster).filter(Boolean) as string[])].sort(),
+    processes: vocab.processes,
+    roasts: vocab.roastLevels.map((l) => l.label),
+    origins: vocab.origins,
+    notes: vocab.tastingNotes,
+  };
+
+  return (
+    <>
+      {sections.map((sec) => {
+        const missing = defs ? PREF_LISTS.flatMap((l) => defs[sec][l].filter((d) => !p[sec][l].some((t) => t.id === d.id)).map((d) => ({ l, d }))) : [];
+        return (
+          <section key={sec} className="card stack pref-section" data-testid={`prefs-${sec}`}>
+            <h2>{SECTION_LABELS[sec]}</h2>
+            <div className="pref-lists">
+            {PREF_LISTS.map((list) => (
+              <TagList key={list} id={`pref-${sec}-${list}`} label={LIST_LABELS[list]} hint={LIST_HINTS[list]} tags={p[sec][list]} suggestions={suggestions[sec]}
+                onAdd={(label) => update(sec, list, (l) => {
+                  const same = l.find((t) => t.label.toLowerCase() === label.toLowerCase());
+                  return same ? l.map((t) => (t === same ? { ...t, on: true } : t)) : [...l, newTag(label, l)];
+                })}
+                onToggle={(id) => update(sec, list, (l) => l.map((t) => (t.id === id ? { ...t, on: !t.on } : t)))}
+                onRemove={(id) => update(sec, list, (l) => l.filter((t) => t.id !== id))} />
+            ))}
+            </div>
+            {missing.length > 0 && (
+              <button type="button" className="link small" onClick={() => {
+                for (const l of PREF_LISTS) {
+                  const add = missing.filter((m) => m.l === l).map((m) => m.d);
+                  if (add.length) update(sec, l, (cur) => [...cur, ...add]);
+                }
+              }}>Restore {missing.length} built-in tag{missing.length === 1 ? "" : "s"} you removed</button>
+            )}
+          </section>
+        );
+      })}
+    </>
+  );
+}
+
+/** One list: an input to add tags, then the tags. Tap a tag to switch it on or off; × removes it. */
+function TagList({ id, label, hint, tags, suggestions, onAdd, onToggle, onRemove }: {
+  id: string; label: string; hint: string; tags: PrefTag[]; suggestions: string[];
+  onAdd: (label: string) => void; onToggle: (id: string) => void; onRemove: (id: string) => void;
+}) {
+  const [text, setText] = useState("");
+  const add = (raw: string) => {
+    for (const t of raw.split(/[,;\n]/).map((x) => x.trim()).filter(Boolean)) onAdd(t.slice(0, 80));
+    setText("");
+  };
+  const listId = `${id}-suggest`;
+  return (
+    <div className="pref-list" data-testid={id}>
+      <label htmlFor={id}>{label}</label>
+      <input id={id} aria-describedby={`${id}-hint`} value={text} placeholder="Add a tag, then Enter" enterKeyHint="done" list={suggestions.length ? listId : undefined}
+        onChange={(e) => (/[,;]/.test(e.target.value) ? add(e.target.value) : setText(e.target.value))}
+        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(text); } }}
+        onBlur={() => add(text)} />
+      <div className="hint" id={`${id}-hint`}>{hint}</div>
+      {suggestions.length > 0 && <datalist id={listId}>{suggestions.filter((s) => !tags.some((t) => t.label.toLowerCase() === s.toLowerCase())).map((s) => <option key={s} value={s} />)}</datalist>}
+      {tags.length > 0 && (
+        <ul className="ptags" aria-label={label}>
+          {tags.map((t) => (
+            <li key={t.id} className={`ptag ${t.on ? "on" : ""}`}>
+              <button type="button" className="ptag-toggle" aria-pressed={t.on} title={t.words?.length ? `Matches: ${t.words.join(", ")}` : undefined} onClick={() => onToggle(t.id)}>{t.label}</button>
+              <button type="button" className="ptag-x" aria-label={`Remove ${t.label}`} onClick={() => onRemove(t.id)}>×</button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
@@ -79,28 +158,15 @@ export function Taste() {
   }, [load, settings]);
   if (!t) return <p className="muted">Loading…</p>;
   const stage = STAGES[t.stage];
-  const setRule = (id: string, on: boolean) => {
-    const next = t.rules.filter((r) => (r.id === id ? on : r.on)).map((r) => r.id);
-    return act(() => saveSettings({ avoidRules: next }));
-  };
-  const defsOf = (rules: AvoidRuleDef[]) => rules.map(({ id, label, keywords }) => ({ id, label, keywords }));
-  const saveRule = (rule: AvoidRuleDef, isNew: boolean) =>
-    act(async () => {
-      const defs = isNew ? [...defsOf(t.rules), rule] : defsOf(t.rules).map((r) => (r.id === rule.id ? rule : r));
-      // A rule you just wrote is meant to apply: switch it on.
-      await saveSettings({ ruleDefs: defs, avoidRules: isNew ? [...t.rules.filter((r) => r.on).map((r) => r.id), rule.id] : undefined });
-    }, isNew ? "Rule added" : "Rule saved");
-  const deleteRule = (id: string) =>
-    act(() => saveSettings({ ruleDefs: defsOf(t.rules).filter((r) => r.id !== id) }), "Rule removed");
-  const missingPresets = t.presets.filter((p) => !t.rules.some((r) => r.id === p.id));
   const answer = (id: string, accept: boolean) =>
     act(async () => {
       await api.post(`/api/discover/suggestions/${id}`, { accept });
       await saveSettings({}); // refresh settings in the app
-    }, accept ? "Avoid rule turned on" : undefined);
+    }, accept ? "Switched on under Do not include" : undefined);
 
   return (
     <div className="stack" data-testid="taste">
+      <div className="row-actions"><ResetPrefs /></div>
       <section className="card" data-testid="taste-stage" data-stage={t.stage}>
         <h2>{stage.title}</h2>
         <p className="small">{stage.text}</p>
@@ -131,29 +197,11 @@ export function Taste() {
         </section>
       ))}
 
-      <section className="card" data-testid="avoid-rules">
-        <h2>Always leave out</h2>
-        <p className="muted small">
-          Hard filters: a coffee whose name, process, roast or tasting notes contain any of a rule's words never reaches the board.
-          They're yours to edit, and the starter rules are just suggestions, all off until you turn them on. The quiz and your own words below are softer:
-          they steer the research but don't block anything. Coffees you've tried or put on the avoid list are always left out.
-        </p>
-        <ul className="plain rules">
-          {t.rules.map((r) => <RuleRow key={r.id} rule={r} onToggle={(on) => setRule(r.id, on)} onSave={(x) => saveRule(x, false)} onDelete={() => deleteRule(r.id)} />)}
-        </ul>
-        <NewRule taken={t.rules.map((r) => r.id)} onAdd={(x) => saveRule(x, true)} />
-        {missingPresets.length > 0 && (
-          <button className="link small" onClick={() => act(() => saveSettings({ ruleDefs: [...defsOf(t.rules), ...missingPresets] }), "Starter rules restored")}>
-            Restore starter rules you removed ({missingPresets.map((p) => p.label).join(", ")})
-          </button>
-        )}
-      </section>
-
-      <section className="card">
-        <h2>Quick quiz</h2>
-        <p className="muted small">Optional. Helps the first boards before you've rated much.</p>
-        <TasteQuiz />
-      </section>
+      <p className="muted small">
+        Tap a tag to switch it on or off; × removes it. Built-in tags start off. <strong>Preferred</strong> and <strong>Rather avoid</strong> steer the
+        weekly research and the ranking; <strong>Do not include</strong> leaves a coffee out. Coffees you've tried or put on the avoid list are always left out.
+      </p>
+      <PrefsEditor defaults={t.defaults} />
 
       <section className="card">
         <h2>In your own words</h2>
@@ -163,70 +211,6 @@ export function Taste() {
           <button className="primary" disabled={(notes ?? "") === t.palateNotes} onClick={() => act(() => saveSettings({ palateNotes: notes ?? "" }), "Saved")}>Save</button>
         </div>
       </section>
-    </div>
-  );
-}
-
-const splitWords = (s: string) => [...new Set(s.split(",").map((w) => w.trim()).filter(Boolean))];
-
-/** One rule: switch, its words, and an inline editor. */
-function RuleRow({ rule, onToggle, onSave, onDelete }: {
-  rule: AvoidRuleDef & { on: boolean };
-  onToggle: (on: boolean) => void;
-  onSave: (r: AvoidRuleDef) => Promise<unknown>;
-  onDelete: () => void;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [label, setLabel] = useState(rule.label);
-  const [words, setWords] = useState(rule.keywords.join(", "));
-  if (editing)
-    return (
-      <li className="rule editing" data-testid={`rule-${rule.id}`}>
-        <label className="small" htmlFor={`rl-${rule.id}`}>Name</label>
-        <input id={`rl-${rule.id}`} value={label} onChange={(e) => setLabel(e.target.value)} />
-        <label className="small" htmlFor={`rw-${rule.id}`}>Words to look for (comma-separated)</label>
-        <input id={`rw-${rule.id}`} value={words} onChange={(e) => setWords(e.target.value)} />
-        <div className="row-actions">
-          <button className="link danger" onClick={() => { if (confirm(`Remove the rule “${rule.label}”?`)) onDelete(); }}>Remove rule</button>
-          <button onClick={() => { setLabel(rule.label); setWords(rule.keywords.join(", ")); setEditing(false); }}>Cancel</button>
-          <button className="primary" disabled={!label.trim() || !splitWords(words).length}
-            onClick={async () => { if (await onSave({ id: rule.id, label: label.trim(), keywords: splitWords(words) })) setEditing(false); }}>Save</button>
-        </div>
-      </li>
-    );
-  return (
-    <li className="rule" data-testid={`rule-${rule.id}`}>
-      <label className="toggle-row">
-        <input type="checkbox" checked={rule.on} onChange={(e) => onToggle(e.target.checked)} data-rule={rule.id} />
-        <span>
-          {rule.label}
-          <span className="muted small rule-words"> — {rule.keywords.join(", ")}</span>
-        </span>
-      </label>
-      <button className="link small" aria-label={`Edit rule ${rule.label}`} onClick={() => setEditing(true)}>Edit</button>
-    </li>
-  );
-}
-
-function NewRule({ taken, onAdd }: { taken: string[]; onAdd: (r: AvoidRuleDef) => Promise<unknown> }) {
-  const [open, setOpen] = useState(false);
-  const [label, setLabel] = useState("");
-  const [words, setWords] = useState("");
-  if (!open) return <button className="link" onClick={() => setOpen(true)} data-testid="rule-add">+ Add a rule</button>;
-  const base = label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 30) || "rule";
-  let id = `my-${base}`, n = 2;
-  while (taken.includes(id)) id = `my-${base}-${n++}`;
-  return (
-    <div className="rule editing" data-testid="rule-new">
-      <label className="small" htmlFor="rn-label">Name</label>
-      <input id="rn-label" placeholder="e.g. Peaberries" value={label} onChange={(e) => setLabel(e.target.value)} />
-      <label className="small" htmlFor="rn-words">Words to look for (comma-separated)</label>
-      <input id="rn-words" placeholder="e.g. peaberry, pea berry" value={words} onChange={(e) => setWords(e.target.value)} />
-      <div className="row-actions">
-        <button onClick={() => { setOpen(false); setLabel(""); setWords(""); }}>Cancel</button>
-        <button className="primary" disabled={!label.trim() || !splitWords(words).length}
-          onClick={async () => { if (await onAdd({ id, label: label.trim(), keywords: splitWords(words) })) { setOpen(false); setLabel(""); setWords(""); } }}>Add rule</button>
-      </div>
     </div>
   );
 }

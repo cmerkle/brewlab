@@ -71,6 +71,14 @@ Every brewer has a `defaultMethod`: the grind range it uses on the user's grinde
 
 Bases and additives live in `catalog/water-additives.json`. An additive's `ref` says what `amount` of it adds to `volume` of water (GH and KH in ppm as CaCO₃). Use `null` for a value the maker doesn't publish, never a guess. A `published` strength needs a `source` link. A `calculated` one (pure salts from molar mass, or a published concentrate worked out from its salts) says how in its `note`. Quote only numbers from a source, and link to it. Don't copy its text.
 
+## Coffee words
+
+`catalog/coffee-vocab.json` holds the bag form's lists: roast levels (with other spellings to match and a rule-of-thumb rest / peak window in days), processes, origins and tasting-note suggestions. Add an origin or process there, not in the code.
+
+## Discover's built-in tags
+
+`catalog/taste-defaults.json` holds the tags Discover → Your taste starts with (all off), per section and list. `words` are extra words that count as a match.
+
 ## What CI checks
 
 `npm run check:catalog` (CI runs it on every pull request) explains each problem in plain words:

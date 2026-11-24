@@ -1,6 +1,8 @@
 import { DEFAULT_DOSE_NUDGE, type DoseNudge } from "../shared/grind";
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import type { RestOverrides, RoastLevelDef } from "../shared/stash";
+import { emptyPrefs, type Prefs } from "../shared/prefs";
 import { api, type Bag, type Brew, type Gear, type Limits, type Recipe, type WaterRecipe } from "./api";
 import { G_PER_OZ } from "../shared/brew";
 
@@ -29,17 +31,17 @@ export function usePref<T>(key: string, fallback: T): [T, (v: T) => void] {
   return [v, (n: T) => { setV(n); setPref(key, n); }];
 }
 
-/** An "always leave out" rule for Discover: any of its words in a coffee's details → left out. */
-export interface AvoidRuleDef { id: string; label: string; keywords: string[] }
 
 export interface Settings {
   tempUnit: "C" | "F"; waterUnit: "g" | "oz"; defaultRatio: number; discoverEnabled: boolean;
-  ruleDefs: AvoidRuleDef[]; avoidRules: string[]; palateNotes: string;
-  tasteQuiz: { loves: string[]; dislikes: string[]; processes: string[]; roasts: string[] };
+  /** Discover → Your taste: tag-based preferences (see src/shared/prefs.ts). */
+  prefs: Prefs;
+  palateNotes: string;
   dismissedSuggestions: string[];
   doseNudge: DoseNudge;
   updateCheck: boolean;
   backupKeep: number | null;
+  restWindows: RestOverrides;
 }
 export interface SetupState { onboarded: boolean; empty: boolean; settings: Settings }
 
@@ -64,11 +66,71 @@ interface Data {
 const Ctx = createContext<Data | null>(null);
 export const DEFAULT_SETTINGS: Settings = {
   tempUnit: "C", waterUnit: "g", defaultRatio: 16, discoverEnabled: true,
-  ruleDefs: [], avoidRules: [], palateNotes: "", tasteQuiz: { loves: [], dislikes: [], processes: [], roasts: [] }, dismissedSuggestions: [],
+  prefs: emptyPrefs(), palateNotes: "", dismissedSuggestions: [],
   doseNudge: DEFAULT_DOSE_NUDGE,
   updateCheck: false,
   backupKeep: null,
+  restWindows: {},
 };
+
+/* ------------------------------ coffee words (catalog/coffee-vocab.json) ------------------------------ */
+
+export interface CoffeeVocab { roastLevels: RoastLevelDef[]; processes: string[]; origins: string[]; tastingNotes: string[] }
+const EMPTY_VOCAB: CoffeeVocab = { roastLevels: [], processes: [], origins: [], tastingNotes: [] };
+let vocabPromise: Promise<CoffeeVocab> | null = null;
+let vocabCache: CoffeeVocab | null = null;
+/** Roast levels, processes, origins and tasting-note suggestions — fetched once. */
+export function useVocab(): CoffeeVocab {
+  const [v, setV] = useState<CoffeeVocab>(vocabCache ?? EMPTY_VOCAB);
+  useEffect(() => {
+    if (vocabCache) return;
+    vocabPromise ??= api.get<CoffeeVocab>("/api/vocab").then((x) => (vocabCache = x));
+    let live = true;
+    vocabPromise.then((x) => live && setV(x), () => { vocabPromise = null; });
+    return () => { live = false; };
+  }, []);
+  return v;
+}
+
+/** Tags as chips: type and press Enter or comma to add, × to remove. Suggestions from a list. */
+export function TagInput({ id, label, tags, onChange, suggestions = [], placeholder = "Type and press Enter", hint }: {
+  id: string; label: string; tags: string[]; onChange: (t: string[]) => void; suggestions?: string[]; placeholder?: string; hint?: string;
+}) {
+  const [text, setText] = useState("");
+  const add = (raw: string) => {
+    const parts = raw.split(/[,;\n]/).map((t) => t.trim()).filter(Boolean);
+    if (!parts.length) return;
+    const next = [...tags];
+    for (const t of parts) if (!next.some((x) => x.toLowerCase() === t.toLowerCase())) next.push(t);
+    onChange(next);
+    setText("");
+  };
+  const listId = `${id}-suggest`;
+  return (
+    <div className="field tag-field">
+      <label htmlFor={id}>{label}</label>
+      {tags.length > 0 && (
+        <ul className="tag-chips" aria-label={label}>
+          {tags.map((t) => (
+            <li key={t} className="tag-chip">
+              <span>{t}</span>
+              <button type="button" aria-label={`Remove ${t}`} onClick={() => onChange(tags.filter((x) => x !== t))}>×</button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <input id={id} value={text} list={suggestions.length ? listId : undefined} placeholder={placeholder} enterKeyHint="done"
+        onChange={(e) => (/[,;]/.test(e.target.value) ? add(e.target.value) : setText(e.target.value))}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") { e.preventDefault(); add(text); }
+          else if (e.key === "Backspace" && !text && tags.length) onChange(tags.slice(0, -1));
+        }}
+        onBlur={() => add(text)} />
+      {suggestions.length > 0 && <datalist id={listId}>{suggestions.filter((s) => !tags.some((t) => t.toLowerCase() === s.toLowerCase())).map((s) => <option key={s} value={s} />)}</datalist>}
+      {hint && <div className="hint">{hint}</div>}
+    </div>
+  );
+}
 export const useData = () => useContext(Ctx)!;
 
 export function DataProvider({ children }: { children: React.ReactNode }) {

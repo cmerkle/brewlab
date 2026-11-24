@@ -5,7 +5,7 @@ import { api } from "./api";
 import { fmtGrind } from "../shared/grind";
 import { AiProvider } from "./AiProvider";
 import { Wordmark } from "./Logo";
-import { TasteQuiz } from "./discover/Taste";
+import { PrefsEditor, ResetPrefs } from "./discover/Taste";
 import { useData, BackButton, NumInput, SearchInput, Field, useEdgeSwipeBack, useTemp, type Settings } from "./ui";
 
 interface LibGear {
@@ -110,7 +110,7 @@ function Welcome({ empty, onFresh, onDone }: { empty: boolean; onFresh: () => vo
   if (!empty)
     return (
       <>
-        <p>Setting things up again. Nothing you already have is removed — add gear, change preferences or pick more starter recipes.</p>
+        <p>Setting things up again. Nothing you already have is removed — add gear, change preferences or pick more starter recipes. </p>
         <button className="primary block" onClick={onFresh}>Start</button>
         <button className="block" onClick={onDone}>Exit setup</button>
       </>
@@ -370,6 +370,14 @@ function RecipesStep({ onAdded }: { onAdded: () => void }) {
       <p className="hint">Recipes your gear can brew, with grind settings already in your grinder's units. Untick any you don't want.</p>
       {!list && <p className="muted">Loading…</p>}
       {list && list.length === 0 && <p className="muted">No starter recipes fit your gear yet — add a brewer (Back), or skip and write your own.</p>}
+      {list && list.length > 0 && (
+        <div className="row wrap" data-testid="tpl-bulk">
+          {/* Recipes already in your list stay unticked: they're never added twice. */}
+          <button type="button" disabled={!list.some((t) => !t.alreadyAdded)} onClick={() => setPicked(new Set(list.filter((t) => !t.alreadyAdded).map((t) => t.id)))}>Select all</button>
+          <button type="button" disabled={!n} onClick={() => setPicked(new Set())}>Deselect all</button>
+          {!list.some((t) => !t.alreadyAdded) && <span className="muted small">All of these are already in your recipes.</span>}
+        </div>
+      )}
       {groups.map(([brewer, ts]) => (
         <section key={brewer}>
           <h2 className="group">{brewer}</h2>
@@ -418,11 +426,12 @@ function DiscoverStep() {
       </div>
       {on && (
         <>
-          <section className="card">
+          <section className="card" data-testid="setup-taste">
             <h2>Your taste (optional)</h2>
-            <p className="muted small">With no ratings yet, the first boards are popular, approachable coffees. A few taps here point them your way; rating what you drink does the rest.</p>
-            <TasteQuiz />
+            <p className="muted small">With no ratings yet, the first boards are popular, approachable coffees. Tap a few tags to point them your way; rating what you drink does the rest. More in Discover → Your taste.</p>
+            <ResetPrefs />
           </section>
+          <PrefsEditor sections={["notes", "processes", "roasts"]} />
           <section className="card">
             <h2>AI provider (optional)</h2>
             <p className="muted small">Lets Brewlab research the weekly board and read bag photos. Without one, you add board candidates yourself and Brewlab filters and ranks them.</p>

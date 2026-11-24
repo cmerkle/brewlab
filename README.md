@@ -40,7 +40,7 @@ Open `http://<server-ip>:7642`. The first visit opens a short setup:
 2. **Brewers** and **grinders:** choose from the built-in library, or add your own. For a grinder that isn't listed, type the setting you use for a V60 and Brewlab proposes a pour-over range, so conversions work straight away.
 3. **Preferences:** grams or ounces, °C or °F, default ratio.
 4. **Starter recipes** that fit your gear, with grind settings already in your grinder's units.
-5. **Discover:** on or off, an optional taste quiz, and an optional AI provider.
+5. **Discover:** on or off, a few optional taste tags, and an optional AI provider.
 
 Every step can be skipped and redone from **More → Settings → Run setup again**.
 
@@ -112,7 +112,7 @@ Set a provider in the app under **More → Settings → AI provider**: choose on
 *Discover → Your taste* shows what the board is based on:
 - **Ratings:** your Stash stars, brew ratings and tasting log, summarised by origin, process, roast and tasting notes.
 - **How personal it gets:** popular picks with no ratings, a mix with 1–4 rated coffees, tailored picks from 5.
-- **Always leave out:** hard filters you control. Each rule is a name plus words to look for in a coffee's name, process, roast and tasting notes. Brewlab starts you with suggestions you can turn on (cinnamon-forward, co-ferments or flavoured, fermentation funk, decaf, dark roasts, blends, robusta, smoky). Change their words, delete them, or add your own (say, "Peaberries: peaberry"). All start off; the app suggests one when you rate a few matching coffees low, and never turns one on by itself.
+- **Your preferences, as tags,** in five sections: roasters, processes, roast level, origins and tasting notes. Each has **Preferred** and **Rather avoid** (soft: they steer the research and the ranking) and **Do not include** (hard: a matching coffee is left out). Tap a tag to switch it on or off, × to remove it, or type your own. Built-in tags start off: flavours (berries, citrus, chocolate …), processes, roast levels, and exclusions such as cinnamon-forward, co-ferments, fermentation funk, decaf, dark roasts, blends and robusta. The app suggests switching an exclusion on when you rate a few matching coffees low, and never does it by itself.
 - **Exactly what the research is told,** shown word for word.
 
 ## Data and backups

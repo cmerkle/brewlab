@@ -4,9 +4,10 @@ import { TastingSchema, AvoidSchema, CandidateSchema, type Candidate, firstError
 import { addToInventory } from "./routes-brew.js";
 import { applyMatchingRules, type Dropped } from "./rules.js";
 import { llmConfig, researchSupported, researchCandidates } from "./llm.js";
-import { enabledRules, getSettings, setSettings } from "./settings.js";
+import { getSettings, setSettings } from "./settings.js";
+import { PREF_SECTIONS } from "../shared/prefs.js";
+import { loadTasteDefaults } from "./catalog.js";
 import { tasteSummary, tasteProfileText, scoreCandidate, avoidSuggestions, describe } from "./taste.js";
-import { PRESET_RULES } from "./rules.js";
 
 const PICK_STATUSES = ["new", "saved", "passed", "tried"] as const;
 
@@ -24,7 +25,7 @@ function setRefresh(db: DB, status: string, note: string) {
 
 function ruleContext(db: DB) {
   return {
-    rules: enabledRules(getSettings(db)),
+    prefs: getSettings(db).prefs,
     tastings: db.prepare("SELECT name, roaster FROM tastings").all() as any[],
     avoids: db.prepare("SELECT name, roaster FROM avoids").all() as any[],
     stash: (db.prepare("SELECT name, roaster, finishedDate, openedDate FROM inventory_items").all() as any[]).map((i) => ({
@@ -48,8 +49,10 @@ export function publishEdition(db: DB, cands: Candidate[], weekLabel: string, se
   // Entered candidates (no AI research) are ranked by the taste summary, each with its reason.
   if (opts.rankByTaste) {
     const s = tasteSummary(db);
-    if (s.stage !== "popular") {
-      const scored = kept.map((c, i) => ({ c, i, ...scoreCandidate(c, s) }));
+    const prefs = getSettings(db).prefs;
+    const anyPrefs = PREF_SECTIONS.some((sec) => prefs[sec].prefer.some((t) => t.on) || prefs[sec].avoid.some((t) => t.on));
+    if (s.stage !== "popular" || anyPrefs) {
+      const scored = kept.map((c, i) => ({ c, i, ...scoreCandidate(c, s, prefs) }));
       scored.sort((a, b) => (a.c.kind === "wildcard" ? 1 : 0) - (b.c.kind === "wildcard" ? 1 : 0) || b.score - a.score || a.i - b.i);
       kept = scored.map(({ c, reason }) => (reason && !(c.whyFit ?? "").includes(reason) ? { ...c, whyFit: [c.whyFit, reason].filter(Boolean).join(" ") } : c));
     }
@@ -263,19 +266,27 @@ export function discoverRouter(db: DB) {
       likes: s.likes.map((a) => ({ ...a, text: describe(a) })),
       dislikes: s.dislikes.map((a) => ({ ...a, text: describe(a) })),
       coffees: s.coffees,
-      rules: settings.ruleDefs.map((r) => ({ ...r, on: settings.avoidRules.includes(r.id), preset: PRESET_RULES.some((p) => p.id === r.id) })),
-      presets: PRESET_RULES,
       suggestions: avoidSuggestions(db, s, settings),
+      defaults: loadTasteDefaults().prefs,
       palateNotes: settings.palateNotes,
-      tasteQuiz: settings.tasteQuiz,
       prompt: tasteProfileText(s, settings),
     });
   });
+  /** Reset preferences: every section back to the built-in tags, all off (asked first in the app). */
+  r.post("/prefs/reset", (_req, res) => {
+    res.json(setSettings(db, { prefs: loadTasteDefaults().prefs, dismissedSuggestions: [] }));
+  });
   r.post("/suggestions/:id", (req, res) => {
     const id = req.params.id;
-    if (!getSettings(db).ruleDefs.some((x) => x.id === id)) return bad(res, "Unknown suggestion", 404);
     const s = getSettings(db);
-    if (req.body?.accept) setSettings(db, { avoidRules: [...new Set([...s.avoidRules, id])] });
+    const [section, tagId] = id.split(":");
+    const tag = (PREF_SECTIONS as readonly string[]).includes(section) ? s.prefs[section as (typeof PREF_SECTIONS)[number]].exclude.find((t) => t.id === tagId) : undefined;
+    if (!tag) return bad(res, "Unknown suggestion", 404);
+    if (req.body?.accept) {
+      const prefs = structuredClone(s.prefs);
+      prefs[section as (typeof PREF_SECTIONS)[number]].exclude.find((t) => t.id === tagId)!.on = true;
+      setSettings(db, { prefs });
+    }
     else setSettings(db, { dismissedSuggestions: [...new Set([...s.dismissedSuggestions, id])] });
     res.json({ ok: true });
   });
