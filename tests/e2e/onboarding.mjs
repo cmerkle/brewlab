@@ -192,7 +192,9 @@ try {
   await p.goto(`${BASE}/#/more`);
   const dnCard = p.locator('[data-testid="dose-nudge-settings"]');
   await dnCard.waitFor();
-  check(/twice the dose → .* coarser/.test(await dnCard.innerText()), `the setting shows a worked example on your gear: ${(await dnCard.locator(".hint").innerText()).slice(0, 120)}`);
+  const dnTable = await dnCard.locator('[data-testid="dose-nudge-table"]').innerText();
+  check(/1½×\s+\+11\.7%/.test(dnTable) && /½×\s+−20%/.test(dnTable) && /Comandante C40/.test(dnTable),
+    `the setting explains the scaling with a table on your gear: ${dnTable.replace(/\s+/g, " ").slice(0, 160)}`);
   await p.fill("#dn-percent", "40");
   await dnCard.getByLabel("French press / immersion").check();
   await p.waitForTimeout(400);

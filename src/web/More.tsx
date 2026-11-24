@@ -219,18 +219,19 @@ function DoseNudgeSettings() {
   };
   const queue = useRef<Promise<unknown>>(Promise.resolve());
   // A worked example on the user's own gear, so the percentage means something.
+  // Worked on the user's own gear (first grinder with a range for a ticked category), so the
+  // percentage means something.
   const ex = (() => {
     for (const m of cfg.methods) {
       for (const g of gear.filter((x) => x.type === "grinder")) {
         const r = rangeFor(g, m);
-        if (r && r.high > r.low) {
-          const d = (cfg.percent / 100) * (r.high - r.low);
-          return `e.g. ${g.name}, ${METHOD_LABELS[m]} ${fmtGrindNumber(r.low)}–${fmtGrindNumber(r.high)}${g.units ? ` ${g.units}` : ""}: twice the dose → ${fmtGrindNumber(Math.round(d * 100) / 100)} coarser, half → that much finer.`;
-        }
+        if (r && r.high > r.low) return { g, m, r };
       }
     }
     return null;
   })();
+  const FACTORS: [number, string][] = [[0.5, "½×"], [0.75, "¾×"], [1.25, "1¼×"], [1.5, "1½×"], [2, "2×"], [3, "3×"]];
+  const sign = (n: number) => (n > 0 ? "+" : n < 0 ? "−" : "±");
   return (
     <section className="card stack" data-testid="dose-nudge-settings">
       <h2>Grind for a different dose</h2>
@@ -253,7 +254,33 @@ function DoseNudgeSettings() {
               <span className="muted">% of the range</span>
             </span>
           </div>
-          <p className="hint">The range is your grinder's low–high for that grind category (Gear). {ex}</p>
+          <div className="hint" data-testid="dose-nudge-explain">
+            <p>
+              Each <strong>doubling</strong> of the dose moves the grind {fmtGrindNumber(cfg.percent)}% of your grinder's
+              low–high range for that grind category (set in Gear) coarser; each <strong>halving</strong> moves it the same
+              amount finer. It follows the ratio, not the grams: 1½× the dose moves {Math.round(Math.log2(1.5) * 100)}% as far
+              as 2× does, while ½× (−50%) moves the full amount finer.
+            </p>
+            <table className="guide" data-testid="dose-nudge-table">
+              <thead>
+                <tr><th>Dose vs recipe</th><th>Grind moves (share of range)</th>{ex && <th>{ex.g.name}, {METHOD_LABELS[ex.m]} {fmtGrindNumber(ex.r.low)}–{fmtGrindNumber(ex.r.high)}{ex.g.units ? ` ${ex.g.units}` : ""}</th>}</tr>
+              </thead>
+              <tbody>
+                {FACTORS.map(([f, l]) => {
+                  const pct = (cfg.percent * Math.log2(f));
+                  const d = ex ? (pct / 100) * (ex.r.high - ex.r.low) : 0;
+                  return (
+                    <tr key={f}>
+                      <td>{l}</td>
+                      <td>{sign(pct)}{fmtGrindNumber(Math.abs(Math.round(pct * 10) / 10))}%</td>
+                      {ex && <td>{sign(d)}{fmtGrindNumber(Math.abs(Math.round(d * 100) / 100))}{ex.g.units ? ` ${ex.g.units}` : ""}</td>}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            {ex && <p>Brew setup rounds the result to the grinder's step.</p>}
+          </div>
           <fieldset className="checks">
             <legend>Applies to</legend>
             {METHODS.map((m) => (
