@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Rapid Brewer sits between AeroPress and pour-over** in every table, list and picker (finest → coarsest), and in the library files.
+- **Can't-do shows as "—"** in the grind guide and converter instead of a yellow warning (hover or a screen reader still gives the reason). Rows with no range yet keep "No conversion data yet — add starting ranges for this grinder · Edit grinder", in plain text. The guide's stale "K-Ultra ranges are from the original guide" line is gone.
 - **"Estimate the empty rows"** in the gear editor fills a grinder's missing grind ranges from its other ranges, marks them "est." and writes how they were worked out. It says which rows it couldn't fill and what they'd need. The rules are data, in `catalog/estimate-rules.json` (e.g. cold brew = the French press range moved half its width coarser), and are the same ones behind the library's estimated rows: `npm test` checks the library's rule-made estimates match them.
 - **"Can do" per brew method replaces "Espresso-capable".** Each row of a grinder's range table has a box: untick a method the grinder can't do and its range goes away, conversions to it say "<grinder> can't grind for <method>", and the grinder picker marks it. Library grinders come marked (e.g. the Ode Gen 2 and ZP6 can't do Turkish or espresso). Grinders saved as not espresso-capable are migrated to "can't do espresso".
 - **No more summary box above the grind ranges.** Everything it showed is in the fields below; a library grinder whose ranges still match the library just says so in one line.

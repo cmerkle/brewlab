@@ -26,6 +26,10 @@
         "low": 21,
         "high": 23
       },
+      "rapid": {
+        "low": 22,
+        "high": 26
+      },
       "pourover": {
         "low": 24,
         "high": 27
@@ -41,10 +45,6 @@
       "coldbrew": {
         "low": 34,
         "high": 40
-      },
-      "rapid": {
-        "low": 22,
-        "high": 26
       }
     },
     "notes": {
@@ -61,11 +61,11 @@
     "estimated": [
       "moka",
       "aeropress",
+      "rapid",
       "pourover",
       "batch",
       "immersion",
-      "coldbrew",
-      "rapid"
+      "coldbrew"
     ],
     "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: moka pot: 18–21, between espresso and AeroPress; AeroPress: 21–23 around Baratza's 22; pour-over: 24–27 around Baratza's V60 25 (Chemex 30 is coarser); drip coffee maker: 27–29 around Baratza's automatic brewer 28; French press: 31–34 around Baratza's 32; cold brew: 34–40, the coarse end of the filter range; Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
   }

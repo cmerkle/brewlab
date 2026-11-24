@@ -21,6 +21,10 @@
         "low": 1.2,
         "high": 2
       },
+      "rapid": {
+        "low": 1.6,
+        "high": 2.5
+      },
       "pourover": {
         "low": 1.8,
         "high": 3.2
@@ -36,10 +40,6 @@
       "coldbrew": {
         "low": 3.2,
         "high": 4.4
-      },
-      "rapid": {
-        "low": 1.6,
-        "high": 2.5
       }
     },
     "notes": {
@@ -58,8 +58,8 @@
     "source": "https://1zpresso.coffee/grind-setting/",
     "note": "1Zpresso “Q Grind Setting Reference” chart for the Q series (grind-setting_q_en_20260423.jpg on that page), in rotations: AeroPress/moka/drip coffee maker 1.2–2.0, siphon/pour over 1.8–3.2, French press 2.6–3.8.",
     "estimated": [
-      "coldbrew",
-      "rapid"
+      "rapid",
+      "coldbrew"
     ],
     "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: cold brew: the French press range moved half its width coarser; Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
   }

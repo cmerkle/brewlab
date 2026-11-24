@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useData, NumInput, usePref } from "../ui";
 import { useGrinders } from "../grindui";
-import { METHODS, METHOD_LABELS, recommend, convertSetting, valueToDial, effectiveRanges, rangeFor, missingRange, NO_DATA_MESSAGE, DRAFT_NOTE, type Method } from "../../shared/grind";
+import { METHODS, METHOD_LABELS, recommend, convertSetting, valueToDial, effectiveRanges, rangeFor, missingRange, canGrind, NO_DATA_MESSAGE, DRAFT_NOTE, type Method } from "../../shared/grind";
 
 export function Guide({ onEditGrinder }: { onEditGrinder: (id: string) => void }) {
   const grinders = useGrinders();
@@ -9,7 +9,7 @@ export function Guide({ onEditGrinder }: { onEditGrinder: (id: string) => void }
     <div className="stack">
       <Converter onEditGrinder={onEditGrinder} />
       <h2>Grind guide</h2>
-      <p className="hint">{DRAFT_NOTE} K-Ultra ranges are from the original guide.</p>
+      <p className="hint">{DRAFT_NOTE} — means the grinder can't do that method.</p>
       {grinders.map((g) => {
         const r = effectiveRanges(g);
         const custom = Boolean(g.grindRanges && Object.keys(g.grindRanges.methods ?? {}).length);
@@ -34,10 +34,11 @@ export function Guide({ onEditGrinder }: { onEditGrinder: (id: string) => void }
                           <td>{rec.low} – {rec.high}</td>
                           <td>{rec.microns.low}–{rec.microns.high}</td>
                         </>
+                      ) : !canGrind(g, m) ? (
+                        <td colSpan={3} className="muted" title={rec.message}><span aria-label={`can't do ${METHOD_LABELS[m]}`}>—</span></td>
                       ) : (
-                        <td colSpan={3} className="note">
-                          {rec.message}
-                          {rec.reason === "no-data" && <> <button className="link" onClick={() => onEditGrinder(g.id)}>Edit grinder</button></>}
+                        <td colSpan={3} className="muted">
+                          {NO_DATA_MESSAGE}. <button className="link" onClick={() => onEditGrinder(g.id)}>Edit grinder</button>
                         </td>
                       )}
                     </tr>
@@ -89,7 +90,7 @@ function Converter({ onEditGrinder }: { onEditGrinder: (id: string) => void }) {
         </div>
       </div>
       {from && !fromRange && (
-        <div className="note">
+        <div className="muted">
           {missingRange(from, method).message}{" "}
           {missingRange(from, method).reason === "no-data" && <button className="link" onClick={() => onEditGrinder(from.id)}>Edit grinder</button>}
         </div>
@@ -103,10 +104,11 @@ function Converter({ onEditGrinder }: { onEditGrinder: (id: string) => void }) {
                 <span>{g.name}</span>
                 {r.ok ? (
                   <strong>{r.display}{r.microns ? <span className="muted"> · ~{r.microns} µm</span> : null}{r.clamped ? <span className="muted"> (at the end of its range)</span> : null}</strong>
+                ) : !canGrind(g, method) ? (
+                  <span className="muted" title={r.message} aria-label={`${g.name} can't do ${METHOD_LABELS[method]}`}>—</span>
                 ) : (
-                  <span className="note">
-                    {r.message}
-                    {r.reason === "no-data" && <> <button className="link" onClick={() => onEditGrinder(g.id)}>Edit grinder</button></>}
+                  <span className="muted">
+                    {r.message}{r.reason === "no-data" && <> <button className="link" onClick={() => onEditGrinder(g.id)}>Edit grinder</button></>}
                   </span>
                 )}
               </li>

@@ -25,6 +25,10 @@
         "low": 3,
         "high": 5
       },
+      "rapid": {
+        "low": 4,
+        "high": 7
+      },
       "pourover": {
         "low": 5,
         "high": 9
@@ -40,10 +44,6 @@
       "coldbrew": {
         "low": 8,
         "high": 10
-      },
-      "rapid": {
-        "low": 4,
-        "high": 7
       }
     },
     "notes": {

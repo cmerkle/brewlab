@@ -30,6 +30,10 @@
         "low": 50,
         "high": 70
       },
+      "rapid": {
+        "low": 60,
+        "high": 85
+      },
       "pourover": {
         "low": 80,
         "high": 90
@@ -45,10 +49,6 @@
       "coldbrew": {
         "low": 95,
         "high": 105
-      },
-      "rapid": {
-        "low": 60,
-        "high": 85
       }
     },
     "notes": {
@@ -63,8 +63,8 @@
     "source": "https://1zpresso.coffee/grind-setting/",
     "note": "1Zpresso “Kultra Grind Setting Reference” chart (Kultra-Grind-Setting-Reference-20221031.jpg on that page), in dial points: Turkish 2–3.5, espresso 3–4.5, AeroPress/moka/drip coffee maker 5–7, siphon/pour over 8–9, French press 9–10.",
     "estimated": [
-      "coldbrew",
-      "rapid"
+      "rapid",
+      "coldbrew"
     ],
     "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: cold brew: the French press range moved half its width coarser; Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
   }

@@ -152,7 +152,7 @@ try {
 
   // Grind ranges: the brew-method rows, and an editable source for a custom grinder.
   const rows = await p.locator('[data-testid="range-table"] .rl').allInnerTexts();
-  check(JSON.stringify(rows.map((x) => x.replace(/est\.$/, "").trim())) === JSON.stringify(["Turkish", "Espresso", "Moka pot", "AeroPress", "Pour-over (V60)", "Drip coffee maker", "French press / immersion", "Cold brew", "Rapid Brewer"]),
+  check(JSON.stringify(rows.map((x) => x.replace(/est\.$/, "").trim())) === JSON.stringify(["Turkish", "Espresso", "Moka pot", "AeroPress", "Rapid Brewer", "Pour-over (V60)", "Drip coffee maker", "French press / immersion", "Cold brew"]),
     `range rows follow the grind chart: ${rows.join(" · ")}`);
   check(!(await p.locator('[data-testid="range-source"]').count()) && (await p.inputValue("#ge-source")) === "", "no summary box; a custom grinder starts with an empty source");
   check((await p.locator('[data-testid="range-table"] input[type=checkbox]:checked').count()) === 9, "a new grinder can do every brew method until you untick one");
@@ -205,7 +205,7 @@ try {
   await p.getByRole("button", { name: "Estimate the empty rows" }).click();
   const estRes = p.locator('[data-testid="estimate-result"]');
   await estRes.waitFor();
-  check(/Estimated Moka pot, AeroPress, Drip coffee maker, Cold brew, Rapid Brewer/.test(await estRes.innerText()), `estimate result: ${await estRes.innerText()}`);
+  check(/Estimated Moka pot, AeroPress, Rapid Brewer, Drip coffee maker, Cold brew/.test(await estRes.innerText()), `estimate result: ${await estRes.innerText()}`);
   const v = async (m) => `${await p.getByLabel(`${m} low`).inputValue()}–${await p.getByLabel(`${m} high`).inputValue()}`;
   check(await v("AeroPress") === "20–30" && await v("Moka pot") === "20–25" && await v("Drip coffee maker") === "30–40" && await v("Cold brew") === "55–65" && await v("Rapid Brewer") === "25–35",
     `rules applied: AeroPress ${await v("AeroPress")}, moka ${await v("Moka pot")}, drip ${await v("Drip coffee maker")}, cold brew ${await v("Cold brew")}, Rapid ${await v("Rapid Brewer")}`);
@@ -214,7 +214,7 @@ try {
   await p.getByRole("button", { name: "Save", exact: true }).click();
   await p.locator(".card h3", { hasText: "Estimate Mill" }).waitFor();
   const em = (await (await fetch(`${BASE}/api/gear`)).json()).find((g) => g.name === "Estimate Mill");
-  check(em.rangeInfo?.estimated?.join() === "moka,aeropress,batch,coldbrew,rapid" && !em.grindRanges.methods.turkish && em.grindRanges.unsupported?.join() === "turkish",
+  check(em.rangeInfo?.estimated?.join() === "moka,aeropress,rapid,batch,coldbrew" && !em.grindRanges.methods.turkish && em.grindRanges.unsupported?.join() === "turkish",
     `saved with its estimates, and nothing for the method it can't do: ${JSON.stringify(em.rangeInfo?.estimated)}`);
 
   // Library gear is fully replicable: install an entry, rebuild it by hand in the gear editor,

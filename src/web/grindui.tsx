@@ -90,8 +90,8 @@ export function GrinderSwitcher({
             {choice.converted ? <span className="muted"> · converted from {fmtGrind(recipe.grindSetting, orig)}{choice.microns ? ` · ~${choice.microns} µm` : ""}</span> : <span className="muted"> · original</span>}
           </>
         ) : (
-          <span className="note">
-            {choice.message}
+          <span className={target && !canGrind(target, m) ? "muted" : "note"}>
+            {target && !canGrind(target, m) ? `— ${target.name} can't do ${METHOD_LABELS[m]}; type a setting if you like.` : choice.message}
             {noData && onEditGrinder && value && (
               <>
                 {" "}

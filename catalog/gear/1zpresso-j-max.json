@@ -29,6 +29,10 @@
         "low": 180,
         "high": 240
       },
+      "rapid": {
+        "low": 210,
+        "high": 270
+      },
       "pourover": {
         "low": 240,
         "high": 300
@@ -44,10 +48,6 @@
       "coldbrew": {
         "low": 390,
         "high": 450
-      },
-      "rapid": {
-        "low": 210,
-        "high": 270
       }
     },
     "notes": {
@@ -61,8 +61,8 @@
     "source": "https://1zpresso.coffee/grind-setting/",
     "note": "1Zpresso “J-Max Grind Setting Reference” chart (J-Max-Grind-setting-reference-20220721.jpg on that page), in clicks: Turkish 70–110, espresso 90–150, AeroPress/moka/drip coffee maker 180–240, siphon/pour over 240–300, French press 360–420.",
     "estimated": [
-      "coldbrew",
-      "rapid"
+      "rapid",
+      "coldbrew"
     ],
     "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: cold brew: the French press range moved half its width coarser; Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
   }

@@ -43,7 +43,7 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   Legacy text is converted by `normalizeGrindSettings` (startup, seed, restore) and the API schema.
 - **Dose nudge** (`doseAdjustedGrind`) is a setting (`settings.doseNudge`, More → "Grind for a
   different dose"): on/off, `percent` of the method range per doubling of dose vs the recipe, and
-  which methods (default on, 20%, pourover/batch/rapid — `DEFAULT_DOSE_NUDGE`). Shown with a
+  which methods (default on, 20%, rapid/pourover/batch — `DEFAULT_DOSE_NUDGE`). Shown with a
   one-tap "Use <recipe grind>"; typing a grind turns it off.
 - **Prefer settings and data over constants.** The owner wants Brewlab highly configurable: a
   behaviour with a tunable number or list belongs in `settings` (with a default) or in `catalog/`,
@@ -151,8 +151,9 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   (`libraryEntryFor` → `POST /api/gear/:id/library-entry`: new entry for custom gear, version-bumped
   update with the user's ranges for library gear; nothing is sent — the user opens GitHub's
   new-file/edit page, repo from `LIBRARY_REPO`, default `cmerkle/brewlab`).
-- Methods (grind categories), finest → coarsest: turkish, espresso, moka, aeropress, pourover,
-  batch (drip coffee maker), immersion (French press), coldbrew, rapid (OXO). Every brewer has
+- Methods (grind categories), finest → coarsest — `METHODS` order is used everywhere (tables,
+  pickers, library JSON): turkish, espresso, moka, aeropress, rapid (OXO), pourover, batch (drip
+  coffee maker), immersion (French press), coldbrew. Can't-do cells show "—", never a warning box. Every brewer has
   one (`defaultMethod`; library rule; kinds suggest one via `CATEGORY_METHOD`).
 - `recipes.method` / `gear_items.defaultMethod`: conversion needs to know which method range a
   setting sits in (e.g. a Switch as pour-over vs immersion).

@@ -26,6 +26,10 @@
         "low": 30,
         "high": 46
       },
+      "rapid": {
+        "low": 38,
+        "high": 50
+      },
       "pourover": {
         "low": 46,
         "high": 54
@@ -41,10 +45,6 @@
       "coldbrew": {
         "low": 58,
         "high": 60
-      },
-      "rapid": {
-        "low": 38,
-        "high": 50
       }
     },
     "notes": {
@@ -63,9 +63,9 @@
     "estimated": [
       "moka",
       "aeropress",
+      "rapid",
       "pourover",
-      "coldbrew",
-      "rapid"
+      "coldbrew"
     ],
     "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: moka pot: Breville's “percolator” (stovetop) range, 31–45; AeroPress: between the espresso and pour-over ranges (or one pour-over span finer when there's no espresso range); pour-over: the drip coffee maker range; cold brew: the French press range moved half its width coarser; Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
   }

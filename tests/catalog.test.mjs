@@ -299,3 +299,14 @@ test("estimate rules: the library's estimated rows are what catalog/estimate-rul
   assert.equal(e.methods.batch, undefined);
   assert.match(estimateNoteFor([e.notes.aeropress], rules), /^Estimated by extrapolating.*Dial in from there\.$/);
 });
+
+test("library files keep methods finest → coarsest (METHODS order) in methods, notes, unsupported and estimated", () => {
+  const ord = (keys) => keys.every((k, i) => i === 0 || METHODS.indexOf(keys[i - 1]) < METHODS.indexOf(k));
+  for (const f of fs.readdirSync("catalog/gear")) {
+    const g = JSON.parse(fs.readFileSync(`catalog/gear/${f}`, "utf8"));
+    const r = g.grindRanges;
+    if (!r) continue;
+    for (const [what, keys] of [["methods", Object.keys(r.methods)], ["notes", Object.keys(r.notes ?? {})], ["unsupported", r.unsupported ?? []], ["estimated", g.rangeInfo?.estimated ?? []]])
+      assert.ok(ord(keys), `${f} ${what}: ${keys.join(", ")}`);
+  }
+});

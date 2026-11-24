@@ -21,6 +21,10 @@
         "low": 3,
         "high": 4
       },
+      "rapid": {
+        "low": 3.5,
+        "high": 4.5
+      },
       "pourover": {
         "low": 4,
         "high": 5
@@ -36,10 +40,6 @@
       "coldbrew": {
         "low": 5.5,
         "high": 6.5
-      },
-      "rapid": {
-        "low": 3.5,
-        "high": 4.5
       }
     },
     "notes": {
@@ -59,9 +59,9 @@
     "estimated": [
       "moka",
       "aeropress",
+      "rapid",
       "batch",
-      "coldbrew",
-      "rapid"
+      "coldbrew"
     ],
     "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: moka pot: from the top of the espresso range to halfway to the top of the AeroPress range (or one AeroPress span finer when there's no espresso range); AeroPress: between the espresso and pour-over ranges (or one pour-over span finer when there's no espresso range); drip coffee maker: the pour-over range; cold brew: the French press range moved half its width coarser; Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
   }

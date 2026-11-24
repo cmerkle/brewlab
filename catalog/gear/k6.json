@@ -29,6 +29,10 @@
         "low": 60,
         "high": 80
       },
+      "rapid": {
+        "low": 70,
+        "high": 90
+      },
       "pourover": {
         "low": 80,
         "high": 100
@@ -44,10 +48,6 @@
       "coldbrew": {
         "low": 140,
         "high": 160
-      },
-      "rapid": {
-        "low": 70,
-        "high": 90
       }
     },
     "notes": {
@@ -60,10 +60,10 @@
     "source": "https://m.media-amazon.com/images/I/C1DrZy5LZUL.pdf",
     "note": "KINGrinder K4/K6 manual (hosted on Amazon), “Recommended grinder settings”, K6 column: Turkish coffee 28–40 clicks, espresso 40–60, moka pot/AeroPress 60–80, pour-over 80–100, French press 140. “One circle is equivalent to 60 clicks.”",
     "estimated": [
+      "rapid",
       "batch",
       "immersion",
-      "coldbrew",
-      "rapid"
+      "coldbrew"
     ],
     "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: French press: 130–150 around the manual's single setting of 140; drip coffee maker: the pour-over range; cold brew: the French press range moved half its width coarser; Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
   }

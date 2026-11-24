@@ -7,7 +7,8 @@
 
 // Order = finest to coarsest, as grind charts list them. "batch" is a drip coffee maker,
 // "immersion" a French press (or Switch/Clever full immersion). Rapid Brewer last (OXO).
-export const METHODS = ["turkish", "espresso", "moka", "aeropress", "pourover", "batch", "immersion", "coldbrew", "rapid"] as const;
+// Finest → coarsest (the order every table, list and picker uses).
+export const METHODS = ["turkish", "espresso", "moka", "aeropress", "rapid", "pourover", "batch", "immersion", "coldbrew"] as const;
 export type Method = (typeof METHODS)[number];
 
 export const METHOD_LABELS: Record<Method, string> = {
@@ -15,11 +16,11 @@ export const METHOD_LABELS: Record<Method, string> = {
   espresso: "Espresso",
   moka: "Moka pot",
   aeropress: "AeroPress",
+  rapid: "Rapid Brewer",
   pourover: "Pour-over (V60)",
   batch: "Drip coffee maker",
   immersion: "French press / immersion",
   coldbrew: "Cold brew",
-  rapid: "Rapid Brewer",
 };
 
 /** The grind category a kind of brewer uses by default (a brewer's own defaultMethod wins). */
@@ -78,7 +79,7 @@ export const METHOD_MICRONS: Record<Method, GrindRange> = {
 };
 
 export const DRAFT_NOTE =
-  "These ranges are a draft — verify them against your own dial and adjust in Gear.";
+  "Starting points from each grinder's ranges in Gear (where they come from is noted there) — dial in from here.";
 
 export interface GrinderLike {
   id: string;
@@ -290,7 +291,7 @@ export function validateRanges(methods: Partial<Record<Method, { low?: number | 
  */
 export interface DoseNudge { enabled: boolean; percent: number; methods: Method[] }
 /** Defaults: drip methods, where a bigger bed drains slower and wants a coarser grind. */
-export const DEFAULT_DOSE_NUDGE: DoseNudge = { enabled: true, percent: 20, methods: ["pourover", "batch", "rapid"] };
+export const DEFAULT_DOSE_NUDGE: DoseNudge = { enabled: true, percent: 20, methods: ["rapid", "pourover", "batch"] };
 
 /**
  * Grind for a different dose than the recipe's: the chosen methods move coarser (bigger dose) or
