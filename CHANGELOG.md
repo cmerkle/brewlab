@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.1
 
 - **Step chime fixes:** the chime now also plays when the timer moves from the first step to the second (it was skipped), it sounds on an iPhone set to silent while the brew timer is open, and unmuting the bell plays it once so you know it's on.
 
