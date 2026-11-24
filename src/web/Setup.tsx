@@ -23,7 +23,7 @@ export const CATEGORY_LABELS: Record<string, string> = {
   "espresso-machine": "Espresso machines", "batch-brewer": "Drip coffee makers", "cezve": "Cezves (Turkish)",
   "cold-brew-maker": "Cold brew makers", "siphon": "Siphons", "other": "Other",
 };
-const BREWER_CATEGORIES = Object.keys(CATEGORY_LABELS).filter((c) => !c.endsWith("grinder"));
+const BREWER_CATEGORIES = Object.keys(CATEGORY_LABELS).filter((c) => !c.endsWith("grinder") && c !== "other");
 
 const STEPS = ["Welcome", "Brewers", "Grinders", "Preferences", "Starter recipes", "Discover"] as const;
 
@@ -215,7 +215,7 @@ function CustomBrewer({ onDone }: { onDone: () => void }) {
   const [category, setCategory] = useState("cone-dripper");
   const save = () =>
     act(async () => {
-      await api.post("/api/gear", { name: name.trim(), type: category === "other" ? "other" : "brewer", category });
+      await api.post("/api/gear", { name: name.trim(), type: "brewer", category });
       await reload(["gear"]);
       onDone();
     }, `Added ${name.trim()}`);

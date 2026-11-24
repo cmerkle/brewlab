@@ -131,7 +131,10 @@ try {
   const gear = await (await fetch(`${BASE}/api/gear`)).json();
   const c40 = gear.find((g) => g.name === "Comandante C40");
   await p.goto(`${BASE}/#/brew/gear`);
+  await p.locator(`[data-testid="gear-${c40.id}"]`).waitFor();
+  check(!(await p.getByRole("heading", { name: /^Other/ }).count()), "Gear page lists only grinders and brewers");
   await p.locator(`[data-testid="gear-${c40.id}"]`).getByRole("button", { name: "Edit" }).click();
+  check(!(await p.locator('#ge-type option[value="other"]').count()), "gear editor has no Other type");
   await p.locator('[data-testid="suggest-open"]').click();
   await p.locator('[data-testid="suggest-json"]').waitFor();
   const issues = await p.locator('[data-testid="suggest-issues"]').innerText();

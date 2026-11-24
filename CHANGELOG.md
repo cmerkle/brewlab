@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Gear is grinders and brewers only.** The "Other (scales, kettles, accessories)" section is gone: nothing else in the app used those entries. Existing ones are kept and still listed under "Other" so they can be removed; new ones can't be added.
 - **Grind categories match a grind chart:** Turkish, espresso, moka pot, AeroPress, pour-over (V60), drip coffee maker, French press, cold brew (plus Rapid Brewer). Every brewer belongs to one ("Grind category" in the gear editor, suggested from its Kind), and the library rules now require it. New library brewers cover the gaps: a cezve (Turkish), Hario Mizudashi and Toddy (cold brew), Hario Technica siphon, Melitta 1x4, Moccamaster KBGV and Flair 58.
 - **Every library grinder now covers every method it can do:**
   - Ranges taken from the maker's chart are used as given (e.g. 1Zpresso's Turkish and moka ranges).

@@ -7,7 +7,8 @@ import { METHODS, METHOD_LABELS, CATEGORY_METHOD, validateRanges, type Method, t
 const TYPES = [
   { id: "grinder", label: "Grinders" },
   { id: "brewer", label: "Brewers" },
-  { id: "other", label: "Other (scales, kettles, accessories)" },
+  // Retired type: older installs may still hold some; shown only then, so they can be removed.
+  { id: "other", label: "Other" },
 ] as const;
 
 export function Gear({ editId, onEditDone }: { editId: string | null; onEditDone: () => void }) {
@@ -29,6 +30,7 @@ export function Gear({ editId, onEditDone }: { editId: string | null; onEditDone
     <div className="stack">
       {TYPES.map((t) => {
         const items = gear.filter((g) => g.type === t.id);
+        if (t.id === "other" && items.length === 0) return null;
         return (
           <section key={t.id}>
             <h2 className="group">{t.label}</h2>
@@ -169,7 +171,7 @@ function GearEditor({ item, onClose }: { item: GearT | null; onClose: () => void
           <Field label="Name" htmlFor="ge-name"><input id="ge-name" value={f.name} onChange={(e) => set("name", e.target.value)} /></Field>
           <Field label="Type" htmlFor="ge-type">
             <select id="ge-type" value={f.type} onChange={(e) => set("type", e.target.value as GearT["type"])}>
-              <option value="grinder">Grinder</option><option value="brewer">Brewer</option><option value="other">Other</option>
+              <option value="grinder">Grinder</option><option value="brewer">Brewer</option>{f.type === "other" && <option value="other">Other</option>}
             </select>
           </Field>
         </div>
