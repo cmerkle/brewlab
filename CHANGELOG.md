@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0
 
 - **Stash archive:** a finished bag leaves the Stash and moves to its Archive (newest first), with its brews and tasting notes kept. *Back to stash* undoes a finish.
 - **Sort and search the Stash and its Archive:** sort by name, roaster, origin, process, roast / purchase / opened / finished date, rating, price or coffee left, and flip the direction with one tap. Bags missing that value go last either way. Each tab remembers its sort on the device. Search matches every word against the name, roaster, origin, process, roast level, notes, dates ("2026-10", "october", "Nov 4"), rating ("5★") and price ("$18").
