@@ -10,14 +10,14 @@ A self-hosted coffee app for home brewers: one Docker container, one SQLite data
 - **Brew:** recipes with a guided brew timer, ratio calculator, a grind guide that **converts settings between your grinders**, your coffee stash, a brew log, and your gear.
 - **Discover:** a weekly board of coffees to try. It starts with popular picks and learns from what you rate. An AI provider is optional: with one, Brewlab researches roasters' current offerings; without one, you add candidates and Brewlab filters and ranks them.
 
-It's built for phones first (installable as an app on iPhone and desktop), and works on tablets and desktops too.
+It's built for phones first and works just as well on tablets and computers. Install it from the browser to use it like an app.
 
 <p align="center">
-<picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/recipes-dark.png"><img src="docs/screenshots/recipes-light.png" alt="Recipes, with a recipe opened" width="190"></picture>
-<picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/timer-dark.png"><img src="docs/screenshots/timer-light.png" alt="The guided brew timer" width="190"></picture>
-<picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/guide-dark.png"><img src="docs/screenshots/guide-light.png" alt="Grind converter: one setting on every grinder" width="190"></picture>
-<picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/discover-dark.png"><img src="docs/screenshots/discover-light.png" alt="Discover: the weekly board" width="190"></picture>
-<picture><source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/stash-dark.png"><img src="docs/screenshots/stash-light.png" alt="Stash: your bags of coffee" width="190"></picture>
+<img src="docs/screenshots/recipes.png" alt="Recipes, with a recipe opened" width="190">
+<img src="docs/screenshots/timer.png" alt="The guided brew timer" width="190">
+<img src="docs/screenshots/guide.png" alt="Grind converter: one setting on every grinder" width="190">
+<img src="docs/screenshots/discover.png" alt="Discover: the weekly board" width="190">
+<img src="docs/screenshots/stash.png" alt="Stash: your bags of coffee" width="190">
 </p>
 
 <sub>Recipes · the brew timer · the grind converter · Discover · your Stash (demo data, all fictional). Screenshots are made by <code>tests/e2e/screenshots.mjs</code>.</sub>

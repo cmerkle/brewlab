@@ -1,7 +1,7 @@
 // README screenshots, from an install with the (fictional) demo data:
 //   curl -XPOST $BASE/api/setup/demo && curl -XPOST $BASE/api/setup/complete
 //   BASE=http://localhost:3104 node screenshots.mjs        → docs/screenshots/*.png
-// Each phone shot is taken in light and dark mode; the README picks one with <picture>.
+// Phone shots in dark mode.
 import { chromium } from "playwright";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -37,16 +37,14 @@ const shots = {
 };
 
 const b = await chromium.launch();
-for (const scheme of ["light", "dark"]) {
-  for (const [name, go] of Object.entries(shots)) {
-    const ctx = await b.newContext({ ...PHONE, colorScheme: scheme });
-    const p = await ctx.newPage();
-    await go(p);
-    await p.waitForTimeout(600);
-    await p.screenshot({ path: `${OUT}/${name}-${scheme}.png` });
-    console.log(`✓ ${name}-${scheme}`);
-    await ctx.close();
-  }
+for (const [name, go] of Object.entries(shots)) {
+  const ctx = await b.newContext({ ...PHONE, colorScheme: "dark" });
+  const p = await ctx.newPage();
+  await go(p);
+  await p.waitForTimeout(600);
+  await p.screenshot({ path: `${OUT}/${name}.png` });
+  console.log(`✓ ${name}`);
+  await ctx.close();
 }
 await b.close();
 // Shrink: 256-colour palette PNGs are about a third of the size and look the same at phone scale.

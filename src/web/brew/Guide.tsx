@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useData, NumInput, usePref } from "../ui";
 import { useGrinders } from "../grindui";
 import { METHODS, METHOD_LABELS, recommend, convertSetting, valueToDial, effectiveRanges, rangeFor, missingRange, canGrind, NO_DATA_MESSAGE, DRAFT_NOTE, type Method } from "../../shared/grind";
@@ -68,6 +68,15 @@ function Converter({ onEditGrinder }: { onEditGrinder: (id: string) => void }) {
     return r && from ? valueToDial(from, (r.low + r.high) / 2) : null;
   })();
   const [value, setValue] = useState<number | null>(startValue);
+  // Opened before the gear has loaded (e.g. straight from a link): fill the start value once it arrives.
+  const touched = useRef(false);
+  useEffect(() => {
+    if (!touched.current && value == null && startValue != null) setValue(startValue);
+  }, [startValue]); // eslint-disable-line react-hooks/exhaustive-deps
+  const onValue = (v: number | null) => {
+    touched.current = true;
+    setValue(v);
+  };
   const fromRange = from ? rangeFor(from, method) : null;
   return (
     <section className="card converter" aria-label="Grind-size converter">
@@ -86,7 +95,7 @@ function Converter({ onEditGrinder }: { onEditGrinder: (id: string) => void }) {
         </div>
         <div className="field">
           <label htmlFor="cv-value">Setting{from?.units ? ` (${from.units})` : ""}</label>
-          <NumInput id="cv-value" value={value} onChange={setValue} decimals={2} />
+          <NumInput id="cv-value" value={value} onChange={onValue} decimals={2} />
         </div>
       </div>
       {from && !fromRange && (
