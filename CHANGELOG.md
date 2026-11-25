@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Grafana dashboard:** the Brewlab wordmark across the top, in Grafana 11 and 12. It follows Grafana's theme (light text on the dark theme, dark text on the light one). Your browser loads it from the repo via jsDelivr; without internet the row stays empty.
+
 ## 0.5.0
 
 - **Brew Log filters:** a filter button inside the search box opens filters for coffee, roaster, origin, roast level, process, recipe, brew method, brewer, grinder, water, rating and dates. Pick any number of values (any of them within a group; groups combine), each showing how many brews it leaves. Active filters show as chips with ×, and the button shows how many are on. They replace the coffee / recipe / water dropdowns. The search now matches every word across the brew and its Stash bag (roaster, origin, process, tasting notes), the grind setting, dose and date.

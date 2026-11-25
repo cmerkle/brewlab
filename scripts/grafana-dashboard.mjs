@@ -8,7 +8,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const OUT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "grafana", "brewlab-dashboard.json");
+const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
+const OUT = path.join(ROOT, "grafana", "brewlab-dashboard.json");
 const DS = { type: "prometheus", uid: "${datasource}" };
 const J = 'job=~"$job"';
 /** brewlab_<name>{job=~"$job", …} */
@@ -90,6 +91,31 @@ const table = (title, targets, o = {}) => base("table", title, o.w ?? 24, o.h ??
 const DIMS = [["roaster", "Roaster"], ["origin", "Origin"], ["roast_level", "Roast level"], ["process", "Process"]];
 const GEAR = [["brewer", "Brewer"], ["grinder", "Grinder"], ["method", "Brew method"]];
 const notNone = (l) => `${l}!="none"`;
+
+/*
+ * The Brewlab wordmark across the top: grafana/brewlab-wordmark.svg (written here from the brand
+ * file), shown by a Canvas icon. Text panels strip images, styles and SVG; Grafana 12 won't take a
+ * data URI in a canvas either (it reads it as a file under /public/build), so the canvas loads the
+ * file from the repo by URL. Canvas fetches and inlines it, so the SVG's own <style> can follow
+ * Grafana's theme (body.theme-light): light text on dark, dark text on light. Offline, the row is empty.
+ */
+const WORDMARK_URL = process.env.WORDMARK_URL || "https://cdn.jsdelivr.net/gh/cmerkle/brewlab@main/grafana/brewlab-wordmark.svg";
+function wordmark() {
+  let svg = fs.readFileSync(path.join(ROOT, "brand", "brewlab-refined-header.svg"), "utf8");
+  svg = svg.replaceAll('fill="#F2E9DF"', 'class="blw-ink"').replaceAll('fill="#DDA77C"', 'class="blw-tan"').replaceAll('fill="#83C66B"', 'class="blw-led"');
+  const style = "<style>.blw-ink{fill:#F2E9DF}.blw-tan{fill:#DDA77C}.blw-led{fill:#83C66B}" +
+    ".theme-light .blw-ink{fill:#2B1E17}.theme-light .blw-tan{fill:#B06A30}.theme-light .blw-led{fill:#3F8F3A}</style>";
+  svg = svg.replace(/(<svg[^>]*>)/, `$1${style}`);
+  fs.writeFileSync(path.join(ROOT, "grafana", "brewlab-wordmark.svg"), svg.endsWith("\n") ? svg : svg + "\n");
+  const none = { color: { fixed: "transparent" } };
+  panels.push({
+    type: "canvas", id: ++id, title: "", description: "", transparent: true, gridPos: place(24, 2),
+    options: { inlineEditing: false, showAdvancedTypes: false, root: { type: "frame", name: "root", background: none, border: none, constraint: { horizontal: "left", vertical: "top" },
+      elements: [{ type: "icon", name: "Brewlab", config: { path: { mode: "fixed", fixed: WORDMARK_URL } },
+        constraint: { horizontal: "left", vertical: "top" }, placement: { left: 4, top: 4, width: 216, height: 54 }, background: none, border: none }] } },
+  });
+}
+wordmark();
 
 row("At a glance");
 stat("Brews today", m("brews_window", 'window="today"'), { description: "Since local midnight (the instance's TZ)." });

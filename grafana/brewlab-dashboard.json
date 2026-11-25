@@ -31,13 +31,80 @@
   ],
   "panels": [
     {
-      "type": "row",
+      "type": "canvas",
       "id": 1,
+      "title": "",
+      "description": "",
+      "transparent": true,
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 2
+      },
+      "options": {
+        "inlineEditing": false,
+        "showAdvancedTypes": false,
+        "root": {
+          "type": "frame",
+          "name": "root",
+          "background": {
+            "color": {
+              "fixed": "transparent"
+            }
+          },
+          "border": {
+            "color": {
+              "fixed": "transparent"
+            }
+          },
+          "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+          },
+          "elements": [
+            {
+              "type": "icon",
+              "name": "Brewlab",
+              "config": {
+                "path": {
+                  "mode": "fixed",
+                  "fixed": "https://cdn.jsdelivr.net/gh/cmerkle/brewlab@main/grafana/brewlab-wordmark.svg"
+                }
+              },
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              },
+              "placement": {
+                "left": 4,
+                "top": 4,
+                "width": 216,
+                "height": 54
+              },
+              "background": {
+                "color": {
+                  "fixed": "transparent"
+                }
+              },
+              "border": {
+                "color": {
+                  "fixed": "transparent"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "row",
+      "id": 2,
       "title": "At a glance",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 0,
+        "y": 2,
         "w": 24,
         "h": 1
       },
@@ -45,7 +112,7 @@
     },
     {
       "type": "stat",
-      "id": 2,
+      "id": 3,
       "title": "Brews today",
       "description": "Since local midnight (the instance's TZ).",
       "datasource": {
@@ -54,7 +121,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 1,
+        "y": 3,
         "w": 3,
         "h": 4
       },
@@ -113,7 +180,7 @@
     },
     {
       "type": "stat",
-      "id": 3,
+      "id": 4,
       "title": "Coffee today",
       "description": "",
       "datasource": {
@@ -122,7 +189,7 @@
       },
       "gridPos": {
         "x": 3,
-        "y": 1,
+        "y": 3,
         "w": 3,
         "h": 4
       },
@@ -181,7 +248,7 @@
     },
     {
       "type": "stat",
-      "id": 4,
+      "id": 5,
       "title": "Brews, last 7 days",
       "description": "",
       "datasource": {
@@ -190,7 +257,7 @@
       },
       "gridPos": {
         "x": 6,
-        "y": 1,
+        "y": 3,
         "w": 3,
         "h": 4
       },
@@ -249,7 +316,7 @@
     },
     {
       "type": "stat",
-      "id": 5,
+      "id": 6,
       "title": "Coffee, last 30 days",
       "description": "",
       "datasource": {
@@ -258,7 +325,7 @@
       },
       "gridPos": {
         "x": 9,
-        "y": 1,
+        "y": 3,
         "w": 3,
         "h": 4
       },
@@ -317,7 +384,7 @@
     },
     {
       "type": "stat",
-      "id": 6,
+      "id": 7,
       "title": "Brewing streak",
       "description": "Consecutive days with a brew, up to today (or yesterday if nothing yet today).",
       "datasource": {
@@ -326,7 +393,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 1,
+        "y": 3,
         "w": 3,
         "h": 4
       },
@@ -385,7 +452,7 @@
     },
     {
       "type": "stat",
-      "id": 7,
+      "id": 8,
       "title": "Longest streak",
       "description": "",
       "datasource": {
@@ -394,7 +461,7 @@
       },
       "gridPos": {
         "x": 15,
-        "y": 1,
+        "y": 3,
         "w": 3,
         "h": 4
       },
@@ -453,7 +520,7 @@
     },
     {
       "type": "stat",
-      "id": 8,
+      "id": 9,
       "title": "Average rating",
       "description": "Every rated brew, in stars (½–5).",
       "datasource": {
@@ -462,7 +529,7 @@
       },
       "gridPos": {
         "x": 18,
-        "y": 1,
+        "y": 3,
         "w": 3,
         "h": 4
       },
@@ -529,7 +596,7 @@
     },
     {
       "type": "stat",
-      "id": 9,
+      "id": 10,
       "title": "Average ratio (1:x)",
       "description": "",
       "datasource": {
@@ -538,7 +605,7 @@
       },
       "gridPos": {
         "x": 21,
-        "y": 1,
+        "y": 3,
         "w": 3,
         "h": 4
       },
@@ -598,7 +665,7 @@
     },
     {
       "type": "stat",
-      "id": 10,
+      "id": 11,
       "title": "Brews, all time",
       "description": "",
       "datasource": {
@@ -607,7 +674,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 5,
+        "y": 7,
         "w": 3,
         "h": 4
       },
@@ -666,7 +733,7 @@
     },
     {
       "type": "stat",
-      "id": 11,
+      "id": 12,
       "title": "Coffee, all time",
       "description": "",
       "datasource": {
@@ -675,7 +742,7 @@
       },
       "gridPos": {
         "x": 3,
-        "y": 5,
+        "y": 7,
         "w": 3,
         "h": 4
       },
@@ -734,7 +801,7 @@
     },
     {
       "type": "stat",
-      "id": 12,
+      "id": 13,
       "title": "Water, all time",
       "description": "",
       "datasource": {
@@ -743,7 +810,7 @@
       },
       "gridPos": {
         "x": 6,
-        "y": 5,
+        "y": 7,
         "w": 3,
         "h": 4
       },
@@ -802,7 +869,7 @@
     },
     {
       "type": "stat",
-      "id": 13,
+      "id": 14,
       "title": "Brewing days",
       "description": "Days with at least one brew.",
       "datasource": {
@@ -811,7 +878,7 @@
       },
       "gridPos": {
         "x": 9,
-        "y": 5,
+        "y": 7,
         "w": 3,
         "h": 4
       },
@@ -870,7 +937,7 @@
     },
     {
       "type": "stat",
-      "id": 14,
+      "id": 15,
       "title": "Last brew",
       "description": "",
       "datasource": {
@@ -879,7 +946,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 5,
+        "y": 7,
         "w": 3,
         "h": 4
       },
@@ -938,7 +1005,7 @@
     },
     {
       "type": "stat",
-      "id": 15,
+      "id": 16,
       "title": "Coffee left in the stash",
       "description": "",
       "datasource": {
@@ -947,7 +1014,7 @@
       },
       "gridPos": {
         "x": 15,
-        "y": 5,
+        "y": 7,
         "w": 3,
         "h": 4
       },
@@ -1006,7 +1073,7 @@
     },
     {
       "type": "stat",
-      "id": 16,
+      "id": 17,
       "title": "Spent this year",
       "description": "",
       "datasource": {
@@ -1015,7 +1082,7 @@
       },
       "gridPos": {
         "x": 18,
-        "y": 5,
+        "y": 7,
         "w": 3,
         "h": 4
       },
@@ -1075,7 +1142,7 @@
     },
     {
       "type": "stat",
-      "id": 17,
+      "id": 18,
       "title": "Average cost per brew",
       "description": "Dose × the bag's price per gram, for brews from priced bags.",
       "datasource": {
@@ -1084,7 +1151,7 @@
       },
       "gridPos": {
         "x": 21,
-        "y": 5,
+        "y": 7,
         "w": 3,
         "h": 4
       },
@@ -1144,12 +1211,12 @@
     },
     {
       "type": "row",
-      "id": 18,
+      "id": 19,
       "title": "Brewing over time",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 9,
+        "y": 11,
         "w": 24,
         "h": 1
       },
@@ -1157,7 +1224,7 @@
     },
     {
       "type": "barchart",
-      "id": 19,
+      "id": 20,
       "title": "Brews per day (last 400 days)",
       "description": "From the app's history, so it's full from the first scrape.",
       "datasource": {
@@ -1166,7 +1233,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 10,
+        "y": 12,
         "w": 24,
         "h": 8
       },
@@ -1263,7 +1330,7 @@
     },
     {
       "type": "barchart",
-      "id": 20,
+      "id": 21,
       "title": "Brews per month",
       "description": "",
       "datasource": {
@@ -1272,7 +1339,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 18,
+        "y": 20,
         "w": 12,
         "h": 8
       },
@@ -1356,7 +1423,7 @@
     },
     {
       "type": "barchart",
-      "id": 21,
+      "id": 22,
       "title": "Coffee used per month",
       "description": "",
       "datasource": {
@@ -1365,7 +1432,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 18,
+        "y": 20,
         "w": 12,
         "h": 8
       },
@@ -1449,7 +1516,7 @@
     },
     {
       "type": "timeseries",
-      "id": 22,
+      "id": 23,
       "title": "Brews in rolling windows",
       "description": "How the 7- and 30-day counts move, from what Prometheus has scraped.",
       "datasource": {
@@ -1458,7 +1525,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 26,
+        "y": 28,
         "w": 12,
         "h": 8
       },
@@ -1524,7 +1591,7 @@
     },
     {
       "type": "timeseries",
-      "id": 23,
+      "id": 24,
       "title": "Coffee used in rolling windows",
       "description": "",
       "datasource": {
@@ -1533,7 +1600,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 26,
+        "y": 28,
         "w": 12,
         "h": 8
       },
@@ -1599,7 +1666,7 @@
     },
     {
       "type": "timeseries",
-      "id": 24,
+      "id": 25,
       "title": "Brews per day (scraped)",
       "description": "Daily increase of the brew counter since Prometheus started scraping (deleting brews shows as a dip).",
       "datasource": {
@@ -1608,7 +1675,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 34,
+        "y": 36,
         "w": 12,
         "h": 8
       },
@@ -1675,7 +1742,7 @@
     },
     {
       "type": "timeseries",
-      "id": 25,
+      "id": 26,
       "title": "Average rating over time",
       "description": "",
       "datasource": {
@@ -1684,7 +1751,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 34,
+        "y": 36,
         "w": 12,
         "h": 8
       },
@@ -1753,12 +1820,12 @@
     },
     {
       "type": "row",
-      "id": 26,
+      "id": 27,
       "title": "The latest brew",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 42,
+        "y": 44,
         "w": 24,
         "h": 1
       },
@@ -1766,7 +1833,7 @@
     },
     {
       "type": "stat",
-      "id": 27,
+      "id": 28,
       "title": "Dose",
       "description": "",
       "datasource": {
@@ -1775,7 +1842,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 43,
+        "y": 45,
         "w": 4,
         "h": 4
       },
@@ -1834,7 +1901,7 @@
     },
     {
       "type": "stat",
-      "id": 28,
+      "id": 29,
       "title": "Water",
       "description": "",
       "datasource": {
@@ -1843,7 +1910,7 @@
       },
       "gridPos": {
         "x": 4,
-        "y": 43,
+        "y": 45,
         "w": 4,
         "h": 4
       },
@@ -1902,7 +1969,7 @@
     },
     {
       "type": "stat",
-      "id": 29,
+      "id": 30,
       "title": "Ratio (1:x)",
       "description": "",
       "datasource": {
@@ -1911,7 +1978,7 @@
       },
       "gridPos": {
         "x": 8,
-        "y": 43,
+        "y": 45,
         "w": 4,
         "h": 4
       },
@@ -1971,7 +2038,7 @@
     },
     {
       "type": "stat",
-      "id": 30,
+      "id": 31,
       "title": "Rating",
       "description": "",
       "datasource": {
@@ -1980,7 +2047,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 43,
+        "y": 45,
         "w": 4,
         "h": 4
       },
@@ -2040,7 +2107,7 @@
     },
     {
       "type": "stat",
-      "id": 31,
+      "id": 32,
       "title": "Temperature",
       "description": "",
       "datasource": {
@@ -2049,7 +2116,7 @@
       },
       "gridPos": {
         "x": 16,
-        "y": 43,
+        "y": 45,
         "w": 4,
         "h": 4
       },
@@ -2108,7 +2175,7 @@
     },
     {
       "type": "stat",
-      "id": 32,
+      "id": 33,
       "title": "Brew time",
       "description": "",
       "datasource": {
@@ -2117,7 +2184,7 @@
       },
       "gridPos": {
         "x": 20,
-        "y": 43,
+        "y": 45,
         "w": 4,
         "h": 4
       },
@@ -2176,12 +2243,12 @@
     },
     {
       "type": "row",
-      "id": 33,
+      "id": 34,
       "title": "When you brew",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 47,
+        "y": 49,
         "w": 24,
         "h": 1
       },
@@ -2189,7 +2256,7 @@
     },
     {
       "type": "table",
-      "id": 34,
+      "id": 35,
       "title": "Weekday × hour",
       "description": "Brews by local weekday and hour of day — the darker, the more.",
       "datasource": {
@@ -2198,7 +2265,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 48,
+        "y": 50,
         "w": 24,
         "h": 9
       },
@@ -2299,7 +2366,7 @@
     },
     {
       "type": "barchart",
-      "id": 35,
+      "id": 36,
       "title": "By hour of day",
       "description": "",
       "datasource": {
@@ -2308,7 +2375,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 57,
+        "y": 59,
         "w": 12,
         "h": 8
       },
@@ -2403,7 +2470,7 @@
     },
     {
       "type": "barchart",
-      "id": 36,
+      "id": 37,
       "title": "By weekday",
       "description": "",
       "datasource": {
@@ -2412,7 +2479,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 57,
+        "y": 59,
         "w": 12,
         "h": 8
       },
@@ -2507,12 +2574,12 @@
     },
     {
       "type": "row",
-      "id": 37,
+      "id": 38,
       "title": "Ratings and ratios",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 65,
+        "y": 67,
         "w": 24,
         "h": 1
       },
@@ -2520,7 +2587,7 @@
     },
     {
       "type": "barchart",
-      "id": 38,
+      "id": 39,
       "title": "Brew ratings (half stars)",
       "description": "",
       "datasource": {
@@ -2529,7 +2596,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 66,
+        "y": 68,
         "w": 8,
         "h": 8
       },
@@ -2624,7 +2691,7 @@
     },
     {
       "type": "barchart",
-      "id": 39,
+      "id": 40,
       "title": "Brew ratios",
       "description": "Water to coffee; under 1:4 is espresso-like.",
       "datasource": {
@@ -2633,7 +2700,7 @@
       },
       "gridPos": {
         "x": 8,
-        "y": 66,
+        "y": 68,
         "w": 8,
         "h": 8
       },
@@ -2717,7 +2784,7 @@
     },
     {
       "type": "stat",
-      "id": 40,
+      "id": 41,
       "title": "Rated brews",
       "description": "",
       "datasource": {
@@ -2726,7 +2793,7 @@
       },
       "gridPos": {
         "x": 16,
-        "y": 66,
+        "y": 68,
         "w": 4,
         "h": 8
       },
@@ -2785,7 +2852,7 @@
     },
     {
       "type": "stat",
-      "id": 41,
+      "id": 42,
       "title": "Not rated",
       "description": "",
       "datasource": {
@@ -2794,7 +2861,7 @@
       },
       "gridPos": {
         "x": 20,
-        "y": 66,
+        "y": 68,
         "w": 4,
         "h": 8
       },
@@ -2853,12 +2920,12 @@
     },
     {
       "type": "row",
-      "id": 42,
+      "id": 43,
       "title": "Gear",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 74,
+        "y": 76,
         "w": 24,
         "h": 1
       },
@@ -2866,7 +2933,7 @@
     },
     {
       "type": "bargauge",
-      "id": 43,
+      "id": 44,
       "title": "Brews by brewer",
       "description": "",
       "datasource": {
@@ -2875,7 +2942,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 75,
+        "y": 77,
         "w": 8,
         "h": 9
       },
@@ -2938,7 +3005,7 @@
     },
     {
       "type": "bargauge",
-      "id": 44,
+      "id": 45,
       "title": "Brews by grinder",
       "description": "",
       "datasource": {
@@ -2947,7 +3014,7 @@
       },
       "gridPos": {
         "x": 8,
-        "y": 75,
+        "y": 77,
         "w": 8,
         "h": 9
       },
@@ -3010,7 +3077,7 @@
     },
     {
       "type": "bargauge",
-      "id": 45,
+      "id": 46,
       "title": "Brews by brew method",
       "description": "",
       "datasource": {
@@ -3019,7 +3086,7 @@
       },
       "gridPos": {
         "x": 16,
-        "y": 75,
+        "y": 77,
         "w": 8,
         "h": 9
       },
@@ -3082,7 +3149,7 @@
     },
     {
       "type": "bargauge",
-      "id": 46,
+      "id": 47,
       "title": "Coffee used by brewer",
       "description": "",
       "datasource": {
@@ -3091,7 +3158,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 84,
+        "y": 86,
         "w": 8,
         "h": 9
       },
@@ -3154,7 +3221,7 @@
     },
     {
       "type": "bargauge",
-      "id": 47,
+      "id": 48,
       "title": "Coffee used by grinder",
       "description": "",
       "datasource": {
@@ -3163,7 +3230,7 @@
       },
       "gridPos": {
         "x": 8,
-        "y": 84,
+        "y": 86,
         "w": 8,
         "h": 9
       },
@@ -3226,7 +3293,7 @@
     },
     {
       "type": "bargauge",
-      "id": 48,
+      "id": 49,
       "title": "Coffee used by brew method",
       "description": "",
       "datasource": {
@@ -3235,7 +3302,7 @@
       },
       "gridPos": {
         "x": 16,
-        "y": 84,
+        "y": 86,
         "w": 8,
         "h": 9
       },
@@ -3298,7 +3365,7 @@
     },
     {
       "type": "bargauge",
-      "id": 49,
+      "id": 50,
       "title": "Average rating by brewer",
       "description": "",
       "datasource": {
@@ -3307,7 +3374,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 93,
+        "y": 95,
         "w": 8,
         "h": 9
       },
@@ -3372,7 +3439,7 @@
     },
     {
       "type": "bargauge",
-      "id": 50,
+      "id": 51,
       "title": "Average rating by grinder",
       "description": "",
       "datasource": {
@@ -3381,7 +3448,7 @@
       },
       "gridPos": {
         "x": 8,
-        "y": 93,
+        "y": 95,
         "w": 8,
         "h": 9
       },
@@ -3446,7 +3513,7 @@
     },
     {
       "type": "bargauge",
-      "id": 51,
+      "id": 52,
       "title": "Average rating by brew method",
       "description": "",
       "datasource": {
@@ -3455,7 +3522,7 @@
       },
       "gridPos": {
         "x": 16,
-        "y": 93,
+        "y": 95,
         "w": 8,
         "h": 9
       },
@@ -3520,7 +3587,7 @@
     },
     {
       "type": "table",
-      "id": 52,
+      "id": 53,
       "title": "Brew method averages",
       "description": "",
       "datasource": {
@@ -3529,7 +3596,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 102,
+        "y": 104,
         "w": 24,
         "h": 8
       },
@@ -3726,7 +3793,7 @@
     },
     {
       "type": "stat",
-      "id": 53,
+      "id": 54,
       "title": "Grinders",
       "description": "",
       "datasource": {
@@ -3735,7 +3802,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 110,
+        "y": 112,
         "w": 4,
         "h": 4
       },
@@ -3794,7 +3861,7 @@
     },
     {
       "type": "stat",
-      "id": 54,
+      "id": 55,
       "title": "Brewers",
       "description": "",
       "datasource": {
@@ -3803,7 +3870,7 @@
       },
       "gridPos": {
         "x": 4,
-        "y": 110,
+        "y": 112,
         "w": 4,
         "h": 4
       },
@@ -3862,7 +3929,7 @@
     },
     {
       "type": "stat",
-      "id": 55,
+      "id": 56,
       "title": "Your recipes",
       "description": "",
       "datasource": {
@@ -3871,7 +3938,7 @@
       },
       "gridPos": {
         "x": 8,
-        "y": 110,
+        "y": 112,
         "w": 4,
         "h": 4
       },
@@ -3930,7 +3997,7 @@
     },
     {
       "type": "stat",
-      "id": 56,
+      "id": 57,
       "title": "Starter recipes",
       "description": "",
       "datasource": {
@@ -3939,7 +4006,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 110,
+        "y": 112,
         "w": 4,
         "h": 4
       },
@@ -3998,7 +4065,7 @@
     },
     {
       "type": "stat",
-      "id": 57,
+      "id": 58,
       "title": "Favourite recipes",
       "description": "",
       "datasource": {
@@ -4007,7 +4074,7 @@
       },
       "gridPos": {
         "x": 16,
-        "y": 110,
+        "y": 112,
         "w": 4,
         "h": 4
       },
@@ -4066,7 +4133,7 @@
     },
     {
       "type": "stat",
-      "id": 58,
+      "id": 59,
       "title": "Water recipes",
       "description": "",
       "datasource": {
@@ -4075,7 +4142,7 @@
       },
       "gridPos": {
         "x": 20,
-        "y": 110,
+        "y": 112,
         "w": 4,
         "h": 4
       },
@@ -4134,12 +4201,12 @@
     },
     {
       "type": "row",
-      "id": 59,
+      "id": 60,
       "title": "Recipes and water",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 114,
+        "y": 116,
         "w": 24,
         "h": 1
       },
@@ -4147,7 +4214,7 @@
     },
     {
       "type": "bargauge",
-      "id": 60,
+      "id": 61,
       "title": "Brews by recipe",
       "description": "",
       "datasource": {
@@ -4156,7 +4223,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 115,
+        "y": 117,
         "w": 12,
         "h": 11
       },
@@ -4219,7 +4286,7 @@
     },
     {
       "type": "bargauge",
-      "id": 61,
+      "id": 62,
       "title": "Coffee used by recipe",
       "description": "",
       "datasource": {
@@ -4228,7 +4295,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 115,
+        "y": 117,
         "w": 12,
         "h": 11
       },
@@ -4291,7 +4358,7 @@
     },
     {
       "type": "bargauge",
-      "id": 62,
+      "id": 63,
       "title": "Average rating by recipe",
       "description": "",
       "datasource": {
@@ -4300,7 +4367,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 126,
+        "y": 128,
         "w": 12,
         "h": 11
       },
@@ -4365,7 +4432,7 @@
     },
     {
       "type": "bargauge",
-      "id": 63,
+      "id": 64,
       "title": "Brews by water",
       "description": "",
       "datasource": {
@@ -4374,7 +4441,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 126,
+        "y": 128,
         "w": 6,
         "h": 11
       },
@@ -4437,7 +4504,7 @@
     },
     {
       "type": "bargauge",
-      "id": 64,
+      "id": 65,
       "title": "Average rating by water",
       "description": "",
       "datasource": {
@@ -4446,7 +4513,7 @@
       },
       "gridPos": {
         "x": 18,
-        "y": 126,
+        "y": 128,
         "w": 6,
         "h": 11
       },
@@ -4511,12 +4578,12 @@
     },
     {
       "type": "row",
-      "id": 65,
+      "id": 66,
       "title": "Your coffee: what you brew and how you rate it",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 137,
+        "y": 139,
         "w": 24,
         "h": 1
       },
@@ -4524,7 +4591,7 @@
     },
     {
       "type": "bargauge",
-      "id": 66,
+      "id": 67,
       "title": "Brews by roaster",
       "description": "",
       "datasource": {
@@ -4533,7 +4600,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 138,
+        "y": 140,
         "w": 6,
         "h": 9
       },
@@ -4596,7 +4663,7 @@
     },
     {
       "type": "bargauge",
-      "id": 67,
+      "id": 68,
       "title": "Brews by origin",
       "description": "",
       "datasource": {
@@ -4605,7 +4672,7 @@
       },
       "gridPos": {
         "x": 6,
-        "y": 138,
+        "y": 140,
         "w": 6,
         "h": 9
       },
@@ -4668,7 +4735,7 @@
     },
     {
       "type": "bargauge",
-      "id": 68,
+      "id": 69,
       "title": "Brews by roast level",
       "description": "",
       "datasource": {
@@ -4677,7 +4744,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 138,
+        "y": 140,
         "w": 6,
         "h": 9
       },
@@ -4740,7 +4807,7 @@
     },
     {
       "type": "bargauge",
-      "id": 69,
+      "id": 70,
       "title": "Brews by process",
       "description": "",
       "datasource": {
@@ -4749,7 +4816,7 @@
       },
       "gridPos": {
         "x": 18,
-        "y": 138,
+        "y": 140,
         "w": 6,
         "h": 9
       },
@@ -4812,7 +4879,7 @@
     },
     {
       "type": "bargauge",
-      "id": 70,
+      "id": 71,
       "title": "Coffee used by roaster",
       "description": "",
       "datasource": {
@@ -4821,7 +4888,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 147,
+        "y": 149,
         "w": 6,
         "h": 9
       },
@@ -4884,7 +4951,7 @@
     },
     {
       "type": "bargauge",
-      "id": 71,
+      "id": 72,
       "title": "Coffee used by origin",
       "description": "",
       "datasource": {
@@ -4893,7 +4960,7 @@
       },
       "gridPos": {
         "x": 6,
-        "y": 147,
+        "y": 149,
         "w": 6,
         "h": 9
       },
@@ -4956,7 +5023,7 @@
     },
     {
       "type": "bargauge",
-      "id": 72,
+      "id": 73,
       "title": "Coffee used by roast level",
       "description": "",
       "datasource": {
@@ -4965,7 +5032,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 147,
+        "y": 149,
         "w": 6,
         "h": 9
       },
@@ -5028,7 +5095,7 @@
     },
     {
       "type": "bargauge",
-      "id": 73,
+      "id": 74,
       "title": "Coffee used by process",
       "description": "",
       "datasource": {
@@ -5037,7 +5104,7 @@
       },
       "gridPos": {
         "x": 18,
-        "y": 147,
+        "y": 149,
         "w": 6,
         "h": 9
       },
@@ -5100,7 +5167,7 @@
     },
     {
       "type": "bargauge",
-      "id": 74,
+      "id": 75,
       "title": "Average brew rating by roaster",
       "description": "",
       "datasource": {
@@ -5109,7 +5176,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 156,
+        "y": 158,
         "w": 6,
         "h": 9
       },
@@ -5174,7 +5241,7 @@
     },
     {
       "type": "bargauge",
-      "id": 75,
+      "id": 76,
       "title": "Average brew rating by origin",
       "description": "",
       "datasource": {
@@ -5183,7 +5250,7 @@
       },
       "gridPos": {
         "x": 6,
-        "y": 156,
+        "y": 158,
         "w": 6,
         "h": 9
       },
@@ -5248,7 +5315,7 @@
     },
     {
       "type": "bargauge",
-      "id": 76,
+      "id": 77,
       "title": "Average brew rating by roast level",
       "description": "",
       "datasource": {
@@ -5257,7 +5324,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 156,
+        "y": 158,
         "w": 6,
         "h": 9
       },
@@ -5322,7 +5389,7 @@
     },
     {
       "type": "bargauge",
-      "id": 77,
+      "id": 78,
       "title": "Average brew rating by process",
       "description": "",
       "datasource": {
@@ -5331,7 +5398,7 @@
       },
       "gridPos": {
         "x": 18,
-        "y": 156,
+        "y": 158,
         "w": 6,
         "h": 9
       },
@@ -5396,7 +5463,7 @@
     },
     {
       "type": "bargauge",
-      "id": 78,
+      "id": 79,
       "title": "Most-brewed coffees",
       "description": "",
       "datasource": {
@@ -5405,7 +5472,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 165,
+        "y": 167,
         "w": 12,
         "h": 12
       },
@@ -5468,7 +5535,7 @@
     },
     {
       "type": "bargauge",
-      "id": 79,
+      "id": 80,
       "title": "Best-rated coffees (brews)",
       "description": "",
       "datasource": {
@@ -5477,7 +5544,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 165,
+        "y": 167,
         "w": 12,
         "h": 12
       },
@@ -5542,12 +5609,12 @@
     },
     {
       "type": "row",
-      "id": 80,
+      "id": 81,
       "title": "Your coffee: every bag you've had",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 177,
+        "y": 179,
         "w": 24,
         "h": 1
       },
@@ -5555,7 +5622,7 @@
     },
     {
       "type": "piechart",
-      "id": 81,
+      "id": 82,
       "title": "Bags by roaster",
       "description": "",
       "datasource": {
@@ -5564,7 +5631,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 178,
+        "y": 180,
         "w": 6,
         "h": 9
       },
@@ -5629,7 +5696,7 @@
     },
     {
       "type": "piechart",
-      "id": 82,
+      "id": 83,
       "title": "Bags by origin",
       "description": "",
       "datasource": {
@@ -5638,7 +5705,7 @@
       },
       "gridPos": {
         "x": 6,
-        "y": 178,
+        "y": 180,
         "w": 6,
         "h": 9
       },
@@ -5703,7 +5770,7 @@
     },
     {
       "type": "piechart",
-      "id": 83,
+      "id": 84,
       "title": "Bags by roast level",
       "description": "",
       "datasource": {
@@ -5712,7 +5779,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 178,
+        "y": 180,
         "w": 6,
         "h": 9
       },
@@ -5777,7 +5844,7 @@
     },
     {
       "type": "piechart",
-      "id": 84,
+      "id": 85,
       "title": "Bags by process",
       "description": "",
       "datasource": {
@@ -5786,7 +5853,7 @@
       },
       "gridPos": {
         "x": 18,
-        "y": 178,
+        "y": 180,
         "w": 6,
         "h": 9
       },
@@ -5851,7 +5918,7 @@
     },
     {
       "type": "bargauge",
-      "id": 85,
+      "id": 86,
       "title": "Average bag rating by roaster",
       "description": "",
       "datasource": {
@@ -5860,7 +5927,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 187,
+        "y": 189,
         "w": 6,
         "h": 9
       },
@@ -5925,7 +5992,7 @@
     },
     {
       "type": "bargauge",
-      "id": 86,
+      "id": 87,
       "title": "Average bag rating by origin",
       "description": "",
       "datasource": {
@@ -5934,7 +6001,7 @@
       },
       "gridPos": {
         "x": 6,
-        "y": 187,
+        "y": 189,
         "w": 6,
         "h": 9
       },
@@ -5999,7 +6066,7 @@
     },
     {
       "type": "bargauge",
-      "id": 87,
+      "id": 88,
       "title": "Average bag rating by roast level",
       "description": "",
       "datasource": {
@@ -6008,7 +6075,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 187,
+        "y": 189,
         "w": 6,
         "h": 9
       },
@@ -6073,7 +6140,7 @@
     },
     {
       "type": "bargauge",
-      "id": 88,
+      "id": 89,
       "title": "Average bag rating by process",
       "description": "",
       "datasource": {
@@ -6082,7 +6149,7 @@
       },
       "gridPos": {
         "x": 18,
-        "y": 187,
+        "y": 189,
         "w": 6,
         "h": 9
       },
@@ -6147,7 +6214,7 @@
     },
     {
       "type": "bargauge",
-      "id": 89,
+      "id": 90,
       "title": "Tasting notes on your bags",
       "description": "How many bags carried each tasting-note tag.",
       "datasource": {
@@ -6156,7 +6223,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 196,
+        "y": 198,
         "w": 24,
         "h": 12
       },
@@ -6219,12 +6286,12 @@
     },
     {
       "type": "row",
-      "id": 90,
+      "id": 91,
       "title": "Stash",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 208,
+        "y": 210,
         "w": 24,
         "h": 1
       },
@@ -6232,7 +6299,7 @@
     },
     {
       "type": "stat",
-      "id": 91,
+      "id": 92,
       "title": "Open bags",
       "description": "",
       "datasource": {
@@ -6241,7 +6308,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 209,
+        "y": 211,
         "w": 4,
         "h": 4
       },
@@ -6300,7 +6367,7 @@
     },
     {
       "type": "stat",
-      "id": 92,
+      "id": 93,
       "title": "Unopened bags",
       "description": "",
       "datasource": {
@@ -6309,7 +6376,7 @@
       },
       "gridPos": {
         "x": 4,
-        "y": 209,
+        "y": 211,
         "w": 4,
         "h": 4
       },
@@ -6368,7 +6435,7 @@
     },
     {
       "type": "stat",
-      "id": 93,
+      "id": 94,
       "title": "Finished bags",
       "description": "",
       "datasource": {
@@ -6377,7 +6444,7 @@
       },
       "gridPos": {
         "x": 8,
-        "y": 209,
+        "y": 211,
         "w": 4,
         "h": 4
       },
@@ -6436,7 +6503,7 @@
     },
     {
       "type": "stat",
-      "id": 94,
+      "id": 95,
       "title": "Opened → finished",
       "description": "Average, over finished bags.",
       "datasource": {
@@ -6445,7 +6512,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 209,
+        "y": 211,
         "w": 4,
         "h": 4
       },
@@ -6505,7 +6572,7 @@
     },
     {
       "type": "stat",
-      "id": 95,
+      "id": 96,
       "title": "Roasted → finished",
       "description": "",
       "datasource": {
@@ -6514,7 +6581,7 @@
       },
       "gridPos": {
         "x": 16,
-        "y": 209,
+        "y": 211,
         "w": 4,
         "h": 4
       },
@@ -6574,7 +6641,7 @@
     },
     {
       "type": "stat",
-      "id": 96,
+      "id": 97,
       "title": "Bought → finished",
       "description": "",
       "datasource": {
@@ -6583,7 +6650,7 @@
       },
       "gridPos": {
         "x": 20,
-        "y": 209,
+        "y": 211,
         "w": 4,
         "h": 4
       },
@@ -6643,7 +6710,7 @@
     },
     {
       "type": "table",
-      "id": 97,
+      "id": 98,
       "title": "Bags in your stash",
       "description": "",
       "datasource": {
@@ -6652,7 +6719,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 213,
+        "y": 215,
         "w": 24,
         "h": 11
       },
@@ -6942,7 +7009,7 @@
     },
     {
       "type": "bargauge",
-      "id": 98,
+      "id": 99,
       "title": "Coffee left per bag",
       "description": "",
       "datasource": {
@@ -6951,7 +7018,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 224,
+        "y": 226,
         "w": 12,
         "h": 10
       },
@@ -7014,7 +7081,7 @@
     },
     {
       "type": "bargauge",
-      "id": 99,
+      "id": 100,
       "title": "Days off roast",
       "description": "",
       "datasource": {
@@ -7023,7 +7090,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 224,
+        "y": 226,
         "w": 12,
         "h": 10
       },
@@ -7086,7 +7153,7 @@
     },
     {
       "type": "timeseries",
-      "id": 100,
+      "id": 101,
       "title": "Coffee left over time",
       "description": "",
       "datasource": {
@@ -7095,7 +7162,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 234,
+        "y": 236,
         "w": 12,
         "h": 8
       },
@@ -7161,7 +7228,7 @@
     },
     {
       "type": "timeseries",
-      "id": 101,
+      "id": 102,
       "title": "Coffee left per bag over time",
       "description": "",
       "datasource": {
@@ -7170,7 +7237,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 234,
+        "y": 236,
         "w": 12,
         "h": 8
       },
@@ -7238,12 +7305,12 @@
     },
     {
       "type": "row",
-      "id": 102,
+      "id": 103,
       "title": "Buying coffee",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 242,
+        "y": 244,
         "w": 24,
         "h": 1
       },
@@ -7251,7 +7318,7 @@
     },
     {
       "type": "stat",
-      "id": 103,
+      "id": 104,
       "title": "Spent, all time",
       "description": "",
       "datasource": {
@@ -7260,7 +7327,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 243,
+        "y": 245,
         "w": 4,
         "h": 4
       },
@@ -7320,7 +7387,7 @@
     },
     {
       "type": "stat",
-      "id": 104,
+      "id": 105,
       "title": "Spent this year",
       "description": "",
       "datasource": {
@@ -7329,7 +7396,7 @@
       },
       "gridPos": {
         "x": 4,
-        "y": 243,
+        "y": 245,
         "w": 4,
         "h": 4
       },
@@ -7389,7 +7456,7 @@
     },
     {
       "type": "stat",
-      "id": 105,
+      "id": 106,
       "title": "Average price per kg",
       "description": "",
       "datasource": {
@@ -7398,7 +7465,7 @@
       },
       "gridPos": {
         "x": 8,
-        "y": 243,
+        "y": 245,
         "w": 4,
         "h": 4
       },
@@ -7458,7 +7525,7 @@
     },
     {
       "type": "stat",
-      "id": 106,
+      "id": 107,
       "title": "Coffee brewed, at cost",
       "description": "",
       "datasource": {
@@ -7467,7 +7534,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 243,
+        "y": 245,
         "w": 4,
         "h": 4
       },
@@ -7527,7 +7594,7 @@
     },
     {
       "type": "stat",
-      "id": 107,
+      "id": 108,
       "title": "Average cost per brew",
       "description": "",
       "datasource": {
@@ -7536,7 +7603,7 @@
       },
       "gridPos": {
         "x": 16,
-        "y": 243,
+        "y": 245,
         "w": 4,
         "h": 4
       },
@@ -7596,7 +7663,7 @@
     },
     {
       "type": "stat",
-      "id": 108,
+      "id": 109,
       "title": "Bags bought",
       "description": "Bags with a purchase date.",
       "datasource": {
@@ -7605,7 +7672,7 @@
       },
       "gridPos": {
         "x": 20,
-        "y": 243,
+        "y": 245,
         "w": 4,
         "h": 4
       },
@@ -7664,7 +7731,7 @@
     },
     {
       "type": "barchart",
-      "id": 109,
+      "id": 110,
       "title": "Spent per month",
       "description": "",
       "datasource": {
@@ -7673,7 +7740,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 247,
+        "y": 249,
         "w": 12,
         "h": 8
       },
@@ -7757,7 +7824,7 @@
     },
     {
       "type": "barchart",
-      "id": 110,
+      "id": 111,
       "title": "Bags bought per month",
       "description": "",
       "datasource": {
@@ -7766,7 +7833,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 247,
+        "y": 249,
         "w": 12,
         "h": 8
       },
@@ -7850,7 +7917,7 @@
     },
     {
       "type": "barchart",
-      "id": 111,
+      "id": 112,
       "title": "Coffee bought vs brewed per month",
       "description": "",
       "datasource": {
@@ -7859,7 +7926,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 255,
+        "y": 257,
         "w": 12,
         "h": 8
       },
@@ -7968,7 +8035,7 @@
     },
     {
       "type": "barchart",
-      "id": 112,
+      "id": 113,
       "title": "Cost of the coffee you brewed per month",
       "description": "",
       "datasource": {
@@ -7977,7 +8044,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 255,
+        "y": 257,
         "w": 12,
         "h": 8
       },
@@ -8061,7 +8128,7 @@
     },
     {
       "type": "piechart",
-      "id": 113,
+      "id": 114,
       "title": "Spent by roaster",
       "description": "",
       "datasource": {
@@ -8070,7 +8137,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 263,
+        "y": 265,
         "w": 12,
         "h": 9
       },
@@ -8135,7 +8202,7 @@
     },
     {
       "type": "timeseries",
-      "id": 114,
+      "id": 115,
       "title": "Spending over time",
       "description": "",
       "datasource": {
@@ -8144,7 +8211,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 263,
+        "y": 265,
         "w": 12,
         "h": 8
       },
@@ -8222,12 +8289,12 @@
     },
     {
       "type": "row",
-      "id": 115,
+      "id": 116,
       "title": "Discover, backups and the instance",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 272,
+        "y": 274,
         "w": 24,
         "h": 1
       },
@@ -8235,7 +8302,7 @@
     },
     {
       "type": "stat",
-      "id": 116,
+      "id": 117,
       "title": "Board editions",
       "description": "",
       "datasource": {
@@ -8244,7 +8311,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 273,
+        "y": 275,
         "w": 4,
         "h": 4
       },
@@ -8303,7 +8370,7 @@
     },
     {
       "type": "stat",
-      "id": 117,
+      "id": 118,
       "title": "Last board refresh",
       "description": "",
       "datasource": {
@@ -8312,7 +8379,7 @@
       },
       "gridPos": {
         "x": 4,
-        "y": 273,
+        "y": 275,
         "w": 4,
         "h": 4
       },
@@ -8371,7 +8438,7 @@
     },
     {
       "type": "stat",
-      "id": 118,
+      "id": 119,
       "title": "Avoid list",
       "description": "",
       "datasource": {
@@ -8380,7 +8447,7 @@
       },
       "gridPos": {
         "x": 8,
-        "y": 273,
+        "y": 275,
         "w": 4,
         "h": 4
       },
@@ -8439,7 +8506,7 @@
     },
     {
       "type": "stat",
-      "id": 119,
+      "id": 120,
       "title": "Last backup",
       "description": "Nightly at 03:00, plus any you make.",
       "datasource": {
@@ -8448,7 +8515,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 273,
+        "y": 275,
         "w": 4,
         "h": 4
       },
@@ -8507,7 +8574,7 @@
     },
     {
       "type": "stat",
-      "id": 120,
+      "id": 121,
       "title": "Backups on disk",
       "description": "",
       "datasource": {
@@ -8516,7 +8583,7 @@
       },
       "gridPos": {
         "x": 16,
-        "y": 273,
+        "y": 275,
         "w": 4,
         "h": 4
       },
@@ -8575,7 +8642,7 @@
     },
     {
       "type": "stat",
-      "id": 121,
+      "id": 122,
       "title": "Database size",
       "description": "",
       "datasource": {
@@ -8584,7 +8651,7 @@
       },
       "gridPos": {
         "x": 20,
-        "y": 273,
+        "y": 275,
         "w": 4,
         "h": 4
       },
@@ -8643,7 +8710,7 @@
     },
     {
       "type": "piechart",
-      "id": 122,
+      "id": 123,
       "title": "Board picks by status",
       "description": "",
       "datasource": {
@@ -8652,7 +8719,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 277,
+        "y": 279,
         "w": 8,
         "h": 8
       },
@@ -8717,7 +8784,7 @@
     },
     {
       "type": "piechart",
-      "id": 123,
+      "id": 124,
       "title": "Tastings by verdict",
       "description": "",
       "datasource": {
@@ -8726,7 +8793,7 @@
       },
       "gridPos": {
         "x": 8,
-        "y": 277,
+        "y": 279,
         "w": 8,
         "h": 8
       },
@@ -8791,7 +8858,7 @@
     },
     {
       "type": "stat",
-      "id": 124,
+      "id": 125,
       "title": "Brewlab version",
       "description": "",
       "datasource": {
@@ -8800,7 +8867,7 @@
       },
       "gridPos": {
         "x": 16,
-        "y": 277,
+        "y": 279,
         "w": 4,
         "h": 8
       },
@@ -8859,7 +8926,7 @@
     },
     {
       "type": "stat",
-      "id": 125,
+      "id": 126,
       "title": "AI provider",
       "description": "",
       "datasource": {
@@ -8868,7 +8935,7 @@
       },
       "gridPos": {
         "x": 20,
-        "y": 277,
+        "y": 279,
         "w": 4,
         "h": 8
       },

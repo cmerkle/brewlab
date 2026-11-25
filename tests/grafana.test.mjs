@@ -16,7 +16,13 @@ test("every metric the dashboard queries exists in /metrics; panels have unique 
   const dash = JSON.parse(fs.readFileSync(new URL("../grafana/brewlab-dashboard.json", import.meta.url), "utf8"));
   const served = new Set(collect(openDb(path.join(tmp, "brewlab.db"))).map((f) => f.name));
   const used = new Set();
-  const panels = dash.panels.filter((p) => p.type !== "row");
+  const panels = dash.panels.filter((p) => p.type !== "row" && p.type !== "canvas");
+  const logo = dash.panels[0];
+  assert.equal(logo.type, "canvas", "the Brewlab wordmark is first");
+  // Grafana 12 reads a data URI as a file under /public/build, so the wordmark is loaded by URL from the repo.
+  assert.match(logo.options.root.elements[0].config.path.fixed, /^https:\/\/cdn\.jsdelivr\.net\/gh\/cmerkle\/brewlab@main\/grafana\/brewlab-wordmark\.svg$/);
+  const svg = fs.readFileSync(new URL("../grafana/brewlab-wordmark.svg", import.meta.url), "utf8");
+  assert.match(svg, /\.theme-light \.blw-ink/, "the wordmark follows Grafana's light theme");
   for (const p of panels) for (const t of p.targets) for (const n of t.expr.match(/brewlab_[a-z0-9_]+/g) ?? []) used.add(n);
   const missing = [...used].filter((n) => !served.has(n));
   assert.deepEqual(missing, [], "metrics the dashboard uses but the app doesn't serve");
