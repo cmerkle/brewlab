@@ -474,6 +474,8 @@ const VocabSchema = z.object({
   roastLevels: z.array(z.object({
     id: z.string().regex(/^[a-z0-9-]+$/), label: z.string().min(1), aliases: z.array(z.string()),
     rest: z.number().int().min(0).max(365), peakEnd: z.number().int().min(1).max(730),
+    /** Brew setup's roast adjustment: % of the method's grind range, negative = finer (relative, see RoastNudge). */
+    grindShift: z.number().min(-50).max(50).default(0),
   }).refine((l) => l.rest < l.peakEnd, "rest must be before peakEnd")).min(1),
   processes: z.array(z.string().min(1)),
   origins: z.array(z.string().min(1)),

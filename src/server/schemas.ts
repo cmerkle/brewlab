@@ -66,6 +66,8 @@ export const RecipeSchema = z.object({
   inventoryId: z.number().int().nullable().optional(),
   waterId: z.number().int().nullable().optional(),
   waterName: str(200),
+  /** The roast the recipe was written for (a roast level; null = the roast nudge's baseline). */
+  roastLevel: str(100),
 });
 
 export const BrewSchema = z.object({

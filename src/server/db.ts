@@ -207,6 +207,8 @@ function migrate(db: DB) {
   if (!has("inventory_items", "tastingNotes")) db.exec("ALTER TABLE inventory_items ADD COLUMN tastingNotes TEXT NOT NULL DEFAULT '[]'"); // JSON tags
   if (!has("inventory_items", "unloggedG")) db.exec("ALTER TABLE inventory_items ADD COLUMN unloggedG REAL NOT NULL DEFAULT 0");
   if (!has("water_recipes", "concentrate")) db.exec("ALTER TABLE water_recipes ADD COLUMN concentrate INTEGER NOT NULL DEFAULT 0");
+  // The roast a recipe was written for (a roast level label, like bags) — Brew setup's roast grind nudge.
+  if (!has("recipes", "roastLevel")) db.exec("ALTER TABLE recipes ADD COLUMN roastLevel TEXT");
   for (const t of ["recipes", "brews"]) {
     if (!has(t, "waterId")) db.exec(`ALTER TABLE ${t} ADD COLUMN waterId INTEGER REFERENCES water_recipes(id) ON DELETE SET NULL`);
     if (!has(t, "waterName")) db.exec(`ALTER TABLE ${t} ADD COLUMN waterName TEXT`);

@@ -293,6 +293,32 @@ export interface DoseNudge { enabled: boolean; percent: number; methods: Method[
 /** Defaults: drip methods, where a bigger bed drains slower and wants a coarser grind. */
 export const DEFAULT_DOSE_NUDGE: DoseNudge = { enabled: true, percent: 20, methods: ["rapid", "pourover", "batch"] };
 
+/** How far the dose nudge moves the grind, in % of the method range (0 = not at all). */
+export function dosePercent(m: Method, recipeDoseG: number, doseG: number, cfg: DoseNudge = DEFAULT_DOSE_NUDGE): number {
+  if (!cfg.enabled || !(cfg.percent > 0) || !cfg.methods.includes(m)) return 0;
+  if (!(recipeDoseG > 0) || !(doseG > 0) || doseG === recipeDoseG) return 0;
+  return cfg.percent * Math.log2(doseG / recipeDoseG);
+}
+
+/**
+ * Move a setting by `percent` of the grinder's range for the method (positive = coarser), kept
+ * inside the grinder's dial and rounded to its step. Null when nothing changes (no range, 0%, or
+ * the step rounds it away).
+ */
+export function shiftGrind(g: GrinderLike, m: Method, dial: number, percent: number): { dial: number; delta: number } | null {
+  if (!percent) return null;
+  const r = rangeFor(g, m);
+  if (!r || r.high <= r.low) return null;
+  const er = effectiveRanges(g);
+  let v = dialToValue(g, dial) + (percent / 100) * (r.high - r.low);
+  if (er?.min != null) v = Math.max(er.min, v);
+  if (er?.max != null) v = Math.min(er.max, v);
+  const out = valueToDial(g, v);
+  const delta = Math.round((dialToValue(g, out) - dialToValue(g, dial)) * 1000) / 1000;
+  if (Math.abs(delta) < 1e-9) return null;
+  return { dial: out, delta };
+}
+
 /**
  * Grind for a different dose than the recipe's: the chosen methods move coarser (bigger dose) or
  * finer (smaller dose) by `cfg.percent` of the method range per doubling. Returns null when
@@ -301,16 +327,36 @@ export const DEFAULT_DOSE_NUDGE: DoseNudge = { enabled: true, percent: 20, metho
 export function doseAdjustedGrind(
   g: GrinderLike, m: Method, dial: number, recipeDoseG: number, doseG: number, cfg: DoseNudge = DEFAULT_DOSE_NUDGE,
 ): { dial: number; delta: number } | null {
-  if (!cfg.enabled || !(cfg.percent > 0) || !cfg.methods.includes(m)) return null;
-  if (!(recipeDoseG > 0) || !(doseG > 0) || doseG === recipeDoseG) return null;
-  const r = rangeFor(g, m);
-  if (!r || r.high <= r.low) return null;
-  const er = effectiveRanges(g);
-  let v = dialToValue(g, dial) + (cfg.percent / 100) * Math.log2(doseG / recipeDoseG) * (r.high - r.low);
-  if (er?.min != null) v = Math.max(er.min, v);
-  if (er?.max != null) v = Math.min(er.max, v);
-  const out = valueToDial(g, v);
-  const delta = Math.round((dialToValue(g, out) - dialToValue(g, dial)) * 1000) / 1000;
-  if (Math.abs(delta) < 1e-9) return null;
-  return { dial: out, delta };
+  return shiftGrind(g, m, dial, dosePercent(m, recipeDoseG, doseG, cfg));
+}
+
+/* ------------------------------ roast level → grind nudge ------------------------------ */
+
+/**
+ * How Brew setup adjusts the grind for the bag's roast (a setting: More → Settings). Each roast
+ * level has a shift (% of the method range, negative = finer): the data's `grindShift`
+ * (catalog/coffee-vocab.json) unless `shifts` has your own. The grind moves by the bag's shift minus
+ * the shift of the roast the recipe was written for — the recipe's own roast, else `baseline`.
+ */
+export interface RoastNudge { enabled: boolean; baseline: string; shifts: Record<string, number>; methods: Method[] }
+/** Off by default: the data's shifts are a rule of thumb, not published numbers. */
+export const DEFAULT_ROAST_NUDGE: RoastNudge = { enabled: false, baseline: "medium-light", shifts: {}, methods: [...METHODS] };
+export interface RoastShiftLevel { id: string; label: string; grindShift?: number }
+
+/** A roast level's shift: yours if set, else the data's. */
+export const roastShift = (level: RoastShiftLevel, cfg: RoastNudge = DEFAULT_ROAST_NUDGE): number => cfg.shifts[level.id] ?? level.grindShift ?? 0;
+
+/**
+ * The roast part of the grind adjustment: % of the method range for a bag of roast `bag` brewed with
+ * a recipe written for `recipe` (null = the baseline). Null when off, not this method, the bag has
+ * no known roast level, or the two shifts are the same.
+ */
+export function roastPercent<L extends RoastShiftLevel>(
+  m: Method, bag: L | null, recipe: L | null, levels: L[], cfg: RoastNudge = DEFAULT_ROAST_NUDGE,
+): { percent: number; from: L; assumed: boolean } | null {
+  if (!cfg.enabled || !cfg.methods.includes(m) || !bag) return null;
+  const from = recipe ?? levels.find((l) => l.id === cfg.baseline) ?? null;
+  if (!from) return null;
+  const percent = roastShift(bag, cfg) - roastShift(from, cfg);
+  return percent ? { percent, from, assumed: !recipe } : null;
 }

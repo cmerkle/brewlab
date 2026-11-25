@@ -47,6 +47,13 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   different dose"): on/off, `percent` of the method range per doubling of dose vs the recipe, and
   which methods (default on, 20%, rapid/pourover/batch — `DEFAULT_DOSE_NUDGE`). Shown with a
   one-tap "Use <recipe grind>"; typing a grind turns it off.
+- **Roast nudge** (`roastPercent`, `settings.roastNudge`, "Grind for the roast"; off by default; the
+  vocab's shifts are an unsourced rule of thumb and are labelled that way in the app): each roast level has a
+  `grindShift` (% of the method range, negative = finer) in `catalog/coffee-vocab.json`, overridable in
+  `roastNudge.shifts`. The grind moves by the bag's shift minus the shift of the recipe's own `roastLevel`
+  (recipes column; else `roastNudge.baseline`, default medium-light). Only exact roast levels count
+  (`roastLevelOf`; "as entered" text isn't adjusted). Roast and dose percents are added, then
+  `shiftGrind` applies them once (one rounding); Brew setup's note names each reason.
 - **Prefer settings and data over constants.** Brewlab aims to be highly configurable: a
   behaviour with a tunable number or list belongs in `settings` (with a default) or in `catalog/`,
   not hard-coded. Library gear and custom gear share one shape — every field a library entry can
@@ -247,7 +254,7 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   `meta.onboarded` isn't "1"; installs with data are marked onboarded at startup. Preferences in
   the `settings` table (`src/server/settings.ts`): tempUnit (DB always °C — use
   `useTemp`/`TempInput`), waterUnit (instance default; per-device g/oz pref wins), defaultRatio,
-  discoverEnabled, prefs, palateNotes, dismissedSuggestions, doseNudge, updateCheck, backupKeep, restWindows. Demo data (`demo/`, fictional) and restore
+  discoverEnabled, prefs, palateNotes, dismissedSuggestions, doseNudge, roastNudge, updateCheck, backupKeep, restWindows. Demo data (`demo/`, fictional) and restore
   only go into an empty DB.
 - **Discover taste** (`src/server/taste.ts`): summary from Stash ratings, brew ratings and
   tastings → stage popular (0 rated) / mixed (1–4) / tailored (5+), the research prompt, ranking of

@@ -82,6 +82,8 @@ Nothing about specific gear is in the code. The **gear library** (`catalog/gear/
 
 **How conversion works:** a setting keeps its position inside the source grinder's range for that brew method and lands at the same position in the target grinder's range. Halfway through one grinder's pour-over range maps to halfway through the other's. Microns-per-click is never used.
 
+In **Brew setup** the converted setting can also move a little for the brew in front of you: coarser for a bigger dose than the recipe's, finer for a lighter roast than the recipe was written for (coarser for a darker one). Both are settings (More → Settings → *Grind for a different dose* and *Grind for the roast*), with the amount per roast level yours to change; a note says why the grind moved, and one tap goes back to the plain conversion.
+
 Missing gear, or have a source for a grind range? Add it to your own Brewlab, then use **Suggest to the library** in its gear editor: Brewlab checks it and opens a ready-to-submit pull request on GitHub. Details in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Water recipes

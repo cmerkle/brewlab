@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api, type Brew, type Recipe } from "../api";
-import { FullScreen, NumInput, WaterInput, TempInput, useData, Field, Stars, fmtRating, ErrorBox, fmtTime, fmtDate, getPref, setPref, usePref, useTemp } from "../ui";
+import { FullScreen, NumInput, WaterInput, TempInput, useData, Field, Stars, fmtRating, ErrorBox, fmtTime, fmtDate, getPref, setPref, usePref, useTemp, useVocab } from "../ui";
 import { scaleSteps, applyRatio, ratioOf, fmtRatio, RATIO_TOGGLES, fmtG, stepTimes, timerState, nextStepNow, type LastEdited, type Step, type StepShift } from "../../shared/brew";
 import { GrinderSwitcher, grindFor, grindLabel, useGrinders, methodOf } from "../grindui";
-import { doseAdjustedGrind, fmtGrind, toGrindNumber } from "../../shared/grind";
+import { dosePercent, roastPercent, shiftGrind, fmtGrind, toGrindNumber } from "../../shared/grind";
+import { roastLevelOf } from "../../shared/stash";
 import { RatioCalculator } from "./RatioCalculator";
 import { WaterSelect } from "./Water";
 
@@ -27,6 +28,8 @@ export interface BrewPlan {
   waterName?: string | null;
   /** Grinder picked on the recipe card's switcher (converted from the original). */
   selectedGrinderId?: string | null;
+  /** The roast the recipe was written for (null = the roast nudge's baseline). */
+  roastLevel?: string | null;
 }
 
 export const planFromRecipe = (r: Recipe): BrewPlan => ({ ...r, recipeId: r.id });
@@ -150,7 +153,8 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
   onEditGrinder?: (id: string) => void;
   resume?: ActiveBrew;
 }) {
-  const { limits, gear, bags, brews, water: waters, reload, toast, settings } = useData();
+  const { limits, gear, bags, brews, recipes, water: waters, reload, toast, settings } = useData();
+  const vocab = useVocab();
   const temp = useTemp();
   const grinders = useGrinders();
   const method = methodOf(plan, gear);
@@ -183,10 +187,15 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
   const chime = useChime();
   useEffect(() => () => chime.release(), []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Grind: the recipe's (converted to the chosen grinder), nudged for the dose on drip methods —
-  // until you type your own number.
-  const dripNudge = grinder && choice.setting != null && dose ? doseAdjustedGrind(grinder, method, choice.setting, plan.doseG, dose, settings.doseNudge) : null;
-  const suggested = dripNudge?.dial ?? choice.setting;
+  // Grind: the recipe's (converted to the chosen grinder), moved for the bag's roast and the dose
+  // (both settings) — until you type your own number.
+  const bag = bags.find((b) => b.id === inventoryId) ?? null;
+  const bagRoast = roastLevelOf(bag?.roastLevel, vocab.roastLevels);
+  const recipeRoast = roastLevelOf(plan.roastLevel ?? recipes.find((r) => r.id === plan.recipeId)?.roastLevel, vocab.roastLevels);
+  const roastAdj = roastPercent(method, bagRoast, recipeRoast, vocab.roastLevels, settings.roastNudge);
+  const dosePct = dose ? dosePercent(method, plan.doseG, dose, settings.doseNudge) : 0;
+  const nudge = grinder && choice.setting != null ? shiftGrind(grinder, method, choice.setting, dosePct + (roastAdj?.percent ?? 0)) : null;
+  const suggested = nudge?.dial ?? choice.setting;
   const [typedGrind, setTypedGrind] = useState<{ value: number | null } | null>(resume ? { value: resume.grind } : null);
   const grind = typedGrind ? typedGrind.value : suggested;
   const firstGrinder = useRef(true);
@@ -200,7 +209,6 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
 
   const steps = useMemo(() => (water ? scaleSteps(plan.steps, plan.waterG, water) : plan.steps), [plan, water]);
   const ratio = dose && water ? ratioOf(dose, water) : null;
-  const bag = bags.find((b) => b.id === inventoryId) ?? null;
   const lowCoffee = bag && bag.remainingG != null && dose != null && dose > bag.remainingG;
 
   // Dial-in history: recent brews of this bag (or, without a bag, of this recipe).
@@ -421,9 +429,13 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
 
           <GrinderSwitcher recipe={plan} value={grinderId} onChange={setGrinderId} idPrefix="sd" onEditGrinder={onEditGrinder} />
           {grindField("sd-grind", typedGrind ? undefined : "Converted automatically; type your own number if you like.")}
-          {dripNudge && !typedGrind && choice.setting != null && (
-            <div className="hint" role="status" data-testid="grind-dose-nudge">
-              {dose! > plan.doseG ? "Bigger" : "Smaller"} dose than the recipe's {fmtG(plan.doseG)} g, so a touch {dose! > plan.doseG ? "coarser" : "finer"}: {fmtGrind(dripNudge.dial, grinder)} instead of {fmtGrind(choice.setting, grinder)}.{" "}
+          {nudge && !typedGrind && choice.setting != null && (
+            <div className="hint" role="status" data-testid="grind-nudge">
+              {[
+                roastAdj && bagRoast && `${bagRoast.label} roast ${roastAdj.assumed ? `(recipes count as ${roastAdj.from.label.toLowerCase()} unless set)` : `for a ${roastAdj.from.label.toLowerCase()} recipe`}, so ${roastAdj.percent > 0 ? "coarser" : "finer"}`,
+                dosePct && `${dose! > plan.doseG ? "bigger" : "smaller"} dose than the recipe's ${fmtG(plan.doseG)} g, so ${dosePct > 0 ? "coarser" : "finer"}`,
+              ].filter(Boolean).join("; ").replace(/^./, (c) => c.toUpperCase())}
+              : {fmtGrind(nudge.dial, grinder)} instead of {fmtGrind(choice.setting, grinder)}.{" "}
               <button type="button" className="link" onClick={() => setTypedGrind({ value: choice.setting })}>Use {fmtGrind(choice.setting, grinder)}</button>
             </div>
           )}

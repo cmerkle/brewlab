@@ -540,6 +540,9 @@ code.cmd { display: block; margin: 4px 0 6px; overflow-wrap: normal; word-break:
 .rest-table th { text-align: left; font-size: .78rem; color: var(--muted); font-weight: 600; padding: 0 4px 4px; }
 .rest-table td { padding: 3px 4px; }
 .rest-table td:first-child { font-weight: 600; }
+.roast-table td:first-child { white-space: nowrap; }
+.roast-table caption { caption-side: bottom; text-align: left; padding-top: 4px; }
+.roast-table select { width: auto; min-width: 5.5em; }
 
 /* Discover → Your taste: tag lists. Input first, so the inputs line up across columns. */
 .pref-list { display: flex; flex-direction: column; gap: 6px; min-width: 0; }

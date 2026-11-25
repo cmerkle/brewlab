@@ -1,7 +1,7 @@
 // Domain checks for maths that must be exact. Run: npm run build:server && npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { convertSetting, parseSetting, validateRanges, recommend, canGrind, rangeFor, toGrindNumber, dialToValue, valueToDial, fmtGrind, doseAdjustedGrind } from "../dist/shared/grind.js";
+import { convertSetting, parseSetting, validateRanges, recommend, canGrind, rangeFor, toGrindNumber, dialToValue, valueToDial, fmtGrind, doseAdjustedGrind, shiftGrind, roastPercent, roastShift, dosePercent, DEFAULT_ROAST_NUDGE } from "../dist/shared/grind.js";
 import { scaleSteps, applyRatio } from "../dist/shared/brew.js";
 import { applyMatchingRules } from "../dist/server/rules.js";
 import { switchOnExcludes } from "../dist/server/settings.js";
@@ -103,6 +103,36 @@ test("dose nudge: drip methods go coarser for a bigger dose, finer for a smaller
   assert.deepEqual(doseAdjustedGrind(kul, "pourover", 72, 20, 40, { enabled: true, percent: 50, methods: ["pourover"] }), { dial: 80, delta: 8 });
   assert.equal(doseAdjustedGrind(kul, "pourover", 72, 20, 40, { enabled: true, percent: 20, methods: ["immersion"] }), null);
   assert.ok(doseAdjustedGrind(kul, "immersion", 85, 20, 40, { enabled: true, percent: 20, methods: ["immersion"] }));
+});
+
+test("roast nudge: the grind moves by the bag's roast shift minus the recipe's (else the baseline's)", () => {
+  const L = [
+    { id: "light", label: "Light", grindShift: -5 }, { id: "medium-light", label: "Medium-light", grindShift: 0 },
+    { id: "medium", label: "Medium", grindShift: 5 }, { id: "dark", label: "Dark", grindShift: 15 },
+  ];
+  const [light, ml, med, dark] = L;
+  assert.equal(roastPercent("pourover", light, null, L), null); // off by default
+  const ON = { ...DEFAULT_ROAST_NUDGE, enabled: true };
+  // No recipe roast → the baseline (medium-light): a light bag goes 5% finer, a dark one 15% coarser.
+  assert.deepEqual(roastPercent("pourover", light, null, L, ON), { percent: -5, from: ml, assumed: true });
+  assert.equal(roastPercent("pourover", dark, null, L, ON).percent, 15);
+  // A recipe written for medium: a light bag is 10% finer than it; the same roast → nothing.
+  assert.deepEqual(roastPercent("pourover", light, med, L, ON), { percent: -10, from: med, assumed: false });
+  assert.equal(roastPercent("pourover", med, med, L, ON), null);
+  assert.equal(roastPercent("pourover", ml, null, L, ON), null); // bag = baseline
+  assert.equal(roastPercent("pourover", null, med, L, ON), null); // the bag's roast isn't a known level
+  // Settings: off, other methods, your own shifts, another baseline.
+  assert.equal(roastPercent("pourover", light, null, L, { ...ON, enabled: false }), null);
+  assert.equal(roastPercent("espresso", light, null, L, { ...ON, methods: ["pourover"] }), null);
+  assert.equal(roastPercent("pourover", light, null, L, { ...ON, shifts: { light: -12 } }).percent, -12);
+  assert.equal(roastShift(light, { ...ON, shifts: { light: -12 } }), -12);
+  assert.equal(roastPercent("pourover", light, null, L, { ...ON, baseline: "dark" }).percent, -20);
+  assert.equal(roastPercent("pourover", light, null, L, { ...ON, baseline: "nope" }), null);
+  // Applied to a grinder: K-Ultra fixture pour-over 64–80 (16 clicks), −10% → −1.6 → 2 clicks finer.
+  assert.deepEqual(shiftGrind(kul, "pourover", 72, -10), { dial: 70, delta: -2 });
+  assert.equal(shiftGrind(kul, "pourover", 72, 0), null);
+  // Roast and dose add up before rounding: −10% (lighter) + 20% (double dose) = +10% → +1.6 → 2 clicks coarser.
+  assert.equal(shiftGrind(kul, "pourover", 72, -10 + dosePercent("pourover", 20, 40)).dial, 74);
 });
 
 test("Work Horse scaled to 35g / 460g pours ~229g then lands on 460g — not 560g", () => {

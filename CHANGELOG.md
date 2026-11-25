@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.7.0
+
+- **Grind for the roast.** Brew setup now moves the grind for the bag's roast level: finer for lighter
+  roasts, coarser for darker ones, relative to the roast the recipe was written for. Recipes have a new
+  optional "Written for a roast" field; recipes without one count as medium-light. Picking a Stash bag
+  in the recipe editor fills an empty roast from the bag, and "Set to <bag>'s roast" replaces one
+  you chose. More → Settings →
+  "Grind for the roast" switches it on or off and sets the shift for each roast level (as a % of the
+  grinder's range, with a worked example on your own grinder), the baseline roast and which methods it
+  applies to. It's off by default; the starting values (light −5%, dark +15% of the range vs
+  medium-light, and so on) are a rule of thumb, not published numbers. Brew setup's note says why the grind moved, with a one-tap
+  "Use <recipe grind>". Roast and dose adjustments add up and are rounded once.
+
 ## 0.6.1
 
 - **Tag fields** (Discover → Your taste, a bag's tasting notes): suggestions now appear as you type, matching the start of a word, right under the box — tap one, or ↓/↑ and Enter. On iPhone the full list used to pop up after pressing Enter, when the box was empty.

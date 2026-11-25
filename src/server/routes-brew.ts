@@ -159,7 +159,7 @@ function recipeKey(r: any) {
   return JSON.stringify([
     (r.name ?? "").trim().toLowerCase(), r.brewerId ?? null, r.method ?? null, r.coffee ?? null, Number(r.doseG), Number(r.waterG),
     r.tempC == null ? null : Number(r.tempC), r.grinderId ?? null, r.grindSetting ?? null, JSON.parse(steps || "[]"),
-    r.notes ?? null, r.inventoryId ?? null, r.waterId ?? null,
+    r.notes ?? null, r.inventoryId ?? null, r.waterId ?? null, r.roastLevel ?? null,
   ]);
 }
 
@@ -348,7 +348,7 @@ export function brewRouter(db: DB) {
       method: d.method ?? null, coffee, doseG: d.doseG, waterG: d.waterG, tempC: d.tempC ?? null, grinderId: d.grinderId || null,
       grinderName: (d.grinderId && names.get(d.grinderId)) || d.grinderName || null, grindSetting: d.grindSetting ?? null,
       steps: JSON.stringify(d.steps ?? []), notes: d.notes ?? null, favorite: d.favorite ? 1 : 0, inventoryId: d.inventoryId ?? null,
-      waterId: d.waterId ?? null, waterName: waterNameFor(db, d.waterId, d.waterName),
+      waterId: d.waterId ?? null, waterName: waterNameFor(db, d.waterId, d.waterName), roastLevel: normalizeRoastLevel(d.roastLevel),
     };
   };
   const identicalExists = (vals: any, exceptId?: number) => {
@@ -361,8 +361,8 @@ export function brewRouter(db: DB) {
     const t = nowIso();
     const info = db
       .prepare(
-        `INSERT INTO recipes (name, brewerId, brewerName, method, coffee, doseG, waterG, tempC, grinderId, grinderName, grindSetting, steps, notes, favorite, starter, inventoryId, waterId, waterName, createdAt, updatedAt)
-         VALUES (@name, @brewerId, @brewerName, @method, @coffee, @doseG, @waterG, @tempC, @grinderId, @grinderName, @grindSetting, @steps, @notes, @favorite, 0, @inventoryId, @waterId, @waterName, @t, @t)`,
+        `INSERT INTO recipes (name, brewerId, brewerName, method, coffee, doseG, waterG, tempC, grinderId, grinderName, grindSetting, steps, notes, favorite, starter, inventoryId, waterId, waterName, roastLevel, createdAt, updatedAt)
+         VALUES (@name, @brewerId, @brewerName, @method, @coffee, @doseG, @waterG, @tempC, @grinderId, @grinderName, @grindSetting, @steps, @notes, @favorite, 0, @inventoryId, @waterId, @waterName, @roastLevel, @t, @t)`,
       )
       .run({ ...vals, t });
     return recipeRow(db.prepare("SELECT * FROM recipes WHERE id=?").get(info.lastInsertRowid));
@@ -392,7 +392,7 @@ export function brewRouter(db: DB) {
       db.prepare(
         `UPDATE recipes SET name=@name, brewerId=@brewerId, brewerName=@brewerName, method=@method, coffee=@coffee, doseG=@doseG, waterG=@waterG,
          tempC=@tempC, grinderId=@grinderId, grinderName=@grinderName, grindSetting=@grindSetting, steps=@steps, notes=@notes,
-         favorite=@favorite, inventoryId=@inventoryId, waterId=@waterId, waterName=@waterName, updatedAt=@t WHERE id=@id`,
+         favorite=@favorite, inventoryId=@inventoryId, waterId=@waterId, waterName=@waterName, roastLevel=@roastLevel, updatedAt=@t WHERE id=@id`,
       ).run({ ...vals, id, t: nowIso() });
       res.json(recipeRow(db.prepare("SELECT * FROM recipes WHERE id=?").get(id)));
     } catch (e: any) {
@@ -420,7 +420,7 @@ export function brewRouter(db: DB) {
       name: `${src.name} (Copy)`, brewerId: src.brewerId, brewerName: src.brewerName, method: src.method, coffee: src.coffee,
       doseG: src.doseG, waterG: src.waterG, tempC: src.tempC, grinderId: src.grinderId, grinderName: src.grinderName,
       grindSetting: src.grindSetting, steps: src.steps, notes: src.notes, favorite: 0, inventoryId: src.inventoryId,
-      waterId: src.waterId ?? null, waterName: src.waterName ?? null,
+      waterId: src.waterId ?? null, waterName: src.waterName ?? null, roastLevel: src.roastLevel ?? null,
     };
     const dup = identicalExists(vals);
     if (dup) return res.status(409).json({ error: `"${dup.name}" is already saved — no second identical copy was made.`, existing: recipeRow(dup) });

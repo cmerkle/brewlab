@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "./api";
 import { useData, fmtDate, NumInput, useVocab } from "./ui";
-import { METHODS, METHOD_LABELS, DEFAULT_DOSE_NUDGE, rangeFor, fmtGrindNumber, type DoseNudge } from "../shared/grind";
+import { METHODS, METHOD_LABELS, DEFAULT_DOSE_NUDGE, DEFAULT_ROAST_NUDGE, rangeFor, roastShift, fmtGrindNumber, type DoseNudge, type RoastNudge } from "../shared/grind";
 import { RatioCalculator } from "./brew/RatioCalculator";
 import { PrefsForm } from "./Setup";
 import { AiProvider } from "./AiProvider";
@@ -69,6 +69,7 @@ export function Settings() {
         <PrefsForm />
       </section>
       <DoseNudgeSettings />
+      <RoastNudgeSettings />
       <RestSettings />
 
       {group("Discover and AI")}
@@ -425,6 +426,114 @@ function BackupsCard() {
         </ul>
       ) : (
         <p className="small muted">No backups yet.</p>
+      )}
+    </section>
+  );
+}
+
+/** Brew setup's "grind for the roast" adjustment: on/off, a shift per roast level, the baseline, which methods. */
+function RoastNudgeSettings() {
+  const { settings, saveSettings, act, gear } = useData();
+  const vocab = useVocab();
+  // Shown at once and saved in order, like the dose card.
+  const [cfg, setCfg] = useState<RoastNudge>(settings.roastNudge);
+  const latest = useRef(cfg);
+  const saved = JSON.stringify(settings.roastNudge);
+  useEffect(() => {
+    latest.current = settings.roastNudge;
+    setCfg(settings.roastNudge);
+  }, [saved]); // eslint-disable-line react-hooks/exhaustive-deps
+  const queue = useRef<Promise<unknown>>(Promise.resolve());
+  const save = (patch: Partial<RoastNudge>) => {
+    const next = { ...latest.current, ...patch };
+    latest.current = next;
+    setCfg(next);
+    queue.current = queue.current.then(() => act(() => saveSettings({ roastNudge: next })));
+  };
+  const setShift = (id: string, n: number) => {
+    const lv = vocab.roastLevels.find((l) => l.id === id);
+    const shifts = { ...cfg.shifts };
+    if (lv && (lv.grindShift ?? 0) === n) delete shifts[id]; // same as the starting value: keep following it
+    else shifts[id] = n;
+    save({ shifts });
+  };
+  const base = vocab.roastLevels.find((l) => l.id === cfg.baseline) ?? null;
+  // A worked example on the user's own gear (first grinder with a range for a ticked method).
+  const ex = (() => {
+    for (const m of [...cfg.methods].sort((a, b) => Number(b === "pourover") - Number(a === "pourover"))) {
+      for (const g of gear.filter((x) => x.type === "grinder")) {
+        const r = rangeFor(g, m);
+        if (r && r.high > r.low) return { g, m, r };
+      }
+    }
+    return null;
+  })();
+  const word = (n: number) => (n === 0 ? "0" : `${n < 0 ? "−" : "+"}${fmtGrindNumber(Math.abs(n))}%`);
+  const STEPS = Array.from({ length: 61 }, (_, i) => i - 30);
+  const custom = Object.keys(cfg.shifts).length > 0 || cfg.baseline !== DEFAULT_ROAST_NUDGE.baseline
+    || [...cfg.methods].sort().join() !== [...DEFAULT_ROAST_NUDGE.methods].sort().join();
+  return (
+    <section className="card stack" data-testid="roast-nudge-settings">
+      <h2>Grind for the roast</h2>
+      <p className="muted small">When the bag you pick in Brew setup is a different roast from the one the recipe was written for, the grind moves: finer for lighter roasts (they're denser and extract more slowly), coarser for darker ones. You can always type your own number.</p>
+      <p className="muted small">The starting values are a rule of thumb, not published numbers (the common advice is just a step or two finer for light roasts and coarser for dark ones). Change them to match how your grinder dials in.</p>
+      <div className="pref-row">
+        <span>Adjust the grind</span>
+        <div className="seg big" role="group" aria-label="Adjust the grind for the roast">
+          {[true, false].map((v) => (
+            <button key={String(v)} className={cfg.enabled === v ? "on" : ""} aria-pressed={cfg.enabled === v} onClick={() => save({ enabled: v })}>{v ? "On" : "Off"}</button>
+          ))}
+        </div>
+      </div>
+      {cfg.enabled && (
+        <>
+          <p className="small">Each roast level has a setting below, as a share of your grinder's low–high range for the grind category (set in Gear): <strong>−</strong> is finer, <strong>+</strong> coarser. The grind moves by the <strong>difference</strong> between the bag's roast and the recipe's.</p>
+          <table className="rest-table roast-table" data-testid="roast-nudge-table">
+            {ex && base && <caption className="muted small">Example: {ex.g.name}, {METHOD_LABELS[ex.m]}, recipe for {base.label.toLowerCase()}</caption>}
+            <thead><tr><th>Roast</th><th>Grind</th>{ex && base && <th>Example</th>}</tr></thead>
+            <tbody>
+              {vocab.roastLevels.map((l) => {
+                const v = roastShift(l, cfg);
+                const rel = base ? v - roastShift(base, cfg) : 0;
+                const d = ex ? Math.round((rel / 100) * (ex.r.high - ex.r.low) * 100) / 100 : 0;
+                return (
+                  <tr key={l.id}>
+                    <td>{l.label}</td>
+                    <td>
+                      <select aria-label={`${l.label}: grind`} value={String(v)} onChange={(e) => setShift(l.id, Number(e.target.value))}>
+                        {!STEPS.includes(v) && <option value={String(v)}>{word(v)}</option>}
+                        {STEPS.map((n) => <option key={n} value={String(n)}>{word(n)}</option>)}
+                      </select>
+                    </td>
+                    {ex && base && <td>{d === 0 ? "—" : `${d > 0 ? "+" : "−"}${fmtGrindNumber(Math.abs(d))}${ex.g.units ? ` ${ex.g.units}` : ""}`}</td>}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <div className="pref-row">
+            <label htmlFor="rn-baseline">Recipes without a roast are for</label>
+            <select id="rn-baseline" value={cfg.baseline} onChange={(e) => save({ baseline: e.target.value })}>
+              {vocab.roastLevels.map((l) => <option key={l.id} value={l.id}>{l.label}</option>)}
+            </select>
+          </div>
+          <p className="muted small">Set a recipe's own roast in its editor ("Written for a roast"). Bags whose roast isn't one of these levels aren't adjusted.</p>
+          <fieldset className="checks">
+            <legend>Applies to</legend>
+            {METHODS.map((m) => (
+              <label key={m} className="check">
+                <input type="checkbox" checked={cfg.methods.includes(m)}
+                  onChange={(e) => save({ methods: e.target.checked ? METHODS.filter((x) => x === m || cfg.methods.includes(x)) : cfg.methods.filter((x) => x !== m) })} />
+                {METHOD_LABELS[m]}
+              </label>
+            ))}
+          </fieldset>
+          {custom && (
+            <button className="link" onClick={() => save({ shifts: {}, baseline: DEFAULT_ROAST_NUDGE.baseline, methods: [...DEFAULT_ROAST_NUDGE.methods] })}>
+              Back to the starting values
+            </button>
+          )}
+        </>
       )}
     </section>
   );

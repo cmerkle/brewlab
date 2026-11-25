@@ -171,8 +171,16 @@ try {
     await cctx.close();
   }
 
-  // Brew setup: numeric grind, nudged for the dose (drip); temperature editable; timer waits for Start.
+  // Brew setup: numeric grind, nudged for the dose (drip) and the bag's roast; temperature editable; timer waits for Start.
+  const lightBag = await (await fetch(`${BASE}/api/inventory`, { method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ name: "Roast Test Light", roaster: "Example Roasters", roastLevel: "light", amountG: 250 }) })).json();
+  // Off by default with every shift 0; switch it on with a light −5% / dark +15% for this part.
+  const putSettings = (b) => fetch(`${BASE}/api/settings`, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(b) });
+  const rn0 = (await (await fetch(`${BASE}/api/setup`)).json()).settings.roastNudge;
+  check(!rn0.enabled && !Object.keys(rn0.shifts).length, "the roast adjustment is off by default");
+  await putSettings({ roastNudge: { ...rn0, enabled: true, shifts: { light: -5, dark: 15 } } });
   await p.goto(`${BASE}/#/brew/recipes`);
+  await p.reload();
   await p.locator(`[data-testid="recipe-${r.id}"] [data-testid="recipe-brew"]`).click();
   await p.getByRole("heading", { name: "Brew setup" }).waitFor();
   check(true, "Brew opens “Brew setup”");
@@ -180,11 +188,22 @@ try {
   check((await p.inputValue("#sd-temp")) === "212", `recipe temperature shown in °F: ${await p.inputValue("#sd-temp")}`);
   await p.fill("#sd-dose", "15");
   await p.waitForTimeout(200);
-  const nudge = p.locator('[data-testid="grind-dose-nudge"]');
+  const nudge = p.locator('[data-testid="grind-nudge"]');
   check((await p.inputValue("#sd-grind")) === "23" && /Smaller dose.*finer: 23 clicks instead of 24 clicks/.test(await nudge.innerText()),
     `half the dose on a V60 → a touch finer (${await p.inputValue("#sd-grind")})`);
+  // A light-roast bag on a recipe with no roast (counts as medium-light) → finer still; both reasons shown.
+  await p.selectOption("#sd-bag", String(lightBag.id));
+  await p.waitForTimeout(200);
+  const both = await nudge.innerText();
+  check(Number(await p.inputValue("#sd-grind")) <= 23 && /Light roast \(recipes count as medium-light unless set\), so finer; smaller dose/.test(both) && /instead of 24 clicks/.test(both),
+    `light bag → finer for the roast as well (${await p.inputValue("#sd-grind")}: ${both.replace(/\s+/g, " ").slice(0, 160)})`);
+  await p.selectOption("#sd-bag", "");
+  await p.waitForTimeout(200);
+  check((await p.inputValue("#sd-grind")) === "23", "no bag → only the dose nudge again");
+  await p.selectOption("#sd-bag", String(lightBag.id));
   await nudge.getByRole("button", { name: "Use 24 clicks" }).click();
   check((await p.inputValue("#sd-grind")) === "24" && !(await nudge.count()), "one tap back to the recipe's grind");
+  await p.selectOption("#sd-bag", "");
   await p.fill("#sd-grind", "25.5");
   await p.fill("#sd-temp", "205");
   await p.getByRole("button", { name: "Ready to brew" }).click();
@@ -414,6 +433,61 @@ try {
   check(!dn.enabled && dn.percent === 20 && !dn.methods.includes("immersion") && !(await p.locator("#dn-percent").count()), `defaults restored, then switched off: ${JSON.stringify(dn)}`);
   await dnCard.getByRole("group", { name: "Adjust the grind for the dose" }).getByRole("button", { name: "On" }).click();
   await p.waitForTimeout(300);
+
+  // More → Settings → Grind for the roast: a shift per roast level, the baseline, on/off.
+  const rnCard = p.locator('[data-testid="roast-nudge-settings"]');
+  const rnHead = await rnCard.locator('[data-testid="roast-nudge-table"] thead').innerText();
+  const lightSel = rnCard.getByLabel("Light: grind", { exact: true });
+  check((await lightSel.inputValue()) === "-5" && (await rnCard.getByLabel("Dark: grind", { exact: true }).inputValue()) === "15" && /Example: .*pour-over.*recipe for medium-light/i.test(await rnCard.locator("caption").innerText()),
+    `the roast card lists each level's shift with a worked example (${rnHead.replace(/\s+/g, " ")})`);
+  await lightSel.selectOption("-8");
+  await p.selectOption("#rn-baseline", "medium");
+  await p.waitForTimeout(400);
+  let rn = (await (await fetch(`${BASE}/api/setup`)).json()).settings.roastNudge;
+  check(rn.shifts.light === -8 && rn.baseline === "medium", `shift and baseline saved: ${JSON.stringify(rn)}`);
+  await rnCard.getByRole("button", { name: "Back to the starting values" }).click();
+  await rnCard.getByRole("group", { name: "Adjust the grind for the roast" }).getByRole("button", { name: "Off" }).click();
+  await p.waitForTimeout(400);
+  rn = (await (await fetch(`${BASE}/api/setup`)).json()).settings.roastNudge;
+  check(!rn.enabled && !Object.keys(rn.shifts).length && rn.baseline === "medium-light" && !(await rnCard.locator("#rn-baseline").count()),
+    `starting values restored, then switched off: ${JSON.stringify(rn)}`);
+  await rnCard.getByRole("group", { name: "Adjust the grind for the roast" }).getByRole("button", { name: "On" }).click();
+  await p.waitForTimeout(300);
+  await putSettings({ roastNudge: { ...rn0, enabled: true, shifts: { light: -5, dark: 15 } } });
+
+  // A recipe written for a light roast: a light bag needs no roast change.
+  await p.goto(`${BASE}/#/brew/recipes`);
+  const rCard = p.locator(`[data-testid="recipe-${r.id}"]`);
+  await rCard.getByTestId("recipe-toggle").click();
+  await rCard.getByRole("button", { name: "Edit" }).click();
+  // Picking a stash bag fills an empty roast from it; a roast you chose stays, with a button for the bag's.
+  const coffee0 = await p.inputValue("#re-coffee");
+  await p.selectOption("#re-roast", "");
+  await p.selectOption("#re-bag", String(lightBag.id));
+  check((await p.inputValue("#re-roast")) === "Light" && !(await p.getByTestId("re-roast-from-bag").count()), "picking a light bag fills the recipe's roast");
+  await p.selectOption("#re-roast", "Dark");
+  await p.selectOption("#re-bag", "");
+  await p.selectOption("#re-bag", String(lightBag.id));
+  const fromBag = p.getByTestId("re-roast-from-bag");
+  check((await p.inputValue("#re-roast")) === "Dark" && /Set to Roast Test Light's roast \(light\)/.test(await fromBag.innerText()), "a roast you chose is kept; a button offers the bag's");
+  await fromBag.click();
+  check((await p.inputValue("#re-roast")) === "Light" && !(await fromBag.count()), "one tap sets the bag's roast");
+  await p.selectOption("#re-bag", "");
+  await p.fill("#re-coffee", coffee0);
+  await p.getByRole("button", { name: "Save recipe" }).click();
+  await p.getByRole("heading", { name: "Edit recipe" }).waitFor({ state: "detached" });
+  if ((await rCard.getByTestId("recipe-toggle").getAttribute("aria-expanded")) !== "true") await rCard.getByTestId("recipe-toggle").click();
+  const rText = await rCard.innerText();
+  check(/Roast\s*Light/i.test(rText), `the recipe card shows the roast it's for (${rText.replace(/\s+/g, " ").slice(0, 120)})`);
+  await rCard.getByTestId("recipe-brew").click();
+  await p.getByRole("heading", { name: "Brew setup" }).waitFor();
+  await p.selectOption("#sd-bag", String(lightBag.id));
+  await p.waitForTimeout(200);
+  check((await p.inputValue("#sd-grind")) === "24" && !(await p.getByTestId("grind-nudge").count()), "light bag + light recipe → the recipe's grind");
+  await p.getByRole("button", { name: "Back" }).first().click();
+  await fetch(`${BASE}/api/inventory/${lightBag.id}`, { method: "DELETE" });
+  await p.goto(`${BASE}/#/more/settings`);
+  await p.reload();
 
   // More → About: version, bug report / gear links, update check off by default (not clicked:
   // "Check now" would call GitHub).

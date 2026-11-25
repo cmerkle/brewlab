@@ -42,6 +42,22 @@ test("fresh install: empty, not onboarded, default settings", async () => {
   assert.deepEqual((await call("PUT", "/api/settings", { doseNudge: dn })).body.doseNudge, dn);
   assert.equal((await call("PUT", "/api/settings", { doseNudge: { ...dn, percent: 150 } })).status, 400);
   assert.equal((await call("PUT", "/api/settings", { doseNudge: { ...dn, methods: ["siphon"] } })).status, 400);
+  // Roast → grind adjustment: off, medium-light baseline, the vocab's shifts, every method by default.
+  assert.deepEqual({ ...s.settings.roastNudge, methods: s.settings.roastNudge.methods.length }, { enabled: false, baseline: "medium-light", shifts: {}, methods: 9 });
+  const rn = { enabled: false, baseline: "medium", shifts: { light: -8, dark: 12.5 }, methods: ["pourover"] };
+  assert.deepEqual((await call("PUT", "/api/settings", { roastNudge: rn })).body.roastNudge, rn);
+  assert.equal((await call("PUT", "/api/settings", { roastNudge: { ...rn, shifts: { light: -80 } } })).status, 400);
+  assert.equal((await call("PUT", "/api/settings", { roastNudge: { ...rn, baseline: "Medium Light" } })).status, 400);
+  // Every roast level in the data has a grind shift; lighter is never coarser than darker.
+  const levels = (await call("GET", "/api/vocab")).body.roastLevels;
+  assert.ok(levels.length && levels.every((l, i) => typeof l.grindShift === "number" && (i === 0 || l.grindShift >= levels[i - 1].grindShift)));
+  // A recipe keeps the roast it was written for (matched to a level like a bag's), and its copy too.
+  const rec = { name: "Roast test", doseG: 15, waterG: 250, steps: [], roastLevel: "light-medium" };
+  const made = await call("POST", "/api/recipes", rec);
+  assert.equal(made.body.roastLevel, "Medium-light");
+  assert.equal((await call("PUT", `/api/recipes/${made.body.id}`, { ...rec, roastLevel: null })).body.roastLevel, null);
+  await call("PUT", `/api/recipes/${made.body.id}`, { ...rec, roastLevel: "Dark" });
+  assert.equal((await call("POST", `/api/recipes/${made.body.id}/copy`)).body.roastLevel, "Dark");
   server.closeAllConnections(); server.close();
 });
 

@@ -1,4 +1,4 @@
-import { DEFAULT_DOSE_NUDGE, type DoseNudge } from "../shared/grind";
+import { DEFAULT_DOSE_NUDGE, DEFAULT_ROAST_NUDGE, type DoseNudge, type RoastNudge } from "../shared/grind";
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { RestOverrides, RoastLevelDef } from "../shared/stash";
@@ -40,6 +40,7 @@ export interface Settings {
   palateNotes: string;
   dismissedSuggestions: string[];
   doseNudge: DoseNudge;
+  roastNudge: RoastNudge;
   updateCheck: boolean;
   metrics: boolean;
   backupKeep: number | null;
@@ -70,6 +71,7 @@ export const DEFAULT_SETTINGS: Settings = {
   tempUnit: "C", waterUnit: "g", defaultRatio: 16, discoverEnabled: true,
   prefs: emptyPrefs(), palateNotes: "", dismissedSuggestions: [],
   doseNudge: DEFAULT_DOSE_NUDGE,
+  roastNudge: DEFAULT_ROAST_NUDGE,
   updateCheck: false,
   metrics: false,
   backupKeep: null,

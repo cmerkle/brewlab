@@ -1,5 +1,5 @@
 {
-  "about": "Words for coffee bags: roast levels (with how long each usually rests and stays at its best, in days off roast — rules of thumb, adjustable in More), processes, origins and tasting-note suggestions. Processes and origins also accept your own words.",
+  "about": "Words for coffee bags: roast levels (with how long each usually rests and stays at its best, in days off roast — rules of thumb — and grindShift: how far Brew setup moves the grind, as a % of the method's range, negative = finer — starting values, not from a published source: the common advice is only a step or two finer for light roasts and coarser for dark; adjustable in More → Settings), processes, origins and tasting-note suggestions. Processes and origins also accept your own words.",
   "version": 1,
   "roastLevels": [
     {
@@ -12,7 +12,8 @@
         "very light"
       ],
       "rest": 14,
-      "peakEnd": 60
+      "peakEnd": 60,
+      "grindShift": -10
     },
     {
       "id": "light",
@@ -25,7 +26,8 @@
         "cinnamon"
       ],
       "rest": 10,
-      "peakEnd": 45
+      "peakEnd": 45,
+      "grindShift": -5
     },
     {
       "id": "medium-light",
@@ -37,7 +39,8 @@
         "city"
       ],
       "rest": 7,
-      "peakEnd": 35
+      "peakEnd": 35,
+      "grindShift": 0
     },
     {
       "id": "medium",
@@ -48,7 +51,8 @@
         "city+"
       ],
       "rest": 5,
-      "peakEnd": 30
+      "peakEnd": 30,
+      "grindShift": 5
     },
     {
       "id": "medium-dark",
@@ -61,7 +65,8 @@
         "full city+"
       ],
       "rest": 4,
-      "peakEnd": 25
+      "peakEnd": 25,
+      "grindShift": 10
     },
     {
       "id": "dark",
@@ -73,7 +78,8 @@
         "vienna"
       ],
       "rest": 3,
-      "peakEnd": 21
+      "peakEnd": 21,
+      "grindShift": 15
     }
   ],
   "processes": [

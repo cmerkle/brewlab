@@ -121,6 +121,8 @@ export interface Recipe {
   /** Default water recipe (name kept if that water is deleted). */
   waterId: number | null;
   waterName: string | null;
+  /** The roast it was written for (a roast level label; null = the roast nudge's baseline). */
+  roastLevel: string | null;
 }
 
 export interface Brew {

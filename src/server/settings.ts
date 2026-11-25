@@ -4,7 +4,7 @@ import path from "node:path";
 import { z } from "zod";
 import type { DB } from "./db.js";
 
-import { METHODS, DEFAULT_DOSE_NUDGE } from "../shared/grind.js";
+import { METHODS, DEFAULT_DOSE_NUDGE, DEFAULT_ROAST_NUDGE } from "../shared/grind.js";
 import { PREF_SECTIONS, PREF_LISTS, newTag, type Prefs, type PrefSection, type PrefTag } from "../shared/prefs.js";
 import { loadTasteDefaults } from "./catalog.js";
 
@@ -40,6 +40,17 @@ export const SettingsSchema = z.object({
     percent: z.number().min(0).max(100),
     methods: z.array(z.enum(METHODS)).max(METHODS.length),
   }),
+  /**
+   * Brew setup: move the grind for the bag's roast level, relative to the roast the recipe was
+   * written for (its own, else `baseline`). `shifts` = your own % per roast level id; the rest
+   * follow catalog/coffee-vocab.json's grindShift.
+   */
+  roastNudge: z.object({
+    enabled: z.boolean(),
+    baseline: z.string().regex(/^[a-z0-9-]{1,40}$/),
+    shifts: z.record(z.string().regex(/^[a-z0-9-]{1,40}$/), z.number().min(-50).max(50)),
+    methods: z.array(z.enum(METHODS)).max(METHODS.length),
+  }),
   /** Check GitHub once a day for a newer release (off by default: it's a request to github.com). */
   updateCheck: z.boolean(),
   /** Prometheus metrics at GET /metrics (off by default). */
@@ -57,6 +68,7 @@ export const DEFAULT_SETTINGS: Settings = {
   prefs: loadTasteDefaults().prefs, palateNotes: "", dismissedSuggestions: [], updateCheck: false, metrics: false, backupKeep: null,
   restWindows: {},
   doseNudge: { ...DEFAULT_DOSE_NUDGE, methods: [...DEFAULT_DOSE_NUDGE.methods] },
+  roastNudge: { ...DEFAULT_ROAST_NUDGE, shifts: {}, methods: [...DEFAULT_ROAST_NUDGE.methods] },
 };
 
 export function getSettings(db: DB): Settings {

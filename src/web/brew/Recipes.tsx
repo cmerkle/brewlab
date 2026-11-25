@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { api, ApiError, type Recipe } from "../api";
-import { useData, NumInput, WaterInput, Field, FullScreen, ErrorBox, getPref, setPref, useAction, SearchInput, Glyph, useTemp, TempInput } from "../ui";
+import { useData, NumInput, WaterInput, Field, FullScreen, ErrorBox, getPref, setPref, useAction, SearchInput, Glyph, useTemp, TempInput, useVocab } from "../ui";
 import { GrinderSwitcher, grindLabel, methodOf } from "../grindui";
 import { ScaleDialog, planFromRecipe, StepList, type BrewPlan } from "./ScaleDialog";
 import { fmtRatio, ratioOf, type Step } from "../../shared/brew";
 import { METHODS, METHOD_LABELS, type Method } from "../../shared/grind";
 import { WaterSelect } from "./Water";
+import { roastLevelOf } from "../../shared/stash";
 
 export function Recipes({ onEditGrinder }: { onEditGrinder: (id: string) => void }) {
   const { recipes, loaded } = useData();
@@ -132,6 +133,7 @@ export function RecipeCard({ r, onBrew, onEdit, onEditGrinder, startOpen = false
             <div><dt>Ratio</dt><dd>{fmtRatio(ratioOf(r.doseG, r.waterG))}</dd></div>
             <div><dt>Temp</dt><dd>{r.tempC != null ? temp.fmt(r.tempC) : "—"}</dd></div>
             <div><dt>Grind</dt><dd>{grindLabel(r, gear)}</dd></div>
+            {r.roastLevel && <div><dt>Roast</dt><dd>{r.roastLevel}</dd></div>}
           </dl>
           {(r.coffee || bag) && <div className="muted">Coffee: {bag ? `${bag.name} (from Stash)` : r.coffee}</div>}
           {r.waterName && <div className="muted" data-testid="recipe-water">Water: {r.waterName}{r.waterId == null ? " (removed)" : ""}</div>}
@@ -153,7 +155,9 @@ export function RecipeCard({ r, onBrew, onEdit, onEditGrinder, startOpen = false
 /* ------------------------------ Editor ------------------------------ */
 
 export function RecipeEditor({ recipe, onClose }: { recipe: Recipe | null; onClose: () => void }) {
-  const { gear, bags, limits, reload, toast } = useData();
+  const { gear, bags, limits, reload, toast, settings } = useData();
+  const vocab = useVocab();
+  const baselineLabel = vocab.roastLevels.find((l) => l.id === settings.roastNudge.baseline)?.label ?? "Medium-light";
   const temp = useTemp();
   const brewers = gear.filter((g) => g.type === "brewer");
   const grinders = gear.filter((g) => g.type === "grinder");
@@ -174,12 +178,15 @@ export function RecipeEditor({ recipe, onClose }: { recipe: Recipe | null; onClo
     inventoryId: recipe?.inventoryId ?? null as number | null,
     waterId: recipe?.waterId ?? null as number | null,
     waterName: recipe?.waterName ?? null as string | null,
+    roastLevel: recipe?.roastLevel ?? null as string | null,
   }));
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }));
   const setStep = (i: number, patch: Partial<Step>) => set("steps", f.steps.map((s, j) => (j === i ? { ...s, ...patch } : s)));
   const effMethod = f.method ?? methodOf({ method: null, brewerId: f.brewerId }, gear);
+  const pickedBag = bags.find((b) => b.id === f.inventoryId) ?? null;
+  const pickedRoast = roastLevelOf(pickedBag?.roastLevel, vocab.roastLevels);
 
   const save = async () => {
     setError(null);
@@ -224,7 +231,9 @@ export function RecipeEditor({ recipe, onClose }: { recipe: Recipe | null; onClo
             <select id="re-bag" value={f.inventoryId ?? ""} onChange={(e) => {
               const id = e.target.value ? Number(e.target.value) : null;
               const bag = bags.find((b) => b.id === id);
-              setF((x) => ({ ...x, inventoryId: id, coffee: bag ? bag.name : x.coffee }));
+              // The bag's roast fills an empty "Written for a roast"; one you chose is kept (the button below offers the bag's).
+              const roast = roastLevelOf(bag?.roastLevel, vocab.roastLevels)?.label ?? null;
+              setF((x) => ({ ...x, inventoryId: id, coffee: bag ? bag.name : x.coffee, roastLevel: x.roastLevel ?? roast }));
             }}>
               <option value="">— none —</option>
               {bags.filter((b) => b.status !== "finished" || b.id === f.inventoryId).map((b) => <option key={b.id} value={b.id}>{b.name}{b.roaster ? ` — ${b.roaster}` : ""}</option>)}
@@ -232,6 +241,18 @@ export function RecipeEditor({ recipe, onClose }: { recipe: Recipe | null; onClo
           </Field>
           <Field label="Coffee" htmlFor="re-coffee"><input id="re-coffee" value={f.coffee} onChange={(e) => set("coffee", e.target.value)} /></Field>
         </div>
+        <Field label="Written for a roast" htmlFor="re-roast" hint={`Brew setup moves the grind for a bag of another roast (Settings → Grind for the roast). Not set: ${baselineLabel.toLowerCase()}.`}>
+          <select id="re-roast" value={f.roastLevel ?? ""} onChange={(e) => set("roastLevel", e.target.value || null)}>
+            <option value="">Not set</option>
+            {vocab.roastLevels.map((l) => <option key={l.id} value={l.label}>{l.label}</option>)}
+            {f.roastLevel && !vocab.roastLevels.some((l) => l.label === f.roastLevel) && <option value={f.roastLevel}>{f.roastLevel} (as entered)</option>}
+          </select>
+        </Field>
+        {pickedRoast && pickedRoast.label !== f.roastLevel && (
+          <button type="button" className="link" style={{ alignSelf: "flex-start", textAlign: "left" }} data-testid="re-roast-from-bag" onClick={() => set("roastLevel", pickedRoast.label)}>
+            Set to {pickedBag!.name}'s roast ({pickedRoast.label.toLowerCase()})
+          </button>
+        )}
         <WaterSelect id="re-waterrec" value={f.waterId} onChange={(id) => setF((x) => ({ ...x, waterId: id, waterName: id == null ? null : x.waterName }))} keptName={f.waterName} label="Water recipe (default)" />
         <div className="grid3">
           <Field label="Coffee (g)" htmlFor="re-dose"><NumInput id="re-dose" value={f.doseG} onChange={(n) => set("doseG", n)} min={limits?.doseG.min} max={limits?.doseG.max} decimals={1} /></Field>

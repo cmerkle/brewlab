@@ -82,7 +82,7 @@ export function bagMatches(b: SortableBag, query: string, fmtDate: (d: string) =
 /* ---------- roast levels and their rest / peak window (data + a setting) ---------- */
 
 /** One roast level from catalog/coffee-vocab.json: rest = days to rest, peakEnd = last day at its best. */
-export interface RoastLevelDef { id: string; label: string; aliases: string[]; rest: number; peakEnd: number }
+export interface RoastLevelDef { id: string; label: string; aliases: string[]; rest: number; peakEnd: number; /** % of the method's grind range (negative = finer). */ grindShift?: number }
 export interface RestWindow { rest: number; peakEnd: number }
 /** Your own windows (More → Rest and peak window), by roast level id; missing ones use the data's. */
 export type RestOverrides = Record<string, RestWindow>;
