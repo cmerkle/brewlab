@@ -42,7 +42,7 @@ const base = (type, title, w, h, targets, o = {}) => {
 const ACCENT = { mode: "fixed", fixedColor: "#cf7f3e" };
 
 /* ---------- panel kinds ---------- */
-const stat = (title, expr, o = {}) => base("stat", title, o.w ?? 3, o.h ?? 4, [target(expr, { instant: true, format: o.format })], {
+const stat = (title, expr, o = {}) => base("stat", title, o.w ?? 4, o.h ?? 4, [target(expr, { instant: true, format: o.format })], {
   ...o, color: o.color ?? ACCENT,
   options: { reduceOptions: { calcs: ["lastNotNull"], fields: o.fields ?? "", values: false }, colorMode: o.colorMode ?? "value", graphMode: o.graphMode ?? "none", textMode: o.textMode ?? "value", justifyMode: "center", orientation: "auto", wideLayout: true, showPercentChange: false },
 });
@@ -118,22 +118,25 @@ function wordmark() {
 wordmark();
 
 row("At a glance");
+// Six to a row (w 4): wide enough that the titles fit beside the sidebar.
 stat("Brews today", m("brews_window", 'window="today"'), { description: "Since local midnight (the instance's TZ)." });
 stat("Coffee today", m("coffee_used_window_grams", 'window="today"'), { unit: "massg" });
 stat("Brews, last 7 days", m("brews_window", 'window="7d"'));
+stat("Coffee, last 7 days", m("coffee_used_window_grams", 'window="7d"'), { unit: "massg" });
+stat("Brews, last 30 days", m("brews_window", 'window="30d"'));
 stat("Coffee, last 30 days", m("coffee_used_window_grams", 'window="30d"'), { unit: "massg" });
 stat("Brewing streak", m("brewing_streak_days"), { unit: "d", description: "Consecutive days with a brew, up to today (or yesterday if nothing yet today)." });
 stat("Longest streak", m("brewing_streak_longest_days"), { unit: "d" });
+stat("Brewing days", m("brewing_days_total"), { unit: "none", description: "Days with at least one brew." });
 stat("Average rating", m("brew_rating_average"), { decimals: 2, unit: "none", description: "Every rated brew, in stars (½–5).", thresholds: { mode: "absolute", steps: [{ color: "#a85a22", value: null }, { color: "#cf7f3e", value: 3 }, { color: "#e0b050", value: 4 }] }, color: { mode: "thresholds" } });
 stat("Average ratio (1:x)", m("brew_ratio_average"), { decimals: 1 });
+stat("Last brew", `${m("last_brew_timestamp_seconds")} * 1000`, { unit: "dateTimeFromNow" });
 stat("Brews, all time", m("brews_total"));
 stat("Coffee, all time", m("coffee_used_grams_total"), { unit: "massg" });
 stat("Water, all time", m("water_used_grams_total"), { unit: "massg" });
-stat("Brewing days", m("brewing_days_total"), { unit: "none", description: "Days with at least one brew." });
-stat("Last brew", `${m("last_brew_timestamp_seconds")} * 1000`, { unit: "dateTimeFromNow" });
-stat("Coffee left in the stash", m("stash_remaining_grams"), { unit: "massg" });
+stat("Coffee in the stash", m("stash_remaining_grams"), { unit: "massg" });
 stat("Spent this year", m("spent_this_year"), { unit: "currencyUSD", decimals: 0 });
-stat("Average cost per brew", m("brew_cost_average"), { unit: "currencyUSD", decimals: 2, description: "Dose × the bag's price per gram, for brews from priced bags." });
+stat("Cost per brew", m("brew_cost_average"), { unit: "currencyUSD", decimals: 2, description: "Dose × the bag's price per gram, for brews from priced bags." });
 
 row("Brewing over time");
 bars("Brews per day (last 400 days)", [{ expr: m("brews_by_day_total") }], "day", { w: 24, h: 8, toTime: "YYYY-MM-DD", showValue: "never", spacing: 120, rename: { Value: "Brews" }, description: "From the app's history, so it's full from the first scrape." });
