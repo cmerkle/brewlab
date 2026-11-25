@@ -699,6 +699,17 @@ try {
   const spentTile = await p.getByText("Spent on bags").locator("..").innerText();
   const spentSub = await p.getByTestId("chart-cum-spend").locator(".insight-title .muted").innerText();
   check(spentTile.includes(spentSub.split("· ")[1] ?? "?") || (/—/.test(spentTile) && /\$0/.test(spentSub)), `spent on beans agrees with the headline (${spentSub.split("· ")[1]})`);
+  // Your coffee by grams: each roaster's coffee adds up to the brews made from Stash bags with a roaster.
+  await p.selectOption('select[aria-label="Your coffee charts count"]', "grams");
+  const cr = p.getByTestId("chart-coffee-roaster");
+  await cr.getByRole("button", { name: "Table" }).click();
+  const crHead = await cr.locator("thead").innerText();
+  const crSum = (await cr.locator("tbody tr td:nth-child(2)").allInnerTexts()).reduce((a, t) => a + Number(t.replace(/[^\d.]/g, "")), 0);
+  const bagsNow = await (await fetch(`${BASE}/api/inventory`)).json();
+  const roasterOf = new Map((Array.isArray(bagsNow) ? bagsNow : bagsNow.items ?? []).map((b) => [b.id, b.roaster]));
+  const wantG = allBrews.filter((b) => b.inventoryId != null && roasterOf.get(b.inventoryId)).reduce((a, b) => a + (b.doseG ?? 0), 0);
+  check(/Coffee \(g\)/.test(crHead) && Math.abs(crSum - wantG) <= 4, `coffee used per roaster adds up: ${crSum} g (brews from bags with a roaster: ${wantG} g)`);
+  await cr.getByRole("button", { name: "Chart" }).click();
   await p.selectOption('select[aria-label="Your coffee charts count"]', "stash");
   check(/Open and unopened bags/.test(await p.getByTestId("coffee-scope-hint").innerText()), "the Your coffee scope sits with its charts and says what it counts");
 

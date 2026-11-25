@@ -96,7 +96,7 @@ Missing gear, or have a source for a grind range? Add it to your own Brewlab, th
 - **Running totals** of coffee used (grams from your brews) and money spent on beans (bag prices, by purchase date) across the period.
 - **Rating and ratio** distributions.
 - **Brewers, grinders, recipes, brew methods and waters,** by number of brews or by grams of coffee used.
-- **Your coffee by roaster, origin, roast level and process:** counted by brews in the period, by bags in your Stash now, or by every bag you've had (a switch on that section).
+- **Your coffee by roaster, origin, roast level and process:** counted by brews or grams of coffee used in the period, by bags in your Stash now, or by every bag you've had (a switch on that section).
 - **What you rate highest:** average brew rating by origin, process, roaster or roast level (where you've rated at least two brews).
 
 Every chart has a *Table* view, and hovering or tabbing to a bar shows its numbers.

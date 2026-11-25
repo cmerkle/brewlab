@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1
+
+- **Insights → Your coffee by coffee used:** the section's list has a new choice, *Coffee used in this period*, which ranks roasters, origins, roast levels and processes by grams of coffee brewed (with each one's brews and rating underneath), alongside *Brews in this period* and the two bag counts. Every card in the section now says what it adds up to.
+
 ## 0.4.0
 
 - **More is a list of pages:** whatever doesn't fit the main bar — Grind guide & converter, Gear, Water, Ratio calculator, Insights and Settings on phones and tablets; on desktop, Ratio calculator and Settings plus any tab the top bar has no room for: a narrow window moves Insights, then Water, Gear and Guide into More automatically. **Settings** (More → Settings) holds what used to be on More, in four groups: *Brewing* (units and defaults, grind for a different dose, rest and peak windows), *Discover and AI*, *Your data* (backups, run setup again) and *App* (install, about, status, screen).

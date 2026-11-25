@@ -10,10 +10,11 @@ import {
 } from "../../shared/insights";
 import { ChartCard, ColumnChart, BarList, Heatmap, StatTile, LineChart } from "./charts";
 
-type Scope = "brewed" | "stash" | "all";
-/** What the "Your coffee" charts count. Only those four charts; the rest of the page follows the period. */
+type Scope = "brewed" | "grams" | "stash" | "all";
+/** What the "Your coffee" charts count. Only those four charts; brews and grams follow the period, bags don't. */
 const SCOPES: Record<Scope, { label: string; hint: string }> = {
   brewed: { label: "Brews in this period", hint: "Each brew in the period, by the Stash bag it was brewed from." },
+  grams: { label: "Coffee used in this period", hint: "Grams of coffee brewed in the period, by the Stash bag it came from." },
   stash: { label: "Bags in your stash now", hint: "Open and unopened bags today (the period doesn't apply)." },
   all: { label: "Every bag you've had", hint: "All bags, finished ones included (the period doesn't apply)." },
 };
@@ -41,6 +42,7 @@ export function Insights() {
   const p: Period = period in PERIODS ? period : "30d";
   const now = new Date();
 
+  const fromBrews = scope === "brewed" || scope === "grams";
   const d = useMemo(() => {
     const first = brews.length ? brews.map((b) => brewDate(b.brewedAt)).reduce((a, b) => (a < b ? a : b)) : null;
     const range = periodRange(p, now, first);
@@ -50,9 +52,9 @@ export function Insights() {
     const k = kpis(brews, bags as InsightBag[], range);
     const kPrev = prev ? kpis(brews, bags as InsightBag[], prev) : null;
     // Coffee charts: brews (each from its Stash bag) or bags, by the scope.
-    const coffeeItems: { bag: InsightBag | null; rating: number | null }[] =
-      scope === "brewed" ? inP.map((b) => ({ bag: brewBag(b, bagMap), rating: b.rating }))
-        : (bags as InsightBag[]).filter((b) => scope === "all" || b.status !== "finished").map((b) => ({ bag: b, rating: (b as any).rating ?? null }));
+    const coffeeItems: { bag: InsightBag | null; rating: number | null; doseG: number }[] =
+      fromBrews ? inP.map((b) => ({ bag: brewBag(b, bagMap), rating: b.rating, doseG: b.doseG ?? 0 }))
+        : (bags as InsightBag[]).filter((b) => scope === "all" || b.status !== "finished").map((b) => ({ bag: b, rating: (b as any).rating ?? null, doseG: 0 }));
     const ratedWithBag = inP.filter((b) => b.rating != null).map((b) => ({ bag: brewBag(b, bagMap), rating: b.rating }));
     return { range, prev, inP, k, kPrev, coffeeItems, ratedWithBag, bagMap };
   }, [brews, bags, p, scope]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -64,7 +66,7 @@ export function Insights() {
   const spend = useMemo(() => spendEvents(bags as InsightBag[]), [bags]);
   const cumSpend = useMemo(() => cumulative(spend.events, d.range), [spend, d]);
   const nBrews = d.inP.length;
-  const coffeeWord = scope === "brewed" ? ["brew", "brews"] : ["bag", "bags"];
+  const coffeeWord = fromBrews ? ["brew", "brews"] : ["bag", "bags"];
 
   const rankRows = (r: { rows: Ranked[] }, word: [string, string]) =>
     r.rows.map((x) => ({ label: x.other ? `Other (${x.other})` : x.label, value: x.count, figure: `${x.count} ${x.count === 1 ? word[0] : word[1]}`, sub: [pct(x.share), x.avgRating != null ? `${x.avgRating}★` : null].filter(Boolean).join(" · ") }));
@@ -194,11 +196,15 @@ export function Insights() {
       </div>
       <div className="insights-grid">
         {COFFEE_FIELDS.map((f) => {
-          const r = rankBy(d.coffeeItems, (x) => (x.bag ? (x.bag as any)[f.field] : null), (x) => x.rating);
-          const noBag = scope === "brewed" ? d.coffeeItems.filter((x) => !x.bag).length : 0;
+          const byGrams = scope === "grams";
+          const r = rankBy(d.coffeeItems, (x) => (x.bag ? (x.bag as any)[f.field] : null), (x) => x.rating, 8, byGrams ? (x) => x.doseG : undefined);
+          const noBag = fromBrews ? d.coffeeItems.filter((x) => !x.bag).length : 0;
+          const what = f.label.replace(/s$/, "");
           return (
-            <ChartCard key={f.field} testId={`chart-coffee-${f.field}`} title={f.label} table={rankTable(r, f.label.replace(/s$/, ""), scope === "brewed" ? "Brews" : "Bags")}>
-              <BarList rows={rankRows(r, coffeeWord as [string, string])} empty={scope === "brewed" ? "No brews from Stash bags in this period." : "No bags yet."}
+            <ChartCard key={f.field} testId={`chart-coffee-${f.field}`} title={f.label}
+              sub={byGrams ? `${grams(Math.round(r.total))} of coffee` : `${r.total} ${r.total === 1 ? coffeeWord[0] : coffeeWord[1]}`}
+              table={byGrams ? gramTable(r, what) : rankTable(r, what, fromBrews ? "Brews" : "Bags")}>
+              <BarList rows={byGrams ? gramRows(r) : rankRows(r, coffeeWord as [string, string])} empty={fromBrews ? "No brews from Stash bags in this period." : "No bags yet."}
                 note={noBag ? `${noBag} brew${noBag === 1 ? " wasn't" : "s weren't"} from a Stash bag.` : r.missing ? `${r.missing} without one recorded.` : undefined} />
             </ChartCard>
           );

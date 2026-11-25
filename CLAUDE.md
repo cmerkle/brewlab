@@ -111,7 +111,7 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   `niceTicks`, a hover/focus tooltip on every mark, and a Table view per card. Card grids are at most two columns with paired cards the same height (the top section pairs Brews per day with When you brew); an odd gear card out is `wide`. Running totals
   (`cumulative`: grams from brews, spend from bag prices on their purchase date) are 2px lines with a
   10% wash, a snapping crosshair (←/→ when focused) and the total labelled at the end. The top filter row (period) scopes everything;
-  the Your coffee scope (brews in the period / bags in the stash / every bag) and the Gear and recipes
+  the Your coffee scope (brews or grams in the period / bags in the stash / every bag) and the Gear and recipes
   measure (brews / grams: `rankBy(…, weight)`) sit on their sections. Days are local; "all time" starts at the first brew.
 - **About / updates** (`src/server/about.ts`, More → Settings → About): version from package.json (`/api/about`,
   also in `/api/health`), links to the repo's releases and issue forms (`.github/ISSUE_TEMPLATE`;

@@ -600,7 +600,7 @@ code.cmd { display: block; margin: 4px 0 6px; overflow-wrap: normal; word-break:
 .data-table .num { text-align: right; font-variant-numeric: tabular-nums; }
 .insight-section-head { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: flex-end; justify-content: space-between; margin-top: 8px; }
 .insight-section-head .insight-section { margin: 0; }
-.insight-section-head .pill-select { flex: 0 1 240px; }
+.insight-section-head .pill-select { flex: 0 1 280px; }
 .chart .line { fill: none; stroke: var(--chart-1); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .chart .area { fill: var(--chart-1); fill-opacity: .1; stroke: none; }
 .chart .dot { fill: var(--chart-1); stroke: var(--surface); stroke-width: 2; }
