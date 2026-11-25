@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api, type Brew, type Recipe } from "../api";
 import { FullScreen, NumInput, WaterInput, TempInput, useData, Field, Stars, fmtRating, ErrorBox, fmtTime, fmtDate, getPref, setPref, usePref, useTemp } from "../ui";
-import { scaleSteps, applyRatio, ratioOf, fmtRatio, RATIO_TOGGLES, fmtG, type LastEdited, type Step } from "../../shared/brew";
+import { scaleSteps, applyRatio, ratioOf, fmtRatio, RATIO_TOGGLES, fmtG, stepTimes, timerState, nextStepNow, type LastEdited, type Step, type StepShift } from "../../shared/brew";
 import { GrinderSwitcher, grindFor, grindLabel, useGrinders, methodOf } from "../grindui";
 import { doseAdjustedGrind, fmtGrind, toGrindNumber } from "../../shared/grind";
 import { RatioCalculator } from "./RatioCalculator";
@@ -50,6 +50,10 @@ export interface ActiveBrew {
   phase: "timer" | "log";
   startAt: number;
   endAt: number | null;
+  /** "Next step now" moves (older versions: none). */
+  shifts?: StepShift[];
+  /** "Wait": the step held until you tap Next step now. */
+  waitFor?: number | null;
 }
 const ACTIVE_KEY = "activeBrew";
 const STALE_MS = 3 * 3600 * 1000;
@@ -171,6 +175,8 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
   const [phase, setPhase] = useState<"setup" | "timer" | "log">(resume?.phase ?? "setup");
   const [startAt, setStartAt] = useState<number | null>(resume?.startAt ?? null);
   const [endAt, setEndAt] = useState<number | null>(resume?.endAt ?? null);
+  const [shifts, setShifts] = useState<StepShift[]>(resume?.shifts ?? []);
+  const [waitFor, setWaitFor] = useState<number | null>(resume?.waitFor ?? null);
   const [now, setNow] = useState(Date.now());
   const [calc, setCalc] = useState(false);
   const [sound, setSound] = usePref<boolean>("sound", true);
@@ -219,15 +225,25 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
   // Persist the running brew so it can be resumed if iOS closes the app.
   useEffect(() => {
     if ((phase === "timer" || phase === "log") && startAt)
-      setPref(ACTIVE_KEY, { plan, dose, water, grinderId, grind, tempC, inventoryId, waterId, phase: phase as "timer" | "log", startAt, endAt } satisfies ActiveBrew);
-  }, [phase, startAt, endAt, plan, dose, water, grinderId, grind, tempC, inventoryId, waterId]);
+      setPref(ACTIVE_KEY, { plan, dose, water, grinderId, grind, tempC, inventoryId, waterId, phase: phase as "timer" | "log", startAt, endAt, shifts, waitFor } satisfies ActiveBrew);
+  }, [phase, startAt, endAt, shifts, waitFor, plan, dose, water, grinderId, grind, tempC, inventoryId, waterId]);
 
   const elapsed = startAt ? ((endAt ?? now) - startAt) / 1000 : 0;
-  const currentIdx = steps.reduce((acc, s, i) => ((s.atSec ?? 0) <= elapsed ? i : acc), 0);
+  // Step times after any "Next step now" / "Wait" (each step keeps its duration; the clock stays real time).
+  const times = useMemo(() => stepTimes(steps, shifts), [steps, shifts]);
+  const { idx: currentIdx, holding } = timerState(times, elapsed, waitFor);
   const cur = steps[currentIdx];
   const next = steps[currentIdx + 1];
-  const stepStart = cur?.atSec ?? 0;
-  const stepProgress = next ? Math.min(1, Math.max(0, (elapsed - stepStart) / Math.max(1, (next.atSec ?? 0) - stepStart))) : 1;
+  const stepStart = times[currentIdx] ?? 0;
+  const nextAt = times[currentIdx + 1] ?? 0;
+  const stepProgress = next ? Math.min(1, Math.max(0, (elapsed - stepStart) / Math.max(1, nextAt - stepStart))) : 1;
+  const running = phase === "timer" && !!startAt && !endAt;
+  const goNext = () => {
+    const t = Date.now();
+    setNow(t);
+    setShifts(nextStepNow(steps, shifts, currentIdx, startAt ? (t - startAt) / 1000 : 0));
+    setWaitFor(null);
+  };
 
   // Chime when a new step begins.
   const lastIdx = useRef<number | null>(null);
@@ -284,6 +300,8 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
     setStartAt(Date.now());
     setNow(Date.now());
     setEndAt(null);
+    setShifts([]);
+    setWaitFor(null);
     setPhase("timer");
   };
   const finish = () => {
@@ -444,18 +462,37 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
             {cur?.detail && <div className="muted">{cur.detail}</div>}
           </div>
           {next ? (
-            <div className="next-step" data-testid="next-step">
-              <div className="next-count">{fmtTime((next.atSec ?? 0) - elapsed)}</div>
-              <div>until <strong>{next.label}</strong>{next.targetWaterG != null ? ` → ${fmtG(next.targetWaterG)} g` : ""}</div>
-              <div className="progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(stepProgress * 100)}>
-                <span style={{ width: `${stepProgress * 100}%` }} />
-              </div>
+            <div className={`next-step${holding ? " holding" : ""}`} data-testid="next-step">
+              {holding ? (
+                <>
+                  <div className="next-count" data-testid="wait-count">+{fmtTime(elapsed - nextAt)}</div>
+                  <div>Waiting — tap <strong>Next step now</strong> for <strong>{next.label}</strong>{next.targetWaterG != null ? ` → ${fmtG(next.targetWaterG)} g` : ""}</div>
+                </>
+              ) : (
+                <>
+                  <div className="next-count">{fmtTime(nextAt - elapsed)}</div>
+                  <div>{waitFor != null ? "then wait for " : "until "}<strong>{next.label}</strong>{next.targetWaterG != null ? ` → ${fmtG(next.targetWaterG)} g` : ""}</div>
+                  <div className="progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(stepProgress * 100)}>
+                    <span style={{ width: `${stepProgress * 100}%` }} />
+                  </div>
+                </>
+              )}
+              {running && (
+                <div className="step-ctl">
+                  {!holding && (
+                    <button type="button" aria-pressed={waitFor != null} className={waitFor != null ? "on" : ""} onClick={() => setWaitFor(waitFor != null ? null : currentIdx + 1)}>
+                      Wait
+                    </button>
+                  )}
+                  <button type="button" className={holding ? "primary" : ""} onClick={goNext}>Next step now</button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="next-step done"><div>Last step — tap <strong>Finish</strong> when it's drained.</div></div>
           )}
           <div className="muted small">Grind: {fmtGrind(grind, grinder) || "—"} on {choice.grinderName ?? "—"}{tempC != null ? ` · ${temp.fmt(tempC)}` : ""} · {dose}g coffee / {water != null ? fmtG(water) : "—"}g {waterLabel.toLowerCase()}{bag ? ` · ${bag.name}` : ""}{waterRec ? ` · ${waterRec.name}` : ""}</div>
-          <StepList steps={steps} active={currentIdx} follow />
+          <StepList steps={steps} active={currentIdx} times={times} follow />
         </div>
       )}
 
@@ -503,7 +540,7 @@ function BellIcon({ off }: { off: boolean }) {
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
 /** `follow`: the list scrolls itself (not the page) to keep the active step in view, with the step before it peeking above. */
-export function StepList({ steps, active, follow }: { steps: Step[]; active?: number; follow?: boolean }) {
+export function StepList({ steps, active, follow, times }: { steps: Step[]; active?: number; follow?: boolean; times?: number[] }) {
   const ref = useRef<HTMLOListElement>(null);
   useEffect(() => {
     const ol = ref.current;
@@ -518,7 +555,7 @@ export function StepList({ steps, active, follow }: { steps: Step[]; active?: nu
     <ol ref={ref} className={follow ? "steps follow" : "steps"} data-testid="steps">
       {steps.map((s, i) => (
         <li key={i} className={active === i ? "active" : active != null && i < active ? "done" : ""}>
-          <span className="at">{fmtTime(s.atSec ?? 0)}</span>
+          <span className="at">{fmtTime(times?.[i] ?? s.atSec ?? 0)}</span>
           <span className="lbl">{s.label}{s.detail ? <span className="muted"> — {s.detail}</span> : null}</span>
           <span className="tgt" data-testid="step-target">{s.targetWaterG != null ? `${fmtG(s.targetWaterG)} g` : ""}</span>
         </li>

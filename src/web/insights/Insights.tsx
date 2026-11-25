@@ -4,8 +4,8 @@ import { useMemo, useState } from "react";
 import { useData, usePref } from "../ui";
 import { METHOD_LABELS, type Method } from "../../shared/grind";
 import {
-  PERIODS, periodRange, previousRange, inRange, autoUnit, timeline, rankBy, bestRated, weekHours, WEEKDAYS, BANDS,
-  ratingCounts, ratioCounts, RATIO_BINS, BAND_STARTS, cumulative, gramsEvents, spendEvents, streak, kpis, COFFEE_FIELDS, brewBag, brewDate,
+  PERIODS, periodRange, previousRange, inRange, autoUnit, timeline, rankBy, bestRated, weekHours, WEEKDAYS, HOURS,
+  ratingCounts, ratioCounts, RATIO_BINS, cumulative, gramsEvents, spendEvents, streak, kpis, COFFEE_FIELDS, brewBag, brewDate,
   type Period, type Unit, type InsightBag, type CoffeeField, type Ranked,
 } from "../../shared/insights";
 import { ChartCard, ColumnChart, BarList, Heatmap, StatTile, LineChart } from "./charts";
@@ -132,9 +132,9 @@ export function Insights() {
           <ColumnChart data={tl.map((b) => ({ label: b.label, value: b.brews, detail: b.grams ? `${Math.round(b.grams)} g` : undefined }))} unit={["brew", "brews"]} ariaLabel={`Brews per ${unit}`} height={220} />
         </ChartCard>
 
-        <ChartCard testId="chart-when" title="When you brew" sub="By weekday and hour (3-hour blocks)"
-          table={{ head: ["Day", ...BANDS], rows: weekHours(d.inP).map((r, i) => [WEEKDAYS[i], ...r]) }}>
-          {nBrews ? <Heatmap rows={WEEKDAYS} cols={BANDS} colLabels={BAND_STARTS} grid={weekHours(d.inP)} unit={["brew", "brews"]} /> : <p className="muted small">No brews in this period.</p>}
+        <ChartCard testId="chart-when" title="When you brew" sub="By weekday and hour"
+          table={{ head: ["Day", ...HOURS], rows: weekHours(d.inP).map((r, i) => [WEEKDAYS[i], ...r]) }}>
+          {nBrews ? <Heatmap rows={WEEKDAYS} cols={HOURS} labelEvery={3} grid={weekHours(d.inP)} unit={["brew", "brews"]} /> : <p className="muted small">No brews in this period.</p>}
         </ChartCard>
 
         <ChartCard testId="chart-cum-grams" title="Coffee used" sub={`Running total · ${grams(Math.round(cumGrams.at(-1)?.total ?? 0))} in ${PERIODS[p].label.toLowerCase()}`}

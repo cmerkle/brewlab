@@ -149,17 +149,15 @@ export function bestRated<T>(items: T[], key: (x: T) => string | null | undefine
     .slice(0, limit);
 }
 
-/** When you brew: 7 weekdays (Mon first) × 8 three-hour bands. */
-export const BANDS = ["0–3", "3–6", "6–9", "9–12", "12–15", "15–18", "18–21", "21–24"];
-/** Column labels for the grid: the hour each 3-hour block starts. */
-export const BAND_STARTS = ["0", "3", "6", "9", "12", "15", "18", "21"];
+/** When you brew: 7 weekdays (Mon first) × 24 hours. */
+export const HOURS = Array.from({ length: 24 }, (_, h) => `${h}–${h + 1}`);
 export const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 export function weekHours(brews: InsightBrew[]): number[][] {
-  const grid = WEEKDAYS.map(() => BANDS.map(() => 0));
+  const grid = WEEKDAYS.map(() => HOURS.map(() => 0));
   for (const b of brews) {
     if (/^\d{4}-\d{2}-\d{2}$/.test(b.brewedAt)) continue; // a date without a time can't be placed
     const d = new Date(b.brewedAt);
-    grid[(d.getDay() + 6) % 7][Math.floor(d.getHours() / 3)]++;
+    grid[(d.getDay() + 6) % 7][d.getHours()]++;
   }
   return grid;
 }

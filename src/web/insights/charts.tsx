@@ -137,7 +137,8 @@ export function BarList({ rows, max, value, note, empty = "Nothing here yet." }:
 }
 
 /** Rows × columns of counts on a one-hue ramp (5 steps; empty cells are the track). */
-export function Heatmap({ rows, cols, colLabels, grid, unit }: { rows: string[]; cols: string[]; colLabels?: string[]; grid: number[][]; unit: [string, string] }) {
+/** `labelEvery`: label every nth column with its start (e.g. the hour), spanning n columns, so narrow columns stay readable. */
+export function Heatmap({ rows, cols, labelEvery = 1, grid, unit }: { rows: string[]; cols: string[]; labelEvery?: number; grid: number[][]; unit: [string, string] }) {
   const [hover, setHover] = useState<string | null>(null);
   const max = Math.max(0, ...grid.flat());
   const step = (v: number) => (v <= 0 || !max ? 0 : Math.max(1, Math.ceil((v / max) * 5)));
@@ -147,7 +148,11 @@ export function Heatmap({ rows, cols, colLabels, grid, unit }: { rows: string[];
     <div className="heatmap" style={{ gridTemplateColumns: `auto repeat(${cols.length}, minmax(0, 1fr))`, gridTemplateRows: `auto repeat(${rows.length}, var(--hm-cell)) auto` }}
       role="group" aria-label="Brews by weekday and time of day">
       <span />
-      {cols.map((c, j) => <span key={c} className="hm-col" aria-hidden="true">{colLabels?.[j] ?? c}</span>)}
+      {cols.map((c, j) => (j % labelEvery ? null : (
+        <span key={c} className={`hm-col${labelEvery > 1 ? " start" : ""}`} aria-hidden="true" style={{ gridColumn: `${j + 2} / span ${Math.min(labelEvery, cols.length - j)}`, gridRow: 1 }}>
+          {labelEvery > 1 ? c.split("–")[0] : c}
+        </span>
+      )))}
       {rows.map((r, i) => (
         <Fragment key={r}>
           <span className="hm-rowlabel">{r}</span>

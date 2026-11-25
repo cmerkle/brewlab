@@ -184,6 +184,10 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
 - **Title-bar actions** are rendered by App.tsx from the route (`headerActions()`), never
   registered by pages. "+" buttons `fireAction("new-recipe" | "add-bag" | "log-brew" | "add-gear")`;
   pages handle them with `useAction(...)`. Tests find buttons by aria-label.
+- **Brew timer steps move, the clock doesn't:** step start times are `stepTimes(steps, shifts)` (`src/shared/brew.ts`). *Next
+  step now* (`nextStepNow`) adds a shift from the next step on, so later steps keep their durations; *Wait* (`waitFor`)
+  holds that step past its time (`timerState` → `holding`) until Next step now. The clock is always wall time; shifts
+  and waitFor persist with the active brew.
 - **Brew timer:** the dialog body is `pinned` (FullScreen `bodyClassName`): clock, current and next
   step stay on screen and only the step list scrolls, following the active step (`StepList follow`).
 - **Dialogs** render via a portal to `<body>` (`FullScreen`): iOS WebKit confines fixed overlays

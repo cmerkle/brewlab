@@ -1,8 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.6.0
 
-- **Grafana dashboard:** the Brewlab wordmark across the top, in Grafana 11 and 12. It follows Grafana's theme (light text on the dark theme, dark text on the light one). Your browser loads it from the repo via jsDelivr; without internet the row stays empty.
+- **Brew timer: Next step now and Wait.** *Next step now* starts the next step at once (the bed drained early); *Wait* holds the next step past its time until you tap *Next step now* (the bed is still wet), showing how long you've waited. Either way the steps after it keep their durations and move with it, the step list shows the new times, and the clock keeps real time, so the logged total is what the brew took. Survives the app being closed mid-brew.
+- **Insights → When you brew** is hourly: 24 one-hour columns per weekday (was 3-hour blocks), labelled every three hours.
+- **Grafana dashboard:** the Brewlab wordmark across the top, in Grafana 11 and 12. It follows Grafana's theme (light text on the dark theme, dark text on the light one). Your browser loads it from the repo via jsDelivr; without internet the row stays empty. The *At a glance* tiles are wider, six to a row.
 
 ## 0.5.0
 

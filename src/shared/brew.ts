@@ -65,3 +65,35 @@ export function applyRatio(doseG: number, waterG: number, ratio: number, lastEdi
   }
   return { doseG, waterG: Math.round(doseG * ratio * 10) / 10 };
 }
+
+/* ------------------------------ brew timer: skipping ahead and waiting ------------------------------ */
+
+/**
+ * A change to the schedule made mid-brew: every step from `from` on starts `sec` seconds later
+ * (negative = earlier). Each step keeps its duration; the steps before `from` are left alone.
+ */
+export interface StepShift { from: number; sec: number }
+
+/** When each step starts once the shifts are applied (seconds from Start). */
+export function stepTimes(steps: Step[], shifts: StepShift[] = []): number[] {
+  return steps.map((s, i) => (s.atSec ?? 0) + shifts.reduce((n, sh) => n + (sh.from <= i ? sh.sec : 0), 0));
+}
+
+/**
+ * The step on screen at `elapsed`. `waitFor` = the step being held: it doesn't begin on its own
+ * (`holding` once its time has come), only through `nextStepNow`.
+ */
+export function timerState(times: number[], elapsed: number, waitFor: number | null = null): { idx: number; holding: boolean } {
+  let idx = times.reduce((acc, t, i) => (t <= elapsed ? i : acc), 0);
+  const holding = waitFor != null && waitFor < times.length && times[waitFor] <= elapsed;
+  if (waitFor != null && idx >= waitFor) idx = Math.max(0, waitFor - 1);
+  return { idx, holding };
+}
+
+/** Start the step after `idx` now: it and every step after it move by the same amount (earlier when the bed drained fast, later after a wait). */
+export function nextStepNow(steps: Step[], shifts: StepShift[], idx: number, elapsed: number): StepShift[] {
+  const k = idx + 1;
+  if (k >= steps.length) return shifts;
+  const sec = elapsed - stepTimes(steps, shifts)[k];
+  return sec ? [...shifts, { from: k, sec }] : shifts;
+}

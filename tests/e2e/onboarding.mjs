@@ -130,6 +130,44 @@ try {
     await cp.getByRole("button", { name: "Unmute step chime" }).click();
     await cp.waitForTimeout(100);
     check((await chimes()) === 2, "unmuting plays the chime once");
+
+    // Next step now / Wait: the clock stays real; the rest of the schedule moves, durations kept.
+    const fmtT = (x) => `${Math.floor(x / 60)}:${String(x % 60).padStart(2, "0")}`;
+    const clockSec = async () => { const [m, sec] = (await cp.getByTestId("clock").innerText()).split(":").map(Number); return m * 60 + sec; };
+    const atTimes = async () => (await cp.locator('[data-testid="steps"] .at').allInnerTexts());
+    const label = async () => cp.locator('[data-testid="steps"] li').evaluateAll((lis) => lis.findIndex((li) => li.classList.contains("active")));
+    if (steps.length >= 3) {
+      await cp.evaluate(() => localStorage.removeItem("brewlab.activeBrew"));
+      await cp.goto(`${BASE}/#/brew/recipes`);
+      await cp.reload();
+      await cp.locator(`[data-testid="recipe-${r.id}"] [data-testid="recipe-brew"]`).click();
+      await cp.getByRole("button", { name: "Ready to brew" }).click();
+      await cp.getByRole("button", { name: "Start timer" }).click();
+      await cp.clock.runFor(5000);
+      await cp.waitForTimeout(100);
+      const c0 = await chimes();
+      const before = await label();
+      const t0 = await clockSec();
+      await cp.getByRole("button", { name: "Next step now" }).click();
+      await cp.clock.runFor(300); // the page's timers are fake: let it render
+      const ats = await atTimes();
+      check((await label()) === before + 1 && (await clockSec()) - t0 <= 1 && (await chimes()) === c0 + 1, `Next step now: next step on screen at ${t0}s, clock unchanged, chimed (step ${before}→${await label()}, clock ${await clockSec()}, chimes ${c0}→${await chimes()})`);
+      check(ats[2] === fmtT(steps[2] - (steps[1] - t0)), `later steps moved earlier, same gaps (${ats.join(" ")})`);
+      await cp.getByRole("button", { name: "Wait" }).click();
+      check((await cp.getByRole("button", { name: "Wait" }).getAttribute("aria-pressed")) === "true", "Wait is armed");
+      await cp.clock.runFor(120 * 1000);
+      await cp.waitForTimeout(100);
+      check(await cp.getByTestId("wait-count").isVisible() && (await chimes()) === c0 + 1, `Wait holds the next step past its time, no chime (${await chimes()} vs ${c0 + 1})`);
+      const held = await label();
+      await cp.getByRole("button", { name: "Next step now" }).click();
+      await cp.clock.runFor(300); // the page's timers are fake: let it render
+      check((await label()) === held + 1 && !(await cp.getByTestId("wait-count").count()), "Next step now ends the wait");
+      const kept = await atTimes();
+      await cp.reload();
+      await cp.getByTestId("clock").waitFor();
+      const after = await atTimes();
+      check(after.join(" ") === kept.join(" "), `moved times survive a reload (${after.join(" ")})`);
+    }
     await cctx.close();
   }
 

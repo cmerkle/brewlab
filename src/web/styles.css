@@ -391,6 +391,10 @@ ul.link-list .link-ico { display: inline-grid; place-items: center; color: var(-
 .dialin h3 { font-size: .9rem; margin-bottom: 4px; }
 .next-step { background: var(--surface); border: 2px solid var(--accent); border-radius: var(--radius); padding: 12px; display: flex; flex-direction: column; gap: 6px; }
 .next-step.done { border-style: dashed; }
+.next-step.holding { border-style: dashed; }
+.step-ctl { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.step-ctl button { flex: 1 1 0; min-width: 0; }
+.step-ctl button.on { background: var(--accent-soft); border-color: var(--accent); }
 .next-count { font-size: 2.2rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; color: var(--accent); }
 .progress { height: 8px; border-radius: 999px; background: var(--accent-soft); overflow: hidden; }
 .progress span { display: block; height: 100%; background: var(--accent); transition: width .2s linear; }
@@ -615,6 +619,10 @@ code.cmd { display: block; margin: 4px 0 6px; overflow-wrap: normal; word-break:
 .hm-cell.s5 { background: var(--chart-1); }
 .hm-cell.hot { box-shadow: 0 0 0 2px var(--text); }
 .hm-tip { left: 50%; top: 0; }
+.hm-col.start { text-align: left; }
+/* 24 hourly columns: tighter gaps and corners so the cells keep some width on a phone. */
+.heatmap:has(> .hm-col.start) { gap: 3px 2px; }
+.heatmap:has(> .hm-col.start) .hm-cell { border-radius: 2px; }
 .hm-legend { display: flex; align-items: center; gap: 4px; margin-top: 6px; }
 .hm-legend .hm-cell { width: 18px; height: 12px; }
 .table-wrap { overflow-x: auto; }

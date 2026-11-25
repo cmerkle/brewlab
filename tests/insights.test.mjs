@@ -50,8 +50,10 @@ test("rankBy: largest first, case-insensitive, missing left out, the tail folds 
 
 test("week × hour grid, ratings, ratio bins, streak", () => {
   const grid = I.weekHours([brew({ brewedAt: at(2026, 11, 23, 7) }), brew({ brewedAt: at(2026, 11, 23, 8) }), brew({ brewedAt: at(2026, 11, 29, 22) }), brew({ brewedAt: "2026-11-20" })]);
-  assert.equal(grid[0][2], 2, "two Monday brews 6–9");
-  assert.equal(grid[6][7], 1, "Sunday 21–24");
+  assert.equal(grid[0][7], 1, "Monday 7–8");
+  assert.equal(grid[0][8], 1, "Monday 8–9");
+  assert.equal(grid[6][22], 1, "Sunday 22–23");
+  assert.equal(grid[0].length, 24, "hourly");
   assert.equal(grid.flat().reduce((a, b) => a + b, 0), 3, "a date without a time isn't placed");
   assert.deepEqual(I.ratingCounts([brew({ rating: 5 }), brew({ rating: 5 }), brew({ rating: 2 })]).map((c) => c.count), [0, 1, 0, 0, 2]);
   const halves = I.ratingCounts([brew({ rating: 3.5 }), brew({ rating: 4 }), brew({ rating: 0.5 })]);
