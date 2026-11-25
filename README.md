@@ -18,9 +18,15 @@ It's built for phones first and works just as well on tablets and computers. Ins
 <img src="docs/screenshots/guide.png" alt="Grind converter: one setting on every grinder" width="190">
 <img src="docs/screenshots/discover.png" alt="Discover: the weekly board" width="190">
 <img src="docs/screenshots/stash.png" alt="Stash: your bags of coffee" width="190">
+<img src="docs/screenshots/insights.png" alt="Insights: your brewing in numbers and charts" width="190">
 </p>
 
-<sub>Recipes · the brew timer · the grind converter · Discover · your Stash (demo data, all fictional). Screenshots are made by <code>tests/e2e/screenshots.mjs</code>.</sub>
+<p align="center">
+<img src="docs/screenshots/desktop-insights.png" alt="Insights on a computer: headline numbers, brews per week, and when you brew by weekday and hour" width="49%">
+<img src="docs/screenshots/desktop-log.png" alt="The Brew Log on a computer, filtered by roaster and brew method" width="49%">
+</p>
+
+<sub>Recipes · the brew timer · the grind converter · Discover · your Stash · Insights; on a computer, Insights and the Brew Log with two filters on (demo data and made-up history, all fictional). Screenshots are made by <code>tests/e2e/screenshots.mjs</code>.</sub>
 
 > ⚠️ **There is no login.** Anyone who can reach Brewlab can read and change everything in it. Run it on your home network or behind Tailscale/WireGuard, and if you put it behind a public hostname, **add authentication in your reverse proxy** (an access list, basic auth, Authelia, Cloudflare Access…). Never forward its port on your router.
 
@@ -140,7 +146,9 @@ History metrics carry their time in a label (`brews_by_month_total{month}`, `bre
 
 ### Grafana dashboard
 
-[`grafana/brewlab-dashboard.json`](grafana/brewlab-dashboard.json) is a ready-made dashboard (113 panels, under the Brewlab wordmark): at a glance; brewing over time (daily for 400 days, monthly, rolling windows); the latest brew; when you brew (weekday × hour); ratings and ratios; gear (brews, coffee and ratings per brewer, grinder and method, plus method averages); recipes and water; your coffee by roaster, origin, roast level and process (what you brew, how you rate it, every bag you've had, tasting notes); the stash (a table of every open bag with its rest window, coffee left per bag over time); buying coffee (spend and bags per month, bought vs brewed, cost of what you brewed, spend by roaster); Discover, backups and the instance. In Grafana: *Dashboards → New → Import*, upload the file and pick your Prometheus data source. Money is shown in US dollars; change the panels' unit if you buy in another currency. The file is generated: edit `scripts/grafana-dashboard.mjs` and run `node scripts/grafana-dashboard.mjs`.
+<p align="center"><img src="docs/screenshots/grafana.png" alt="The Brewlab Grafana dashboard: the wordmark, At a glance tiles, brews per day and per month" width="85%"></p>
+
+[`grafana/brewlab-dashboard.json`](grafana/brewlab-dashboard.json) is a ready-made dashboard (115 panels, under the Brewlab wordmark): at a glance; brewing over time (daily for 400 days, monthly, rolling windows); the latest brew; when you brew (weekday × hour); ratings and ratios; gear (brews, coffee and ratings per brewer, grinder and method, plus method averages); recipes and water; your coffee by roaster, origin, roast level and process (what you brew, how you rate it, every bag you've had, tasting notes); the stash (a table of every open bag with its rest window, coffee left per bag over time); buying coffee (spend and bags per month, bought vs brewed, cost of what you brewed, spend by roaster); Discover, backups and the instance. In Grafana: *Dashboards → New → Import*, upload the file and pick your Prometheus data source. Money is shown in US dollars; change the panels' unit if you buy in another currency. The file is generated: edit `scripts/grafana-dashboard.mjs` and run `node scripts/grafana-dashboard.mjs`.
 
 ## Discover and AI providers
 

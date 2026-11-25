@@ -5,6 +5,7 @@ import type { RestOverrides, RoastLevelDef } from "../shared/stash";
 import { emptyPrefs, type Prefs } from "../shared/prefs";
 import { api, type Bag, type Brew, type Gear, type Limits, type Recipe, type WaterRecipe } from "./api";
 import { G_PER_OZ } from "../shared/brew";
+import { tagMatches } from "../shared/filters";
 
 /* ------------------------------ App data ------------------------------ */
 
@@ -94,20 +95,64 @@ export function useVocab(): CoffeeVocab {
   return v;
 }
 
+/**
+ * The text box of a tag field: Enter (or a comma) adds what you typed; matching suggestions show as
+ * you type, below the box — tap one, or ↓/↑ then Enter. Leaving the box adds what's typed.
+ */
+export function TagTextInput({ id, suggestions = [], taken, onAdd, onBackspaceEmpty, placeholder, describedBy }: {
+  id: string; suggestions?: string[]; taken: string[]; onAdd: (raw: string) => void; onBackspaceEmpty?: () => void; placeholder?: string; describedBy?: string;
+}) {
+  const [text, setText] = useState("");
+  const [active, setActive] = useState(-1);
+  const input = useRef<HTMLInputElement>(null);
+  // A finger on a suggestion: iOS blurs the box before the tap's click (preventDefault doesn't stop
+  // it), and leaving the box adds what's typed — so while picking, the blur leaves the text alone.
+  const picking = useRef(false);
+  const matches = tagMatches(text, suggestions, taken);
+  const add = (raw: string) => {
+    if (raw.trim()) onAdd(raw);
+    setText("");
+    setActive(-1);
+  };
+  const listId = `${id}-suggest`;
+  return (
+    <div className="tag-entry">
+      <input ref={input} id={id} value={text} placeholder={placeholder} enterKeyHint="done" autoComplete="off" aria-describedby={describedBy}
+        role="combobox" aria-autocomplete="list" aria-expanded={matches.length > 0} aria-controls={listId}
+        aria-activedescendant={active >= 0 && matches[active] ? `${listId}-${active}` : undefined}
+        onChange={(e) => { setActive(-1); if (/[,;]/.test(e.target.value)) add(e.target.value); else setText(e.target.value); }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") { e.preventDefault(); add(active >= 0 && matches[active] ? matches[active] : text); }
+          else if (e.key === "ArrowDown" && matches.length) { e.preventDefault(); setActive((a) => (a + 1) % matches.length); }
+          else if (e.key === "ArrowUp" && matches.length) { e.preventDefault(); setActive((a) => (a <= 0 ? matches.length - 1 : a - 1)); }
+          else if (e.key === "Escape" && matches.length) { e.preventDefault(); setText(""); setActive(-1); }
+          else if (e.key === "Backspace" && !text) onBackspaceEmpty?.();
+        }}
+        onFocus={() => { picking.current = false; }} onBlur={() => { if (!picking.current) add(text); }} />
+      <ul id={listId} role="listbox" className="tag-suggest" aria-label="Suggestions" hidden={!matches.length}>
+        {matches.map((m, i) => (
+          // Pointer/mouse-down keep the focus in the box where the browser allows it; `picking` covers iOS.
+          <li key={m} id={`${listId}-${i}`} role="option" aria-selected={i === active} className={i === active ? "on" : ""}
+            onPointerDown={(e) => { picking.current = true; e.preventDefault(); }} onMouseDown={(e) => e.preventDefault()}
+            onPointerCancel={() => { picking.current = false; }} onPointerLeave={() => { picking.current = false; }}
+            onClick={() => { picking.current = false; add(m); input.current?.focus(); }}>{m}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 /** Tags as chips: type and press Enter or comma to add, × to remove. Suggestions from a list. */
 export function TagInput({ id, label, tags, onChange, suggestions = [], placeholder = "Type and press Enter", hint }: {
   id: string; label: string; tags: string[]; onChange: (t: string[]) => void; suggestions?: string[]; placeholder?: string; hint?: string;
 }) {
-  const [text, setText] = useState("");
   const add = (raw: string) => {
     const parts = raw.split(/[,;\n]/).map((t) => t.trim()).filter(Boolean);
     if (!parts.length) return;
     const next = [...tags];
     for (const t of parts) if (!next.some((x) => x.toLowerCase() === t.toLowerCase())) next.push(t);
     onChange(next);
-    setText("");
   };
-  const listId = `${id}-suggest`;
   return (
     <div className="field tag-field">
       <label htmlFor={id}>{label}</label>
@@ -121,14 +166,8 @@ export function TagInput({ id, label, tags, onChange, suggestions = [], placehol
           ))}
         </ul>
       )}
-      <input id={id} value={text} list={suggestions.length ? listId : undefined} placeholder={placeholder} enterKeyHint="done"
-        onChange={(e) => (/[,;]/.test(e.target.value) ? add(e.target.value) : setText(e.target.value))}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") { e.preventDefault(); add(text); }
-          else if (e.key === "Backspace" && !text && tags.length) onChange(tags.slice(0, -1));
-        }}
-        onBlur={() => add(text)} />
-      {suggestions.length > 0 && <datalist id={listId}>{suggestions.filter((s) => !tags.some((t) => t.toLowerCase() === s.toLowerCase())).map((s) => <option key={s} value={s} />)}</datalist>}
+      <TagTextInput id={id} suggestions={suggestions} taken={tags} onAdd={add} placeholder={placeholder}
+        onBackspaceEmpty={() => tags.length && onChange(tags.slice(0, -1))} />
       {hint && <div className="hint">{hint}</div>}
     </div>
   );

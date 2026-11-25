@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.1
+
+- **Tag fields** (Discover → Your taste, a bag's tasting notes): suggestions now appear as you type, matching the start of a word, right under the box — tap one, or ↓/↑ and Enter. On iPhone the full list used to pop up after pressing Enter, when the box was empty.
+- **README screenshots:** Insights on a phone, Insights and the filtered Brew Log on a computer, and the Grafana dashboard (in the Prometheus section). They use the demo data plus five months of made-up brewing (`tests/e2e/screenshot-data.mjs`).
+- Tests: the onboarding check for the When you brew heatmap counts the hourly grid (168 cells).
+
 ## 0.6.0
 
 - **Brew timer: Next step now and Wait.** *Next step now* starts the next step at once (the bed drained early); *Wait* holds the next step past its time until you tap *Next step now* (the bed is still wet), showing how long you've waited. Either way the steps after it keep their durations and move with it, the step list shows the new times, and the clock keeps real time, so the logged total is what the brew took. Survives the app being closed mid-brew.

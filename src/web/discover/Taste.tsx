@@ -4,7 +4,7 @@
 // removed; built-in ones start off. Plus your own words. All of it shapes the weekly board.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../api";
-import { useData, useVocab } from "../ui";
+import { useData, useVocab, TagTextInput } from "../ui";
 import { PREF_SECTIONS, PREF_LISTS, SECTION_LABELS, LIST_LABELS, newTag, type Prefs, type PrefSection, type PrefList, type PrefTag } from "../../shared/prefs";
 
 interface Aff { kind: string; name: string; n: number; avg: number; text: string }
@@ -118,21 +118,14 @@ function TagList({ id, label, hint, tags, suggestions, onAdd, onToggle, onRemove
   id: string; label: string; hint: string; tags: PrefTag[]; suggestions: string[];
   onAdd: (label: string) => void; onToggle: (id: string) => void; onRemove: (id: string) => void;
 }) {
-  const [text, setText] = useState("");
   const add = (raw: string) => {
     for (const t of raw.split(/[,;\n]/).map((x) => x.trim()).filter(Boolean)) onAdd(t.slice(0, 80));
-    setText("");
   };
-  const listId = `${id}-suggest`;
   return (
     <div className="pref-list" data-testid={id}>
       <label htmlFor={id}>{label}</label>
-      <input id={id} aria-describedby={`${id}-hint`} value={text} placeholder="Add a tag, then Enter" enterKeyHint="done" list={suggestions.length ? listId : undefined}
-        onChange={(e) => (/[,;]/.test(e.target.value) ? add(e.target.value) : setText(e.target.value))}
-        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(text); } }}
-        onBlur={() => add(text)} />
+      <TagTextInput id={id} describedBy={`${id}-hint`} placeholder="Add a tag, then Enter" suggestions={suggestions} taken={tags.map((t) => t.label)} onAdd={add} />
       <div className="hint" id={`${id}-hint`}>{hint}</div>
-      {suggestions.length > 0 && <datalist id={listId}>{suggestions.filter((s) => !tags.some((t) => t.label.toLowerCase() === s.toLowerCase())).map((s) => <option key={s} value={s} />)}</datalist>}
       {tags.length > 0 && (
         <ul className="ptags" aria-label={label}>
           {tags.map((t) => (

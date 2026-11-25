@@ -81,3 +81,13 @@ test("stash facets: tags match one by one, rest window from today and the settin
   const notes = F.facetOptions(list, S.BAG_FACETS, S.BAG_DATES, "notes", F.NO_FILTERS, () => true);
   assert.deepEqual(notes.map((o) => [o.value, o.count]), [["Strawberry", 2], ["cacao", 1], ["Lime", 1]], "tags counted once per bag, case folded");
 });
+
+test("tag suggestions show while typing: word starts, best first, never on an empty box", () => {
+  const list = ["Blend (several origins)", "Bolivia", "Burundi", "Costa Rica", "Rwanda", "Brazil", "Ethiopia"];
+  assert.deepEqual(F.tagMatches("", list, []), [], "nothing until you type");
+  assert.deepEqual(F.tagMatches("b", list, ["Brazil"]), ["Blend (several origins)", "Bolivia", "Burundi"], "taken tags left out");
+  assert.deepEqual(F.tagMatches("ri", list, []), ["Costa Rica"], "a later word counts; mid-word doesn't (Burundi)");
+  assert.deepEqual(F.tagMatches("orig", list, []), ["Blend (several origins)"], "inside brackets");
+  assert.deepEqual(F.tagMatches("ethiopia", list, []), [], "an exact match needs no suggestion");
+  assert.deepEqual(F.tagMatches("ETH", ["Éthiopie"], []), ["Éthiopie"], "case and accents folded");
+});

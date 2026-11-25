@@ -1,7 +1,8 @@
-// README screenshots, from an install with the (fictional) demo data:
+// README screenshots, from an install with the (fictional) demo data plus made-up history:
 //   curl -XPOST $BASE/api/setup/demo && curl -XPOST $BASE/api/setup/complete
+//   BASE=http://localhost:3104 node screenshot-data.mjs     (five months of fictional brews, for Insights)
 //   BASE=http://localhost:3104 node screenshots.mjs        → docs/screenshots/*.png
-// Phone shots in dark mode.
+// Phone shots in dark mode; desktop-* shots in light mode at 1440×900.
 import { chromium } from "playwright";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -34,11 +35,27 @@ const shots = {
   async stash(p) {
     await p.goto(`${BASE}/#/brew/stash`);
   },
+  async insights(p) {
+    await p.goto(`${BASE}/#/brew/insights`);
+    await p.getByRole("button", { name: "90 days" }).click();
+  },
+  async "desktop-insights"(p) {
+    await p.goto(`${BASE}/#/brew/insights`);
+    await p.getByRole("button", { name: "90 days" }).click();
+  },
+  async "desktop-log"(p) {
+    await p.goto(`${BASE}/#/brew/log`);
+    await p.getByRole("button", { name: /^Filters/ }).click();
+    await p.getByTestId("facet-roaster").getByRole("button", { name: /^Example Roasters/ }).click();
+    await p.getByTestId("facet-method").getByRole("button", { name: /^Pour-over/ }).click();
+    await p.getByTestId("filter-show").click();
+  },
 };
+const DESKTOP = { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1.5 };
 
 const b = await chromium.launch();
 for (const [name, go] of Object.entries(shots)) {
-  const ctx = await b.newContext({ ...PHONE, colorScheme: "dark" });
+  const ctx = await b.newContext({ ...(name.startsWith("desktop") ? { ...DESKTOP, colorScheme: "light" } : { ...PHONE, colorScheme: "dark" }), timezoneId: "UTC" });
   const p = await ctx.newPage();
   await go(p);
   await p.waitForTimeout(600);

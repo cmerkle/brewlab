@@ -670,6 +670,30 @@ try {
   await p.waitForTimeout(400);
   pr = (await (await fetch(`${BASE}/api/setup`)).json()).settings.prefs;
   check(pr.origins.exclude.find((t) => t.id === "blends")?.on === false, "a removed built-in tag can be restored (off)");
+  // Tag suggestions show as you type (not a <datalist>: iOS pops its whole list on an empty box after Enter).
+  {
+    const sug = p.locator("#pref-origins-prefer-suggest");
+    await p.focus("#pref-origins-prefer");
+    check(!(await sug.isVisible()) && !(await p.locator("datalist").count()), "no suggestions on an empty tag box");
+    await p.fill("#pref-origins-prefer", "bol");
+    check((await sug.getByRole("option").allInnerTexts()).includes("Bolivia"), `typing suggests matches (${(await sug.getByRole("option").allInnerTexts()).join(", ")})`);
+    await sug.getByRole("option", { name: "Bolivia" }).click();
+    check((await p.inputValue("#pref-origins-prefer")) === "" && !(await sug.isVisible()) && (await tagIn("pref-origins-prefer").getByRole("button", { name: "Bolivia", exact: true }).isVisible()),
+      "tapping a suggestion adds it; the box is empty and no list pops up");
+    // iOS order on a tap: pointerdown, the box blurs (preventDefault doesn't stop it), then click.
+    await p.fill("#pref-origins-prefer", "bur");
+    await sug.getByRole("option", { name: "Burundi" }).evaluate((li) => {
+      li.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true }));
+      document.getElementById("pref-origins-prefer").blur();
+      li.click();
+    });
+    await p.waitForTimeout(200);
+    const originTags = await tagIn("pref-origins-prefer").locator(".ptag-toggle").allInnerTexts();
+    check(originTags.includes("Burundi") && !originTags.some((t) => t.toLowerCase() === "bur"), `a tap that blurs the box first still adds the suggestion (${originTags.join(", ")})`);
+    await p.fill("#pref-origins-prefer", "Kenya AA");
+    await p.press("#pref-origins-prefer", "Enter");
+    check(!(await sug.isVisible()) && (await tagIn("pref-origins-prefer").getByRole("button", { name: "Kenya AA", exact: true }).isVisible()), "Enter adds what you typed, no list after");
+  }
   await tagIn("pref-roasters-prefer").getByRole("button", { name: "Good Roasters", exact: true }).click();
   await p.waitForTimeout(400);
   pr = (await (await fetch(`${BASE}/api/setup`)).json()).settings.prefs;
@@ -734,7 +758,7 @@ try {
     for (let i = 0; i < cells.length; i++) for (let j = i + 1; j < cells.length; j++) { const a = cells[i], c = cells[j]; if (a.left < c.right - 0.5 && c.left < a.right - 0.5 && a.top < c.bottom - 0.5 && c.top < a.bottom - 0.5) overlaps++; }
     return { n: cells.length, overlaps, belowHead: cells.every((c) => c.top >= head - 0.5) };
   });
-  check(hm.n === 56 && hm.overlaps === 0 && hm.belowHead, `heatmap: 56 separate cells, below the hour labels (${JSON.stringify(hm)})`);
+  check(hm.n === 168 && hm.overlaps === 0 && hm.belowHead, `heatmap: 168 separate cells (7 days × 24 hours), below the hour labels (${JSON.stringify(hm)})`);
   check(!(await p.locator(".insight-filters select").count()), "the top filter row holds only the period");
   // Running totals: the last value is the period total (the same as the headline tile)
   const cg = p.getByTestId("chart-cum-grams");

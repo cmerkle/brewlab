@@ -93,3 +93,20 @@ export function togglePick(f: Filters, facetId: string, value: string): Filters 
 export function setRange(f: Filters, dateId: string, from: string | null | undefined, to: string | null | undefined): Filters {
   return { ...f, dates: { ...f.dates, [dateId]: { from: from || null, to: to || null } } };
 }
+
+/**
+ * Suggestions while typing: the ones where a word starts with what you typed (best first), none for an
+ * empty box. Our own list, not a <datalist> (iOS pops a datalist's whole list open on an empty, focused box).
+ */
+export function tagMatches(text: string, suggestions: string[], taken: string[], limit = 6): string[] {
+  const q = fold(text.trim());
+  if (!q) return [];
+  const have = new Set(taken.map(fold));
+  const score = (s: string) => {
+    const f = fold(s);
+    if (have.has(f) || f === q) return -1;
+    if (f.startsWith(q)) return 2;
+    return f.split(/[\s\-/(]+/).some((w) => w.startsWith(q)) ? 1 : -1;
+  };
+  return suggestions.map((s) => ({ s, k: score(s) })).filter((x) => x.k > 0).sort((a, b) => b.k - a.k).slice(0, limit).map((x) => x.s);
+}
