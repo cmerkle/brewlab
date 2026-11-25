@@ -497,6 +497,21 @@ try {
   check(/^\d+\.\d+\.\d+/.test(ver) && (await about.getByTestId("app-version").innerText()) === ver, `About shows the version (${ver})`);
   check(!(await about.getByTestId("update-check").isChecked()) && /Not checked yet/.test(await about.getByTestId("update-status").innerText()),
     "the update check is off by default and hasn't run");
+
+  // A newer server than this page (iOS keeps a Home Screen app in memory): a bar offers a reload.
+  check(!(await p.getByTestId("update-bar").count()), "no update bar when the page matches the server");
+  const realAbout = await (await fetch(`${BASE}/api/about`)).json();
+  await p.route("**/api/about", (rt) => rt.fulfill({ json: { ...realAbout, version: "99.0.0" } }));
+  await p.reload();
+  const bar = p.getByTestId("update-bar");
+  await bar.waitFor();
+  check(/Brewlab 99\.0\.0 is available/.test(await bar.innerText()), `the update bar names the server's version (${await bar.innerText()})`);
+  await p.unroute("**/api/about");
+  await bar.getByRole("button", { name: "Reload" }).click();
+  await p.waitForLoadState("load");
+  await p.getByTestId("settings").waitFor();
+  await p.waitForTimeout(500);
+  check(!(await p.getByTestId("update-bar").count()), "Reload loads the page again; the bar is gone");
   const bug = await about.getByTestId("report-bug").getAttribute("href");
   check(/\/issues\/new\?template=bug_report\.yml&version=/.test(bug) && bug.includes(encodeURIComponent(ver)) && /device=/.test(bug),
     "Report a bug opens GitHub's bug form with the version and device filled in");

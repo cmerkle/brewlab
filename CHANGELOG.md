@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.1
+
+- **The Home Screen app no longer falls back to an old version.** The service worker now finishes
+  saving each fresh page before iOS stops it, so the copy it opens when the server can't be reached
+  is the version you last used, not one from around when you installed it (the old copy is cleared
+  once). And when the app comes back to the front or back online and the server has a different
+  version, a bar says "Brewlab X.Y.Z is available" with a Reload button.
+
 ## 0.7.0
 
 - **Grind for the roast.** Brew setup now moves the grind for the bag's roast level: finer for lighter

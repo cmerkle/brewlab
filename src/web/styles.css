@@ -78,6 +78,7 @@ a { color: var(--accent); }
   padding-left: max(16px, env(safe-area-inset-left));
   padding-right: max(16px, env(safe-area-inset-right));
 }
+.update-bar { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; background: var(--accent-soft); color: var(--text); font-size: .85rem; font-weight: 600; padding: 6px 16px; }
 .offline { background: var(--warn-soft); color: var(--warn); text-align: center; font-size: .85rem; font-weight: 600; padding: 6px 16px; }
 .brand { display: inline-flex; align-items: center; text-decoration: none; }
 /* Brewlab wordmark (Logo.tsx): colours follow the theme. */
@@ -124,7 +125,7 @@ html.tabbar .shell { display: flex; flex-direction: column; height: 100vh; heigh
   html.tabbar { min-height: 100lvh; }
   html.tabbar .shell { height: 100lvh; }
 }
-html.tabbar .shell > .top, html.tabbar .shell > .offline, html.tabbar .shell > .tabs { flex: 0 0 auto; }
+html.tabbar .shell > .top, html.tabbar .shell > .offline, html.tabbar .shell > .update-bar, html.tabbar .shell > .tabs { flex: 0 0 auto; }
 html.tabbar .shell > main {
   flex: 1 1 auto; min-height: 0; width: 100%; max-width: none; margin: 0;
   overflow-y: auto; overflow-x: hidden; overscroll-behavior-y: contain;

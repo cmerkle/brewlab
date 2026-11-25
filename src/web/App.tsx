@@ -89,6 +89,44 @@ function useRelayoutOnResize() {
   }, []);
 }
 
+/**
+ * The server's version when it differs from this build's, else null. iOS keeps a Home Screen app
+ * in memory for days (and opens the cached copy when the server can't be reached), so check again
+ * whenever the app comes back to the front or back online.
+ */
+function useNewVersion(): string | null {
+  const [v, setV] = useState<string | null>(null);
+  useEffect(() => {
+    let last = 0;
+    const check = () => {
+      if (document.visibilityState !== "visible" || Date.now() - last < 5000) return;
+      last = Date.now();
+      fetch("/api/about", { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((a: { version?: string } | null) => { if (a?.version) setV(a.version !== __APP_VERSION__ ? a.version : null); })
+        .catch(() => {});
+    };
+    check();
+    document.addEventListener("visibilitychange", check);
+    window.addEventListener("online", check);
+    window.addEventListener("focus", check);
+    return () => {
+      document.removeEventListener("visibilitychange", check);
+      window.removeEventListener("online", check);
+      window.removeEventListener("focus", check);
+    };
+  }, []);
+  return v;
+}
+
+/** Fetch the new service worker too, then load the page from the server. */
+function reloadForUpdate() {
+  const done = () => window.location.reload();
+  const sw = navigator.serviceWorker;
+  if (!sw) return done();
+  sw.getRegistration().then((r) => r?.update()).catch(() => {}).finally(done);
+}
+
 export function App() {
   const tabbar = useTabbar();
   const [calc, setCalc] = useState(false);
@@ -109,6 +147,7 @@ export function App() {
   const editGrinder = (id: string) => go("brew", "gear", id);
 
   const [online, setOnline] = useState(navigator.onLine);
+  const newVersion = useNewVersion();
   useEffect(() => {
     const up = () => setOnline(true);
     const down = () => setOnline(false);
@@ -199,6 +238,12 @@ export function App() {
         </>
       )}
       {!online && <div className="offline" role="status">You're offline — Brewlab needs a connection to load or save your data.</div>}
+      {newVersion && (
+        <div className="update-bar" role="status" data-testid="update-bar">
+          <span>Brewlab {newVersion} is available.</span>
+          <button className="small-btn" onClick={reloadForUpdate}>Reload</button>
+        </div>
+      )}
       {route.section === "discover" && (
         <nav className="tabs" aria-label="Discover tabs">
           {DISCOVER_TABS.map((t) => (

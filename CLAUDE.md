@@ -197,6 +197,11 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   and waitFor persist with the active brew.
 - **Brew timer:** the dialog body is `pinned` (FullScreen `bodyClassName`): clock, current and next
   step stay on screen and only the step list scrolls, following the active step (`StepList follow`).
+- **Service worker** (`src/web/public/sw.js`): pages network-first (offline: the cached `/`), `/assets/` cache-first,
+  `/api` and `/uploads` never cached. Every cache write goes in `event.waitUntil`, with the response cloned before
+  anything reads it — iOS kills the worker after the response, and a lost write left Home Screen apps opening an old
+  page offline. The app compares `__APP_VERSION__` (vite define) with `/api/about` on load, focus, visibility and
+  `online`, and shows the update bar when they differ.
 - **Dialogs** render via a portal to `<body>` (`FullScreen`): iOS WebKit confines fixed overlays
   inside a scroller. Never render a fixed overlay inside `<main>` without a portal; the layout audit
   enforces "dialog directly under body".
