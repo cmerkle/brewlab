@@ -8,7 +8,7 @@ export const LIMITS = {
   doseG: { min: 0.1, max: 500, step: 0.1 },
   waterG: { min: 1, max: 5000, step: 1 },
   tempC: { min: 0, max: 100, step: 1 },
-  rating: { min: 1, max: 5, step: 1 },
+  rating: { min: 0.5, max: 5, step: 0.5 },
   amountG: { min: 1, max: 10000, step: 1 },
   price: { min: 0, max: 10000, step: 0.01 },
   totalTimeSec: { min: 0, max: 36000, step: 1 },
@@ -17,6 +17,8 @@ export const LIMITS = {
 } as const;
 
 type LimitKey = keyof typeof LIMITS;
+/** Ratings go in half stars: 0.5, 1, 1.5 … 5. */
+const ratingSchema = z.number().min(0.5, "Rating must be ½–5 stars").max(5, "Rating must be ½–5 stars").refine((x) => Number.isInteger(x * 2), "Ratings go in half stars (e.g. 3.5)");
 const num = (k: LimitKey, label: string) =>
   z.number({ error: `${label} must be a number` })
     .min(LIMITS[k].min, `${label} must be at least ${LIMITS[k].min}`)
@@ -81,7 +83,7 @@ export const BrewSchema = z.object({
   grindSetting: grind,
   steps: z.array(StepSchema).max(50).nullable().optional(),
   inventoryId: z.number().int().nullable().optional(),
-  rating: z.number().int().min(1, "Rating must be 1–5").max(5, "Rating must be 1–5").nullable().optional(),
+  rating: ratingSchema.nullable().optional(),
   notes: str(5000),
   totalTimeSec: optNum("totalTimeSec", "Total time"),
   brewedAt: z.string().optional(),
@@ -128,7 +130,7 @@ export const InventorySchema = z.object({
   amountG: optNum("amountG", "Bag size"),
   price: optNum("price", "Price"),
   url: z.string().max(2000).url("Link must be a full URL (https://…)").nullable().optional().or(z.literal("").transform(() => null)),
-  rating: z.number().int().min(1, "Rating must be 1–5").max(5, "Rating must be 1–5").nullable().optional(),
+  rating: ratingSchema.nullable().optional(),
   notes: str(5000),
   source: z.enum(["manual", "Coffee Recommendations"]).optional(),
   photo: z.string().regex(/^\/uploads\/bag-[\w.-]+\.(jpg|png)$/, "Invalid photo reference").nullable().optional(),

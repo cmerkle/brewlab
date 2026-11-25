@@ -69,6 +69,10 @@ const PAGES = [
   { name: "dialog: Duplicate bag", hash: "brew/stash", dialog: true, act: async (p) => { await p.locator('[data-testid="bag-1"] .menu .icon-btn').click(); await p.getByRole("menuitem", { name: "Duplicate" }).click(); await p.locator('[data-testid="bag-copy-note"]').waitFor(); } },
   { name: "dialog: Finish bag", hash: "brew/stash", dialog: true, act: async (p) => p.locator('[data-testid="bag-1"]').getByRole("button", { name: "Mark finished" }).click() },
   { name: "dialog: Brew log form", hash: "brew/log", dialog: true, act: async (p) => p.locator('[data-testid="brew-1"]').getByRole("button", { name: "Edit" }).click() },
+  { name: "dialog: Filter brews", hash: "brew/log", dialog: true, act: async (p) => { await p.getByRole("button", { name: /^Filters/ }).click(); await p.getByTestId("filter-sheet").waitFor(); await p.getByTestId("filter-sheet").locator("button.chip").first().click(); } },
+  { name: "Brew log (filtered)", hash: "brew/log", act: async (p) => { await p.getByRole("button", { name: /^Filters/ }).click(); await p.getByTestId("filter-sheet").locator("button.chip").first().click(); await p.getByTestId("filter-show").click(); await p.getByTestId("active-filters").waitFor(); } },
+  { name: "dialog: Filter your stash", hash: "brew/stash", dialog: true, act: async (p) => { await p.getByRole("button", { name: /^Filters/ }).click(); await p.getByTestId("filter-sheet").waitFor(); } },
+  { name: "Stash (filtered)", hash: "brew/stash", act: async (p) => { await p.getByRole("button", { name: /^Filters/ }).click(); await p.getByTestId("filter-sheet").locator("button.chip").first().click(); await p.getByTestId("filter-show").click(); await p.getByTestId("active-filters").waitFor(); } },
   { name: "dialog: Gear editor", hash: "brew/gear", dialog: true, act: async (p) => p.locator('[data-testid="gear-ode-gen2"]').getByRole("button", { name: "Edit" }).click() },
   // First-run setup (re-run from Settings on the seeded data; finished again afterwards).
   ...[

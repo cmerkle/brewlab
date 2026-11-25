@@ -555,6 +555,18 @@ try {
   check((await p.locator(".cards .bag").count()) === 1 && (await firstBag()) === "E2E Zebra Natural", "…and by its roast month");
   await p.getByLabel("Search your stash").fill("no such coffee");
   check(await p.getByTestId("stash-no-match").isVisible(), "no match says so");
+  // Stash filters: the button in the search box; a roaster pick narrows the cards, the chip undoes it.
+  await p.getByLabel("Search your stash").fill("");
+  const allCards = await p.locator(".cards .bag").count();
+  await p.getByRole("button", { name: /^Filters/ }).click();
+  const zChip = p.getByTestId("facet-roaster").getByRole("button", { name: /^Zulu Coffee, 1 bag$/ });
+  await zChip.click();
+  check((await p.getByTestId("filter-show").innerText()) === "Show 1 bag", "the sheet counts the bags a pick leaves");
+  await p.getByTestId("filter-show").click();
+  check((await p.locator(".cards .bag").count()) === 1 && (await firstBag()) === "E2E Apple Washed" && /1 of \d+ bags/.test(await p.getByTestId("stash-count").innerText()),
+    "filter by roaster: one bag, and how many of the stash that is");
+  await p.getByRole("button", { name: "Remove filter Roaster: Zulu Coffee" }).click();
+  check((await p.locator(".cards .bag").count()) === allCards, "removing the chip brings every bag back");
   await reload();
   check((await p.inputValue('select[aria-label="Sort by"]')) === "roastDate", "the sort is remembered on this device");
   // A bag with the lists: roast level, a listed process, your own origin, tasting-note tags
@@ -712,6 +724,47 @@ try {
   await cr.getByRole("button", { name: "Chart" }).click();
   await p.selectOption('select[aria-label="Your coffee charts count"]', "stash");
   check(/Open and unopened bags/.test(await p.getByTestId("coffee-scope-hint").innerText()), "the Your coffee scope sits with its charts and says what it counts");
+
+  // Half-star ratings: the left half of a star gives x.5.
+  {
+    const first = (await (await fetch(`${BASE}/api/brews`)).json())[0];
+    await p.goto(`${BASE}/#/brew/log`);
+    await p.locator(`[data-testid="brew-${first.id}"]`).getByRole("button", { name: "Edit" }).click();
+    await p.getByRole("radio", { name: "3.5 stars" }).click();
+    check((await p.locator(".stars.input .stars-val").innerText()) === "3.5", "the form shows 3.5 beside the stars");
+    await p.getByRole("button", { name: "Save brew" }).click();
+    await p.locator('[role="dialog"]').waitFor({ state: "detached" }).catch(() => {});
+    const saved = (await (await fetch(`${BASE}/api/brews`)).json()).find((b) => b.id === first.id);
+    check(saved.rating === 3.5 && (await p.locator(`[data-testid="brew-${first.id}"] .stars`).getAttribute("aria-label")) === "3.5 of 5 stars",
+      `a half-star rating saves (${saved.rating}) and the card shows three and a half stars`);
+  }
+  // Brew log: the filter button in the search bar; picks narrow the list, chips undo them.
+  const extra = await (await fetch(`${BASE}/api/brews`, { method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ recipeName: "E2E Filter Brew", grinderName: "E2E Grinder", brewerName: "E2E Brewer", coffee: "E2E Coffee", doseG: 12, waterG: 200, rating: 2, brewedAt: new Date().toISOString() }) })).json();
+  await p.goto(`${BASE}/#/brew/log`);
+  await reload(); // the extra brew came in through the API
+  await p.locator("ul.log > li").nth(1).waitFor();
+  const logCount = () => p.locator("ul.log > li").count();
+  const logBefore = await logCount();
+  await p.getByRole("button", { name: /^Filters/ }).click();
+  // The first facet the sheet shows (one with a single value is left out: it couldn't narrow anything).
+  const facet = p.locator('[data-testid^="facet-"]').first();
+  const facetName = await facet.locator("h3").innerText();
+  const gChip = facet.locator("button.chip").first();
+  const gLabel = await gChip.getAttribute("aria-label"); // "<value>, N brews"
+  const [gName, gN] = [gLabel.replace(/, \d+ brews?$/, ""), Number(/(\d+) brews?$/.exec(gLabel)[1])];
+  await gChip.click();
+  const showText = await p.getByTestId("filter-show").innerText();
+  await p.getByTestId("filter-show").click();
+  check(await logCount() === gN && showText === `Show ${gN} brew${gN === 1 ? "" : "s"}` && gN < logBefore,
+    `filter by ${facetName} ${gName}: ${gN} of ${logBefore} brews shown, as the sheet said`);
+  check(/Filters \(1 on\)/.test(await p.getByRole("button", { name: /^Filters/ }).getAttribute("aria-label")), "the filter button shows how many are on");
+  await p.getByLabel("Search brews").fill("zzzz-nothing");
+  check(await p.getByTestId("no-matches").isVisible(), "search and filters combine; nothing matching says so");
+  await p.getByLabel("Search brews").fill("");
+  await p.getByRole("button", { name: `Remove filter ${facetName}: ${gName}` }).click();
+  check(await logCount() === logBefore && !(await p.getByTestId("active-filters").count()), "removing the chip shows every brew again");
+  await fetch(`${BASE}/api/brews/${extra.id}`, { method: "DELETE" });
 
   // Bag photos: take / choose / paste (no camera-only), converted to JPEG on the device.
   await p.goto(`${BASE}/#/brew/stash`);

@@ -17,6 +17,7 @@ import { setupRouter } from "./routes-setup.js";
 import { markExistingInstallOnboarded, applySeedTaste, migrateTastePrefs } from "./settings.js";
 import { SEED_DIR } from "./seed.js";
 import { aboutRouter, dailyUpdateCheck, VERSION } from "./about.js";
+import { metricsHandler } from "./metrics.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -59,6 +60,7 @@ export function createApp(db = openDb()) {
       ocr: await tesseractAvailable(), counts: counts(db), tz: process.env.TZ ?? null, version: VERSION,
     });
   });
+  app.get("/metrics", metricsHandler(db)); // Prometheus; off unless switched on in Settings
   app.use("/api", brewRouter(db));
   app.use("/api", backupRouter(db));
   app.use("/api", waterRouter(db));

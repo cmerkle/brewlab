@@ -53,7 +53,10 @@ test("week × hour grid, ratings, ratio bins, streak", () => {
   assert.equal(grid[0][2], 2, "two Monday brews 6–9");
   assert.equal(grid[6][7], 1, "Sunday 21–24");
   assert.equal(grid.flat().reduce((a, b) => a + b, 0), 3, "a date without a time isn't placed");
-  assert.deepEqual(I.ratingCounts([brew({ rating: 5 }), brew({ rating: 5 }), brew({ rating: 2 })]), [0, 1, 0, 0, 2]);
+  assert.deepEqual(I.ratingCounts([brew({ rating: 5 }), brew({ rating: 5 }), brew({ rating: 2 })]).map((c) => c.count), [0, 1, 0, 0, 2]);
+  const halves = I.ratingCounts([brew({ rating: 3.5 }), brew({ rating: 4 }), brew({ rating: 0.5 })]);
+  assert.deepEqual(halves.map((c) => c.label), ["½★", "1★", "1.5★", "2★", "2.5★", "3★", "3.5★", "4★", "4.5★", "5★"], "half stars get their own columns once used");
+  assert.deepEqual([halves[0].count, halves[6].count, halves[7].count], [1, 1, 1]);
   const bins = I.ratioCounts([brew({ doseG: 18, waterG: 36 }), brew({ doseG: 15, waterG: 250 }), brew({ doseG: 20, waterG: 320 }), brew({ doseG: 15, waterG: 300 }), brew({ doseG: null })]);
   assert.deepEqual(bins, [1, 0, 0, 0, 0, 1, 1, 0, 1]); // 1:2, 1:16, 1:16.7 → 1:17, 1:20
   const days = [24, 23, 22, 20].map((d) => brew({ brewedAt: at(2026, 11, d) }));

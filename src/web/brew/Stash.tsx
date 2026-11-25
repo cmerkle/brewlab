@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api, type Bag, type Brew, type Recipe } from "../api";
 import { useData, Field, FullScreen, ErrorBox, NumInput, Stars, Menu, fmtDate, daysSince, useAction, usePref, SearchInput, useVocab, TagInput } from "../ui";
-import { BAG_SORTS, sortBags, bagMatches, freshnessNote, splitTags, type BagSort, type SortDir, type RestOverrides, type RoastLevelDef } from "../../shared/stash";
+import { BAG_SORTS, BAG_FACETS, BAG_DATES, sortBags, bagMatches, freshnessNote, restState, splitTags, type BagSort, type SortDir, type RestOverrides, type RoastLevelDef, type FilterableBag } from "../../shared/stash";
+import { NO_FILTERS, matchesFilters, type Filters } from "../../shared/filters";
+import { ActiveFilters, FilterButton, FilterSheet } from "../filters";
 import { grindLabel } from "../grindui";
 import { RecipeCard } from "./Recipes";
 import { ScaleDialog, type BrewPlan } from "./ScaleDialog";
@@ -15,7 +17,8 @@ const VERDICTS = [
 
 /** The Stash shows bags you have (unopened, open); finished bags go to the Archive (#/brew/stash/archive). */
 export function Stash({ view }: { view?: string }) {
-  const { bags, loaded } = useData();
+  const { bags, loaded, settings } = useData();
+  const vocab = useVocab();
   const [editing, setEditing] = useState<Bag | "new" | null>(null);
   const [copying, setCopying] = useState<Bag | null>(null);
   useAction("add-bag", () => setEditing("new"));
@@ -28,8 +31,19 @@ export function Stash({ view }: { view?: string }) {
   const [sort, setSort] = archive ? [archiveSort, setArchiveSort] : [stashSort, setStashSort];
   const by: BagSort = sort.by in BAG_SORTS ? sort.by : "status";
   const [q, setQ] = useState("");
-  const pool = archive ? finished : current;
-  const shown = sortBags(pool.filter((b) => bagMatches(b, q, fmtDate)), by, sort.dir);
+  // Each tab has its own filters too (the Stash has status and rest window; the Archive doesn't need them).
+  const [stashFilters, setStashFilters] = useState<Filters>(NO_FILTERS);
+  const [archiveFilters, setArchiveFilters] = useState<Filters>(NO_FILTERS);
+  const [filters, setFilters] = archive ? [archiveFilters, setArchiveFilters] : [stashFilters, setStashFilters];
+  const [sheet, setSheet] = useState(false);
+  const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD, local
+  const pool: (Bag & FilterableBag)[] = useMemo(() => (archive ? finished : current).map((b) => ({
+    ...b, rest: b.status === "finished" ? null : restState(b.roastDate, b.roastLevel, today, vocab.roastLevels, settings.restWindows),
+  })), [bags, archive, vocab, settings.restWindows, today]); // eslint-disable-line react-hooks/exhaustive-deps
+  const matchQ = (b: FilterableBag) => bagMatches(b, q, fmtDate);
+  const shown = sortBags(pool.filter((b) => matchesFilters(b, BAG_FACETS, BAG_DATES, filters) && matchQ(b)), by, sort.dir);
+  const filtersOn = Object.values(filters.picked).some((v) => v?.length) || Object.values(filters.dates).some((r) => r?.from || r?.to);
+  const filtering = filtersOn || !!q.trim();
   const kind = BAG_SORTS[by].kind;
   const dirLabel = (d: SortDir) =>
     kind === "text" ? (d === "asc" ? "A → Z" : "Z → A") : kind === "date" ? (d === "asc" ? "oldest first" : "newest first")
@@ -42,7 +56,8 @@ export function Stash({ view }: { view?: string }) {
       </div>
       {pool.length > 0 && (
         <div className="toolbar">
-          <SearchInput placeholder="Search name, roaster, origin, dates…" label={archive ? "Search the archive" : "Search your stash"} value={q} onChange={setQ} />
+          <SearchInput placeholder="Search name, roaster, origin, dates…" label={archive ? "Search the archive" : "Search your stash"} value={q} onChange={setQ}
+            action={<FilterButton filters={filters} onClick={() => setSheet(true)} />} />
           <div className="sort-row">
             <select className="pill-select" aria-label="Sort by" value={by}
               onChange={(e) => { const b = e.target.value as BagSort; setSort({ by: b, dir: BAG_SORTS[b].dir }); }}>
@@ -56,17 +71,23 @@ export function Stash({ view }: { view?: string }) {
           </div>
         </div>
       )}
+      {pool.length > 0 && <ActiveFilters facets={BAG_FACETS} dates={BAG_DATES} filters={filters} onChange={setFilters} />}
+      {pool.length > 0 && filtering && <p className="muted small" data-testid="stash-count">{shown.length} of {pool.length} bag{pool.length === 1 ? "" : "s"}</p>}
       {!loaded && <p className="muted">Loading…</p>}
       {loaded && pool.length === 0 && (
         <p className="muted" data-testid="stash-empty">
           {archive ? "No finished bags yet. When you mark a bag finished, it moves here." : finished.length ? "Nothing in your stash: every bag is finished. Add one with +." : "No bags yet."}
         </p>
       )}
-      {loaded && pool.length > 0 && shown.length === 0 && <p className="muted" data-testid="stash-no-match">No bags match “{q}”.</p>}
+      {loaded && pool.length > 0 && shown.length === 0 && (
+        <p className="muted" data-testid="stash-no-match">No bags match {[q.trim() && `“${q.trim()}”`, filtersOn && "these filters"].filter(Boolean).join(" and ")}.</p>
+      )}
       {archive && finished.length > 0 && !q && <p className="muted small">Finished bags. Their brews and tasting notes are kept.</p>}
       <div className="cards">
         {shown.map((b) => <BagCard key={b.id} b={b} onEdit={() => setEditing(b)} onDuplicate={() => setCopying(b)} />)}
       </div>
+      {sheet && <FilterSheet title={archive ? "Filter the archive" : "Filter your stash"} items={pool} facets={BAG_FACETS} dates={BAG_DATES} filters={filters}
+        onChange={setFilters} onClose={() => setSheet(false)} query={matchQ} noun={["bag", "bags"]} />}
       {editing && <BagForm bag={editing === "new" ? null : editing} onClose={() => setEditing(null)} />}
       {copying && <BagForm bag={null} copyOf={copying} onClose={() => setCopying(null)} />}
     </div>

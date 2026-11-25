@@ -1,4 +1,5 @@
-// Stash sorting and search (pure functions, shared so they can be unit-tested).
+// Stash sorting, search and filters (pure functions, shared so they can be unit-tested).
+import { fold, ratingValue, type DateDef, type FacetDef } from "./filters.js";
 
 export interface SortableBag {
   id: number;
@@ -36,8 +37,7 @@ export const BAG_SORTS = {
 export type BagSort = keyof typeof BAG_SORTS;
 export type SortDir = "asc" | "desc";
 
-/** Lower-case, accents folded ("Café" → "cafe"). */
-export const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+export { fold } from "./filters.js";
 
 const STATUS_RANK: Record<string, number> = { open: 0, unopened: 1, finished: 2 };
 
@@ -130,3 +130,37 @@ export function splitTags(text: string | null | undefined): string[] {
   }
   return out.slice(0, 40);
 }
+
+/* ------------------------------ Stash / Archive filters (on the shared facet engine) ------------------------------ */
+
+/** Where a bag is in its roast level's rest window today: resting, peak, past — null without a roast date. */
+export type RestState = "resting" | "peak" | "past";
+export function restState(roastDate: string | null | undefined, roastLevel: string | null | undefined, today: string, levels: RoastLevelDef[], overrides: RestOverrides = {}): RestState | null {
+  const w = restWindowFor(roastLevel, levels, overrides);
+  if (!roastDate || !w) return null;
+  const d = Math.round((Date.parse(today + "T12:00:00") - Date.parse(roastDate + "T12:00:00")) / 86_400_000);
+  if (d < 0) return null;
+  return d < w.rest ? "resting" : d <= w.peakEnd ? "peak" : "past";
+}
+export const REST_STATE_LABELS: Record<RestState, string> = { resting: "Resting", peak: "In its peak window", past: "Past its peak" };
+
+/** A bag as the filters see it: `rest` is filled in by the caller (it depends on today and your settings). */
+export type FilterableBag = SortableBag & { rest?: RestState | null };
+const STATUS_LABELS: Record<string, string> = { open: "Open", unopened: "Unopened", finished: "Finished" };
+
+export const BAG_FACETS: readonly FacetDef<FilterableBag>[] = [
+  { id: "status", label: "Status", get: (b) => STATUS_LABELS[b.status] ?? b.status },
+  { id: "rest", label: "Rest window", get: (b) => (b.rest ? REST_STATE_LABELS[b.rest] : null) },
+  { id: "roaster", label: "Roaster", get: (b) => b.roaster },
+  { id: "origin", label: "Origin", get: (b) => b.origin },
+  { id: "roastLevel", label: "Roast level", get: (b) => b.roastLevel },
+  { id: "process", label: "Process", get: (b) => b.processMethod },
+  { id: "notes", label: "Tasting notes", get: (b) => b.tastingNotes ?? [] },
+  { id: "rating", label: "Rating", get: (b) => ratingValue(b.rating), order: "number" },
+];
+export const BAG_DATES: readonly DateDef<FilterableBag>[] = [
+  { id: "roasted", label: "Roasted", get: (b) => b.roastDate },
+  { id: "bought", label: "Bought", get: (b) => b.purchaseDate },
+  { id: "opened", label: "Opened", get: (b) => b.openedDate },
+  { id: "finished", label: "Finished", get: (b) => b.finishedDate },
+];

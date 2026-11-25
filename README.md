@@ -85,7 +85,7 @@ Missing gear, or have a source for a grind range? Add it to your own Brewlab, th
 - **Hardness (GH) and alkalinity (KH)** are worked out as you type, in ppm as CaCO₃. Pure salts (Epsom salt, baking soda, potassium bicarbonate, calcium and magnesium chloride) are calculated from their molar mass. Products use the maker's or a published figure (Lotus drops, Third Wave Water). Anything that isn't published, like Third Wave Water's hardness, shows as "—" and is never guessed. Your own additive can say what it adds, if you know.
 - **Concentrates:** mark a water as a concentrate (a stock solution, say 6.8 g calcium chloride in 1 L) and other waters can add it by the gram, with the hardness worked out through it.
 - **A library** of cited recipes (`catalog/water/*.json`, additives in `catalog/water-additives.json`): the Third Wave Water profiles, two Lotus drop recipes (Light & Bright, Rao/Perger) and Barista Hustle's concentrate recipes (Melbourne, Budapest, SCA, Barista Hustle Water, Rao, Hendon, Pretty Hard, Hard dot AF, plus the original filter recipe and an espresso one), with their concentrates. Library entries hold only the numbers and a link to the source. Adding one gives you your own copy.
-- **Linked to brewing:** a recipe can have a default water, Brew setup lets you pick the water you're using, and each brew records it. The Brew Log filters by water and compares how each one rated (for a recipe or coffee too), so you can try one coffee with different waters.
+- **Linked to brewing:** a recipe can have a default water, Brew setup lets you pick the water you're using, and each brew records it. The Brew Log filters by water (and anything else) and compares how each one rated (for a recipe or coffee too), so you can try one coffee with different waters.
 
 ## Insights
 
@@ -100,6 +100,47 @@ Missing gear, or have a source for a grind range? Add it to your own Brewlab, th
 - **What you rate highest:** average brew rating by origin, process, roaster or roast level (where you've rated at least two brews).
 
 Every chart has a *Table* view, and hovering or tabbing to a bar shows its numbers.
+
+## Search and filters (Brew Log, Stash and Archive)
+
+The search box matches every word anywhere in a brew: recipe, coffee and its bag (roaster, origin, process, roast level, tasting notes), brewer, grinder, grind setting, water, notes, dose ("18g") or date ("november"). The **filter button** in the search box opens filters for coffee, roaster, origin, roast level, process, recipe, brew method, brewer, grinder, water, rating and a date range. Pick several values in one group to see any of them; groups combine. Each value shows how many brews it would leave, given the rest. What's on appears as chips under the search box; × removes one.
+
+The **Stash** and its **Archive** have the same filter button (each tab keeps its own filters): status, rest window (resting / in its peak window / past its peak, from *Rest and peak window* in Settings), roaster, origin, roast level, process, tasting-note tags, rating, and date ranges for roasted, bought, opened and finished. A group with only one value is left out, since it couldn't narrow anything.
+
+**Ratings go in half stars** (½ to 5). Tap the left half of a star for x.5 and the right half for the whole star; tap your rating again to clear it.
+
+## Prometheus metrics (Grafana)
+
+Turn on **More → Settings → Prometheus metrics** and Brewlab serves `GET /metrics` in the Prometheus text format (it's a 404 while off, the default). Scrape it like any target:
+
+```yaml
+scrape_configs:
+  - job_name: brewlab
+    scrape_interval: 60s
+    static_configs:
+      - targets: ["<brewlab-host>:7642"]
+```
+
+All metrics start with `brewlab_`. Among them:
+
+| Metric | What |
+| --- | --- |
+| `brews_total`, `coffee_used_grams_total`, `water_used_grams_total` | Every brew logged, and what went into them |
+| `brews_window{window}`, `coffee_used_window_grams{window}` | Today and the last 7 / 30 / 90 / 365 local days, so a dashboard works from the first scrape |
+| `brews_by_<dim>_total`, `coffee_used_by_<dim>_grams_total`, `brew_rating_average_by_<dim>` | Per `coffee`, `roaster`, `origin`, `roast_level`, `process`, `recipe`, `method`, `brewer`, `grinder`, `water` (`none` = not recorded) |
+| `brews_by_rating_total{rating}`, `brew_rating_average`, `brew_ratio_average`, `brewing_streak_days` | Ratings, ratio, streak |
+| `last_brew_*` | Timestamp, dose, water, rating, temperature and duration of the latest brew |
+| `bags{status}`, `stash_remaining_grams`, `spent_total`, `spent_by_roaster_total`, `spent_this_year` | The Stash and spending (prices in your currency) |
+| `bag_remaining_grams`, `bag_size_grams`, `bag_used_grams`, `bag_brews_total`, `bag_price`, `bag_rating`, `bag_days_off_roast`, `bag_days_open`, `bag_freshness{state}` | Each bag not finished yet, labelled with id, name, roaster, origin, roast level, process and status; `state` is resting / peak / past for its rest window |
+| `gear_items{type}`, `recipes{kind}`, `water_recipes`, `discover_*`, `tastings{verdict}`, `avoids`, `backups`, `last_backup_timestamp_seconds`, `database_bytes`, `info{version}` | Everything else |
+
+There's no login on `/metrics`, the same as the rest of the app: keep Brewlab on your LAN (see *Network exposure*).
+
+History metrics carry their time in a label (`brews_by_month_total{month}`, `brews_by_day_total{day}` for the last 400 days, `brews_by_weekday_hour_total{weekday,hour}`, `spent_by_month_total`, `bags_bought_by_month_total`, `coffee_bought_by_month_grams_total`, `coffee_brewed_cost_by_month_total`), so charts show your whole history from the first scrape. Also: `brews_by_ratio_total`, per-method averages (dose, ratio, time, temperature), every bag you've had by roaster / origin / roast level / process with average bag ratings, `bags_by_tasting_note_total`, price per kg, cost per brew, and how long bags last.
+
+### Grafana dashboard
+
+[`grafana/brewlab-dashboard.json`](grafana/brewlab-dashboard.json) is a ready-made dashboard (113 panels): at a glance; brewing over time (daily for 400 days, monthly, rolling windows); the latest brew; when you brew (weekday × hour); ratings and ratios; gear (brews, coffee and ratings per brewer, grinder and method, plus method averages); recipes and water; your coffee by roaster, origin, roast level and process (what you brew, how you rate it, every bag you've had, tasting notes); the stash (a table of every open bag with its rest window, coffee left per bag over time); buying coffee (spend and bags per month, bought vs brewed, cost of what you brewed, spend by roaster); Discover, backups and the instance. In Grafana: *Dashboards → New → Import*, upload the file and pick your Prometheus data source. Money is shown in US dollars; change the panels' unit if you buy in another currency. The file is generated: edit `scripts/grafana-dashboard.mjs` and run `node scripts/grafana-dashboard.mjs`.
 
 ## Discover and AI providers
 
@@ -133,7 +174,7 @@ Set a provider in the app under **More → Settings → AI provider**: choose on
 
 Everything lives in the `brewlab-data` volume at `/data`: the database (`brewlab.db`), bag photos (`uploads/`), nightly snapshots (`backups/`, newest 14 kept unless you change it) and `secrets.json` if you saved an AI key.
 
-On **More** you can *Back up now*, download or delete a snapshot, set how many to keep, or *Export all data (JSON)*. An export can be restored from the first-run setup of a fresh install. For off-machine copies:
+On **More → Settings** you can *Back up now*, download or delete a snapshot, set how many to keep, or *Export all data (JSON)*. An export can be restored from the first-run setup of a fresh install. For off-machine copies:
 
 ```bash
 docker compose cp brewlab:/data ./brewlab-data-copy

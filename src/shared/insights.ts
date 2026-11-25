@@ -165,7 +165,16 @@ export function weekHours(brews: InsightBrew[]): number[][] {
 }
 
 /** Counts of 1–5★ brews. */
-export const ratingCounts = (brews: InsightBrew[]) => [1, 2, 3, 4, 5].map((s) => brews.filter((b) => b.rating === s).length);
+/**
+ * Brews per rating: whole stars 1★–5★, or every half star (½★ … 5★) once any rating uses a half,
+ * so a log without halves doesn't show five empty columns.
+ */
+export function ratingCounts(brews: InsightBrew[]): { label: string; stars: number; count: number }[] {
+  const halves = brews.some((b) => b.rating != null && !Number.isInteger(b.rating));
+  const steps = halves ? [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5] : [1, 2, 3, 4, 5];
+  const label = (s: number) => (s === 0.5 ? "½★" : `${Number.isInteger(s) ? s : s.toFixed(1)}★`);
+  return steps.map((s) => ({ label: label(s), stars: s, count: brews.filter((b) => b.rating === s).length }));
+}
 
 /** Brew ratio (water ÷ coffee) in bins: <1:13, 1:13 … 1:18, ≥1:19, plus espresso-like (< 1:4). */
 export const RATIO_BINS = ["< 1:4", "1:4–12", "1:13", "1:14", "1:15", "1:16", "1:17", "1:18", "≥ 1:19"];

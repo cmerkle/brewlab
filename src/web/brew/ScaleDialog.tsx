@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api, type Brew, type Recipe } from "../api";
-import { FullScreen, NumInput, WaterInput, TempInput, useData, Field, Stars, ErrorBox, fmtTime, fmtDate, getPref, setPref, usePref, useTemp } from "../ui";
+import { FullScreen, NumInput, WaterInput, TempInput, useData, Field, Stars, fmtRating, ErrorBox, fmtTime, fmtDate, getPref, setPref, usePref, useTemp } from "../ui";
 import { scaleSteps, applyRatio, ratioOf, fmtRatio, RATIO_TOGGLES, fmtG, type LastEdited, type Step } from "../../shared/brew";
 import { GrinderSwitcher, grindFor, grindLabel, useGrinders, methodOf } from "../grindui";
 import { doseAdjustedGrind, fmtGrind, toGrindNumber } from "../../shared/grind";
@@ -419,7 +419,7 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
                     <strong>{fmtDate(b.brewedAt)}</strong>{inventoryId != null && b.recipeName ? ` · ${b.recipeName}` : ""} · {b.doseG} g / {b.waterG} g
                     {b.grindSetting != null ? ` · ${grindLabel(b, gear)}` : ""}
                     {b.tempC != null ? ` · ${temp.fmt(b.tempC)}` : ""}
-                    {b.totalTimeSec != null ? ` · ${fmtTime(b.totalTimeSec)}` : ""}{b.rating ? ` · ${"★".repeat(b.rating)}` : ""}
+                    {b.totalTimeSec != null ? ` · ${fmtTime(b.totalTimeSec)}` : ""}{b.rating ? ` · ${fmtRating(b.rating)}★` : ""}
                     {b.notes && <div className="muted">“{b.notes}”</div>}
                   </li>
                 ))}

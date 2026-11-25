@@ -149,8 +149,8 @@ export function Insights() {
         </ChartCard>
 
         <ChartCard testId="chart-ratings" title="Brew ratings" sub={`${d.inP.filter((b) => b.rating != null).length} rated`}
-          table={{ head: ["Rating", "Brews"], rows: ratingCounts(d.inP).map((c, i) => [`${i + 1}★`, c]) }}>
-          <ColumnChart data={ratingCounts(d.inP).map((c, i) => ({ label: `${i + 1}★`, value: c }))} unit={["brew", "brews"]} ariaLabel="Brews by rating" height={170} labelGap={24} />
+          table={{ head: ["Rating", "Brews"], rows: ratingCounts(d.inP).map((c) => [c.label, c.count]) }}>
+          <ColumnChart data={ratingCounts(d.inP).map((c) => ({ label: c.label, value: c.count }))} unit={["brew", "brews"]} ariaLabel="Brews by rating" height={170} labelGap={24} />
         </ChartCard>
 
         <ChartCard testId="chart-ratios" title="Brew ratios" sub="Water to coffee"

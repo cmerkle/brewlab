@@ -40,6 +40,7 @@ export interface Settings {
   dismissedSuggestions: string[];
   doseNudge: DoseNudge;
   updateCheck: boolean;
+  metrics: boolean;
   backupKeep: number | null;
   restWindows: RestOverrides;
 }
@@ -69,6 +70,7 @@ export const DEFAULT_SETTINGS: Settings = {
   prefs: emptyPrefs(), palateNotes: "", dismissedSuggestions: [],
   doseNudge: DEFAULT_DOSE_NUDGE,
   updateCheck: false,
+  metrics: false,
   backupKeep: null,
   restWindows: {},
 };
@@ -342,17 +344,34 @@ export function Field({ label, htmlFor, children, hint }: { label: string; htmlF
   );
 }
 
+/** "4", "3.5" — ratings go in half stars. */
+export const fmtRating = (r: number) => (Number.isInteger(r) ? String(r) : r.toFixed(1));
+
+/**
+ * Star rating in half stars (0.5–5). Read-only: filled, half-filled and empty stars. As an input,
+ * each star has two tap zones — its left half gives x.5, its right half x — and tapping the
+ * current value again clears it. The number shows beside the stars.
+ */
 export function Stars({ value, onChange, label = "Rating" }: { value: number | null; onChange?: (n: number | null) => void; label?: string }) {
+  const fill = (n: number) => (value == null ? "" : value >= n ? "on" : value >= n - 0.5 ? "half" : "");
+  if (!onChange)
+    return (
+      <span className="stars" role="img" aria-label={value != null ? `${fmtRating(value)} of 5 stars` : "Not rated"}>
+        {[1, 2, 3, 4, 5].map((n) => <span key={n} className={fill(n)} aria-hidden="true">★</span>)}
+      </span>
+    );
   return (
-    <span className="stars" role={onChange ? "radiogroup" : undefined} aria-label={label}>
-      {[1, 2, 3, 4, 5].map((n) =>
-        onChange ? (
-          <button key={n} type="button" role="radio" aria-checked={value === n} aria-label={`${n} star${n > 1 ? "s" : ""}`}
-            className={value != null && n <= value ? "on" : ""} onClick={() => onChange(value === n ? null : n)}>★</button>
-        ) : (
-          <span key={n} className={value != null && n <= value ? "on" : ""}>★</span>
-        ),
-      )}
+    <span className="stars input" role="radiogroup" aria-label={label}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <span key={n} className={`rstar ${fill(n)}`}>
+          <span aria-hidden="true">★</span>
+          {[n - 0.5, n].map((v) => (
+            <button key={v} type="button" role="radio" aria-checked={value === v} aria-label={`${fmtRating(v)} star${v === 1 ? "" : "s"}`}
+              className={Number.isInteger(v) ? "rh" : "lh"} onClick={() => onChange(value === v ? null : v)} />
+          ))}
+        </span>
+      ))}
+      <span className="stars-val" aria-hidden="true">{value != null ? fmtRating(value) : ""}</span>
     </span>
   );
 }
@@ -562,6 +581,7 @@ export function useAction(name: PageAction, fn: () => void) {
 const ICONS = {
   plus: "M12 5v14M5 12h14",
   calc: "M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm1 4h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h.01M12 19h4",
+  filter: "M3 5h18l-7 8v6l-4 2v-8L3 5Z",
   search: "M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm10 2-4.35-4.35",
   star: "m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z",
 } as const;
@@ -580,11 +600,13 @@ export function IconButton({ label, icon, onClick, primary = false }: { label: s
   );
 }
 /** Search input with a leading magnifier. */
-export function SearchInput({ value, onChange, placeholder, label }: { value: string; onChange: (v: string) => void; placeholder: string; label: string }) {
+/** A rounded search field; `action` (e.g. a filter button) sits inside it on the right. */
+export function SearchInput({ value, onChange, placeholder, label, action }: { value: string; onChange: (v: string) => void; placeholder: string; label: string; action?: React.ReactNode }) {
   return (
-    <div className="search-wrap">
+    <div className={`search-wrap${action ? " has-action" : ""}`}>
       <Glyph name="search" size={18} />
       <input type="search" placeholder={placeholder} aria-label={label} value={value} onChange={(e) => onChange(e.target.value)} />
+      {action && <div className="search-action">{action}</div>}
     </div>
   );
 }

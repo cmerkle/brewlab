@@ -42,6 +42,8 @@ export const SettingsSchema = z.object({
   }),
   /** Check GitHub once a day for a newer release (off by default: it's a request to github.com). */
   updateCheck: z.boolean(),
+  /** Prometheus metrics at GET /metrics (off by default). */
+  metrics: z.boolean(),
   /** Stash: your own rest / peak window per roast level id (catalog/coffee-vocab.json has the defaults). */
   restWindows: z.record(z.string().regex(/^[a-z0-9-]{1,40}$/), restWindow),
   /** Backups: how many snapshots to keep (newest first). null = the BACKUP_KEEP default. */
@@ -52,7 +54,7 @@ export const SettingsSchema = z.object({
 export type Settings = z.infer<typeof SettingsSchema>;
 export const DEFAULT_SETTINGS: Settings = {
   tempUnit: "C", waterUnit: "g", defaultRatio: 16, discoverEnabled: true,
-  prefs: loadTasteDefaults().prefs, palateNotes: "", dismissedSuggestions: [], updateCheck: false, backupKeep: null,
+  prefs: loadTasteDefaults().prefs, palateNotes: "", dismissedSuggestions: [], updateCheck: false, metrics: false, backupKeep: null,
   restWindows: {},
   doseNudge: { ...DEFAULT_DOSE_NUDGE, methods: [...DEFAULT_DOSE_NUDGE.methods] },
 };

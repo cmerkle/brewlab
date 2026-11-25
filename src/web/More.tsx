@@ -92,6 +92,7 @@ export function Settings() {
 
       {group("Your data")}
       <BackupsCard />
+      <MetricsCard />
       <section className="card" data-testid="settings-setup">
         <h2>Setup</h2>
         <button className="block" onClick={() => act(async () => { await api.post("/api/setup/restart"); await reloadSetup(); })}>
@@ -132,6 +133,37 @@ export function Settings() {
       )}
       <ScreenInfo />
     </div>
+  );
+}
+
+/** Prometheus metrics for Grafana: an on/off switch, the address and a scrape config to copy. */
+function MetricsCard() {
+  const { settings, saveSettings, act } = useData();
+  const url = `${location.origin}/metrics`;
+  const job = `scrape_configs:\n  - job_name: brewlab\n    scrape_interval: 60s\n    static_configs:\n      - targets: ["${location.host}"]`;
+  return (
+    <section className="card stack" data-testid="metrics-settings">
+      <div className="pref-row">
+        <h2>Prometheus metrics</h2>
+        <div className="seg big" role="group" aria-label="Prometheus metrics">
+          {[true, false].map((v) => (
+            <button key={String(v)} className={settings.metrics === v ? "on" : ""} aria-pressed={settings.metrics === v}
+              onClick={() => act(() => saveSettings({ metrics: v }), v ? "Metrics on" : "Metrics off")}>{v ? "On" : "Off"}</button>
+          ))}
+        </div>
+      </div>
+      <p className="muted small">
+        For Grafana or any Prometheus scraper: brews and coffee used (in total, by recent days, and by brewer, grinder, recipe, method, water, coffee, roaster,
+        origin, roast level and process), ratings, your stash bag by bag (coffee left, days off roast, rest window), spending, gear, Discover and backups.
+        Like the rest of Brewlab there's no login, so anyone who can open Brewlab can read them.
+      </p>
+      {settings.metrics && (
+        <>
+          <p className="small">Address: <a href={url} target="_blank" rel="noreferrer" data-testid="metrics-url">{url}</a></p>
+          <pre className="prompt" aria-label="Prometheus scrape config">{job}</pre>
+        </>
+      )}
+    </section>
   );
 }
 

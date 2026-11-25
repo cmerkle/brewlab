@@ -1,6 +1,9 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { api, type Brew } from "../api";
 import { useData, Field, FullScreen, ErrorBox, NumInput, WaterInput, Stars, fmtDate, fmtTime, useAction, SearchInput, useTemp, TempInput } from "../ui";
+import { BREW_DATES, BREW_FACETS, brewMatchesQuery, filterBrews, withBags, type FilterBag } from "../../shared/brewfilter";
+import { NO_FILTERS, type Filters } from "../../shared/filters";
+import { ActiveFilters, FilterButton, FilterSheet } from "../filters";
 import { ScaleDialog, planFromBrew, type BrewPlan } from "./ScaleDialog";
 import { fmtRatio, ratioOf, scaleSteps } from "../../shared/brew";
 import { grindLabel } from "../grindui";
@@ -11,23 +14,20 @@ export function BrewLog() {
   const temp = useTemp();
   const [brewing, setBrewing] = useState<BrewPlan | null>(null);
   const [editing, setEditing] = useState<Brew | "new" | null>(null);
-  const [coffee, setCoffee] = useState("");
-  const [recipe, setRecipe] = useState("");
-  const [waterF, setWaterF] = useState("");
+  const [filters, setFilters] = useState<Filters>(NO_FILTERS);
+  const [sheet, setSheet] = useState(false);
   const [q, setQ] = useState("");
   useAction("log-brew", () => setEditing("new"));
 
-  const coffees = useMemo(() => [...new Set(brews.map((b) => b.coffee).filter(Boolean) as string[])].sort(), [brews]);
-  const recipeNames = useMemo(() => [...new Set(brews.map((b) => b.recipeName).filter(Boolean) as string[])].sort(), [brews]);
-  const waterNames = useMemo(() => [...new Set(brews.map((b) => b.waterName).filter(Boolean) as string[])].sort(), [brews]);
-  const shown = useMemo(() => {
-    const needle = q.trim().toLowerCase();
-    return brews.filter((b) =>
-      (!coffee || b.coffee === coffee) &&
-      (!recipe || b.recipeName === recipe) &&
-      (!waterF || b.waterName === waterF) &&
-      (!needle || [b.notes, b.recipeName, b.coffee, b.grinderName, b.waterName].some((x) => x?.toLowerCase().includes(needle))));
-  }, [brews, coffee, recipe, waterF, q]);
+  const bagMap = useMemo(() => new Map(bags.map((b) => [b.id, b as FilterBag])), [bags]);
+  const bagOf = useCallback((b: Brew) => (b.inventoryId != null ? bagMap.get(b.inventoryId) ?? null : null), [bagMap]);
+  const items = useMemo(() => withBags(brews, bagMap), [brews, bagMap]);
+  const shown = useMemo(() => filterBrews(items, filters, q), [items, filters, q]);
+  const nOn = Object.values(filters.picked).some((v) => v?.length) || Object.values(filters.dates).some((r) => r?.from || r?.to);
+  // The comparisons below narrow to a single picked recipe / coffee, when exactly one is picked.
+  const only = (id: string) => (filters.picked[id]?.length === 1 ? filters.picked[id]![0] : "");
+  const recipe = only("recipe");
+  const coffee = only("coffee");
   const stats = useMemo(() => {
     const rated = shown.filter((b) => b.rating != null);
     const avg = rated.length ? rated.reduce((a, b) => a + (b.rating ?? 0), 0) / rated.length : null;
@@ -50,14 +50,14 @@ export function BrewLog() {
   const byWater = useMemo(() => {
     const m = new Map<string, { n: number; sum: number }>();
     for (const b of brews) {
-      if (!b.waterName || b.rating == null || (recipe && b.recipeName !== recipe) || (coffee && b.coffee !== coffee)) continue;
+      if (!b.waterName || b.rating == null || (recipe && b.recipeName !== recipe) || (coffee && (bagOf(b)?.name ?? b.coffee) !== coffee)) continue;
       const e = m.get(b.waterName) ?? { n: 0, sum: 0 };
       e.n++;
       e.sum += b.rating;
       m.set(b.waterName, e);
     }
     return [...m.entries()].map(([w, e]) => ({ water: w, n: e.n, avg: e.sum / e.n })).sort((a, b) => b.avg - a.avg);
-  }, [brews, recipe, coffee]);
+  }, [brews, recipe, coffee, bagOf]);
 
   const rebrew = (b: Brew) => {
     // Start that exact brew again: the logged dose / water / grinder / grind setting / steps.
@@ -73,24 +73,13 @@ export function BrewLog() {
   return (
     <div className="stack">
       <div className="toolbar">
-        <SearchInput placeholder="Search notes, grind" label="Search brews" value={q} onChange={setQ} />
-        <select className="pill-select" aria-label="Filter by coffee" value={coffee} onChange={(e) => setCoffee(e.target.value)}>
-          <option value="">All coffees</option>
-          {coffees.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
-        <select className="pill-select" aria-label="Filter by recipe" value={recipe} onChange={(e) => setRecipe(e.target.value)}>
-          <option value="">All recipes</option>
-          {recipeNames.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
-        {waterNames.length > 0 && (
-          <select className="pill-select" aria-label="Filter by water" value={waterF} onChange={(e) => setWaterF(e.target.value)}>
-            <option value="">All waters</option>
-            {waterNames.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
-        )}
+        <SearchInput placeholder="Search brews" label="Search brews" value={q} onChange={setQ}
+          action={<FilterButton filters={filters} onClick={() => setSheet(true)} />} />
       </div>
+      <ActiveFilters facets={BREW_FACETS} dates={BREW_DATES} filters={filters} onChange={setFilters} />
       {!loaded && <p className="muted">Loading…</p>}
       {loaded && brews.length === 0 && <p className="muted">No brews logged yet.</p>}
+      {brews.length > 0 && shown.length === 0 && <p className="muted" data-testid="no-matches">No brews match{nOn ? " these filters" : ""}{q.trim() ? ` and “${q.trim()}”` : ""}.</p>}
       {brews.length > 0 && (
         <div className="stats" data-testid="brew-stats">
           <span><strong>{stats.n}</strong> brew{stats.n === 1 ? "" : "s"}</span>
@@ -98,13 +87,13 @@ export function BrewLog() {
           <span><strong>{Math.round(stats.grams)}</strong> g coffee</span>
         </div>
       )}
-      {byCoffee.length > 1 && !coffee && (
+      {byCoffee.length > 1 && !filters.picked.coffee?.length && (
         <details className="card small">
           <summary>Best-rated coffees{recipe ? ` for ${recipe}` : ""}</summary>
           <ol className="small">{byCoffee.map((c) => <li key={c.coffee}>{c.coffee} — {c.avg.toFixed(1)}★ ({c.n})</li>)}</ol>
         </details>
       )}
-      {byWater.length > 1 && !waterF && (
+      {byWater.length > 1 && !filters.picked.water?.length && (
         <details className="card small" data-testid="water-compare">
           <summary>Waters compared{[recipe, coffee].filter(Boolean).length ? ` for ${[recipe, coffee].filter(Boolean).join(" · ")}` : ""}</summary>
           <ol className="small">{byWater.map((w) => <li key={w.water}>{w.water} — {w.avg.toFixed(1)}★ ({w.n})</li>)}</ol>
@@ -136,6 +125,8 @@ export function BrewLog() {
           );
         })}
       </ul>
+      {sheet && <FilterSheet title="Filter brews" items={items} facets={BREW_FACETS} dates={BREW_DATES} filters={filters} onChange={setFilters} onClose={() => setSheet(false)}
+        query={(b) => brewMatchesQuery(b, q)} noun={["brew", "brews"]} />}
       {brewing && <ScaleDialog plan={brewing} onClose={() => setBrewing(null)} />}
       {editing && <BrewForm brew={editing === "new" ? null : editing} onClose={() => setEditing(null)} />}
     </div>
