@@ -12,6 +12,8 @@ A self-hosted coffee app for home brewers: one Docker container, one SQLite data
 
 It's built for phones first and works just as well on tablets and computers. Install it from the browser to use it like an app.
 
+**[Try the online demo →](https://brewlab-demo.fly.dev)** Nothing to install; you get your own private copy of the fictional demo data, reset after an hour idle.
+
 <p align="center">
 <img src="docs/screenshots/recipes.png" alt="Recipes, with a recipe opened" width="190">
 <img src="docs/screenshots/timer.png" alt="The guided brew timer" width="190">
