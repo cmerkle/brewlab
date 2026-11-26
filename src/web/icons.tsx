@@ -1,7 +1,7 @@
 // Navigation icons: the main bar and the More list share them.
 export const NAV_ICONS = {
   cup: "M4 8h13v5a6 6 0 0 1-6 6H10a6 6 0 0 1-6-6V8Zm13 1h1.5a2.5 2.5 0 0 1 0 5H17M8 2c0 1.5 1 1.5 1 3M12 2c0 1.5 1 1.5 1 3",
-  bag: "M7 7V5a5 5 0 0 1 10 0v2M5 7h14l-1 14H6L5 7Z",
+  bag: "M8 8V6a4 4 0 0 1 8 0v2M5 8h14l-1 13H6L5 8Z",
   log: "M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01",
   compass: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm3.5-12.5-2 5-5 2 2-5 5-2Z",
   ruler: "M3 17 17 3l4 4L7 21l-4-4Zm4-4 2 2m1-5 2 2m1-5 2 2",

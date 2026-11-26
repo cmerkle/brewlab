@@ -204,6 +204,24 @@ try {
   await nudge.getByRole("button", { name: "Use 24 clicks" }).click();
   check((await p.inputValue("#sd-grind")) === "24" && !(await nudge.count()), "one tap back to the recipe's grind");
   await p.selectOption("#sd-bag", "");
+  // The ratio calculator holds the ratio like Brew setup: typing coffee or water moves the other one.
+  const calcHolds = async (where) => {
+    await p.fill("#rc-ratio", "16");
+    await p.fill("#rc-dose", "20");
+    await p.waitForTimeout(100);
+    const x = [await p.inputValue("#rc-water"), await p.inputValue("#rc-ratio")];
+    await p.fill("#rc-water", "300");
+    await p.waitForTimeout(100);
+    const y = [await p.inputValue("#rc-dose"), await p.inputValue("#rc-ratio")];
+    check(x[0] === "320" && x[1] === "16" && y[0] === "18.8" && y[1] === "16",
+      `ratio calculator (${where}) keeps 1:16: coffee 20 → water ${x[0]} (1:${x[1]}); water 300 → coffee ${y[0]} (1:${y[1]})`);
+    await p.getByRole("button", { name: "Back" }).last().click();
+    await p.locator("#rc-ratio").waitFor({ state: "detached" });
+  };
+  const sdDose = await p.inputValue("#sd-dose");
+  await p.getByRole("button", { name: "Ratio calculator" }).last().click();
+  await calcHolds("from Brew setup");
+  check((await p.inputValue("#sd-dose")) === sdDose, "Back from the calculator returns to Brew setup as it was");
   await p.fill("#sd-grind", "25.5");
   await p.fill("#sd-temp", "205");
   await p.getByRole("button", { name: "Ready to brew" }).click();
@@ -222,6 +240,13 @@ try {
   await p.getByText("Brew saved to the log").waitFor();
   const logged = (await (await fetch(`${BASE}/api/brews`)).json())[0];
   check(logged.grindSetting === 25.5 && Math.round(logged.tempC * 10) / 10 === 95, `brew logged with grind ${logged.grindSetting} and ${logged.tempC} °C (203 °F)`);
+
+  await p.goto(`${BASE}/#/brew/recipes`);
+  await p.getByRole("button", { name: "Ratio calculator" }).first().click();
+  await calcHolds("from the title bar");
+  await p.goto(`${BASE}/#/more`);
+  await p.getByTestId("more-pages").getByText("Ratio calculator").click();
+  await calcHolds("from More");
 
   // Settings: run setup again keeps data — and Discover's taste tags (resetting them is a separate button)
   const before = (await (await fetch(`${BASE}/api/setup`)).json()).settings.prefs;

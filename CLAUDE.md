@@ -65,7 +65,7 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
 - Brew flow: **Brew setup** (dose/water/ratio/temp/bag/grinder) → *Ready to brew* → timer screen
   idle at 0:00 → *Start timer* → *Finish* → log (temp and grind still editable). The active brew is
   persisted only once the timer runs.
-- Pour steps scale off **water**, not dose. In Brew setup the **ratio holds**: typing coffee moves
+- Pour steps scale off **water**, not dose. In Brew setup and the ratio calculator (one hook, `useHeldRatio`) the **ratio holds**: typing coffee moves
   the water and typing water moves the coffee; only the ratio field and quick-toggles (1:13–1:17
   plus 1:2) change it, and they hold whichever of coffee/water was edited last (coffee by default).
 - The brew timer reads **grams only**, even when the water field is in oz.

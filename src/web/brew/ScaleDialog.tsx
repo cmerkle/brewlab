@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api, type Brew, type Recipe } from "../api";
 import { FullScreen, NumInput, WaterInput, TempInput, useData, Field, Stars, fmtRating, ErrorBox, fmtTime, fmtDate, getPref, setPref, usePref, useTemp, useVocab } from "../ui";
-import { scaleSteps, applyRatio, ratioOf, fmtRatio, RATIO_TOGGLES, fmtG, stepTimes, timerState, nextStepNow, type LastEdited, type Step, type StepShift } from "../../shared/brew";
+import { scaleSteps, ratioOf, fmtRatio, RATIO_TOGGLES, fmtG, stepTimes, timerState, nextStepNow, type Step, type StepShift } from "../../shared/brew";
 import { GrinderSwitcher, grindFor, grindLabel, useGrinders, methodOf } from "../grindui";
 import { dosePercent, roastPercent, shiftGrind, fmtGrind, toGrindNumber } from "../../shared/grind";
 import { roastLevelOf } from "../../shared/stash";
-import { RatioCalculator } from "./RatioCalculator";
+import { RatioCalculator, useHeldRatio } from "./RatioCalculator";
 import { WaterSelect } from "./Water";
 
 export interface BrewPlan {
@@ -161,10 +161,8 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
   const espresso = method === "espresso";
   const waterLabel = espresso ? "Yield" : "Water";
 
-  const [dose, setDose] = useState<number | null>(resume?.dose ?? plan.doseG);
-  const [water, setWater] = useState<number | null>(resume?.water ?? plan.waterG);
-  const [ratioIn, setRatioIn] = useState<number | null>(ratioOf(resume?.dose ?? plan.doseG, resume?.water ?? plan.waterG));
-  const [last, setLast] = useState<LastEdited>(null);
+  const { dose, water, ratio: ratioIn, last, setDoseTyped, setWaterTyped, setRatio: applyR } =
+    useHeldRatio(resume?.dose ?? plan.doseG, resume?.water ?? plan.waterG);
   const [grinderId, setGrinderIdRaw] = useState<string | null>(resume?.grinderId ?? plan.selectedGrinderId ?? plan.grinderId);
   const setGrinderId = (id: string) => {
     setGrinderIdRaw(id);
@@ -261,27 +259,7 @@ export function ScaleDialog({ plan, onClose, onEditGrinder, resume }: {
     lastIdx.current = currentIdx;
   }, [currentIdx, phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // The ratio holds: typing coffee moves the water, typing water moves the coffee. Only the ratio
-  // field and toggles change the ratio. (With the ratio field empty, the two are free.)
-  const setDoseTyped = (n: number | null) => {
-    setDose(n);
-    setLast("dose");
-    if (n && ratioIn) setWater(round1(n * ratioIn));
-    else if (n && water) setRatioIn(ratioOf(n, water));
-  };
-  const setWaterTyped = (n: number | null) => {
-    setWater(n);
-    setLast("water");
-    if (n && ratioIn) setDose(round1(n / ratioIn));
-    else if (n && dose) setRatioIn(ratioOf(dose, n));
-  };
-  const applyR = (r: number | null) => {
-    setRatioIn(r);
-    if (!r || !dose || !water) return;
-    const out = applyRatio(dose, water, r, last);
-    setDose(out.doseG);
-    setWater(out.waterG);
-  };
+  // The ratio holds (useHeldRatio): typing coffee moves the water and typing water moves the coffee.
 
   const valid = dose != null && water != null && dose >= (limits?.doseG.min ?? 0) && water >= (limits?.waterG.min ?? 0);
 
@@ -549,7 +527,6 @@ function BellIcon({ off }: { off: boolean }) {
   );
 }
 
-const round1 = (n: number) => Math.round(n * 10) / 10;
 
 /** `follow`: the list scrolls itself (not the page) to keep the active step in view, with the step before it peeking above. */
 export function StepList({ steps, active, follow, times }: { steps: Step[]; active?: number; follow?: boolean; times?: number[] }) {

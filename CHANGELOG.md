@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.2
+
+- **The ratio calculator holds the ratio**, like Brew setup: typing coffee moves the water and
+  typing water moves the coffee, wherever you open it (title bar, More, or Brew setup). Only the
+  ratio field and the 1:13–1:17 buttons change it.
+- The Stash tab icon's handle is no longer clipped at the top.
+
 ## 0.7.1
 
 - **The Home Screen app no longer falls back to an old version.** The service worker now finishes
