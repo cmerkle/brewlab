@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api, type Bag, type Brew, type Recipe } from "../api";
-import { useData, Field, FullScreen, ErrorBox, NumInput, Stars, Menu, fmtDate, daysSince, useAction, usePref, SearchInput, useVocab, TagInput } from "../ui";
+import { useData, useDemo, Field, FullScreen, ErrorBox, NumInput, Stars, Menu, fmtDate, daysSince, useAction, usePref, SearchInput, useVocab, TagInput } from "../ui";
 import { BAG_SORTS, BAG_FACETS, BAG_DATES, sortBags, bagMatches, freshnessNote, restState, splitTags, type BagSort, type SortDir, type RestOverrides, type RoastLevelDef, type FilterableBag } from "../../shared/stash";
 import { NO_FILTERS, matchesFilters, type Filters } from "../../shared/filters";
 import { ActiveFilters, FilterButton, FilterSheet } from "../filters";
@@ -403,10 +403,12 @@ function BagForm({ bag, copyOf, onClose }: { bag: Bag | null; copyOf?: Bag; onCl
   const [imp, setImp] = useState<ImportRes | null>(null);
   const [busy, setBusy] = useState<"" | "photo" | "link" | "lookup">("");
   const [canLookup, setCanLookup] = useState(false);
+  const demo = useDemo();
   const [look, setLook] = useState<(LookupRes & { filled: string[] }) | null>(null);
   useEffect(() => {
+    if (demo) return; // no AI in the online demo
     api.get<{ researchSupported: boolean }>("/api/ai").then((a) => setCanLookup(Boolean(a.researchSupported))).catch(() => {});
-  }, []);
+  }, [demo]);
   const [link, setLink] = useState("");
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }));
 
@@ -526,7 +528,10 @@ function BagForm({ bag, copyOf, onClose }: { bag: Bag | null; copyOf?: Bag; onCl
             A copy of <strong>{copyOf.name}</strong>{copyOf.roaster ? ` (${copyOf.roaster})` : ""} as a new, unopened bag — opened and finished dates and the rating start empty. Change anything that's different, like the roast date, then save.
           </p>
         )}
-        {!bag && !copyOf && (
+        {!bag && !copyOf && demo && (
+          <p className="note small" data-testid="demo-no-import">On your own install you can fill this form from a photo of the bag or the roaster's product link. The online demo leaves those out — type the details instead.</p>
+        )}
+        {!bag && !copyOf && !demo && (
           <section className="import">
             <h3>Import the details</h3>
             <p className="hint">Both only pre-fill the form — check and edit before saving.</p>

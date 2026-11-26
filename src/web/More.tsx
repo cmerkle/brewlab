@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "./api";
-import { useData, fmtDate, NumInput, useVocab } from "./ui";
+import { useData, useDemo, fmtDate, NumInput, useVocab, usePref, applyTheme, type Theme } from "./ui";
 import { METHODS, METHOD_LABELS, DEFAULT_DOSE_NUDGE, DEFAULT_ROAST_NUDGE, rangeFor, roastShift, fmtGrindNumber, type DoseNudge, type RoastNudge } from "../shared/grind";
 import { RatioCalculator } from "./brew/RatioCalculator";
 import { PrefsForm } from "./Setup";
@@ -51,6 +51,7 @@ export function More({ inMore }: { inMore: string[] }) {
 /** More → Settings: everything that isn't a tool. */
 export function Settings() {
   const { act, settings, saveSettings, reloadSetup } = useData();
+  const demo = useDemo();
   const [health, setHealth] = useState<Health | null>(null);
   const load = useCallback(() => {
     api.get<Health>("/api/health").then(setHealth).catch(() => {});
@@ -88,12 +89,22 @@ export function Settings() {
       <section className="card" data-testid="ai-card">
         <h2>AI provider</h2>
         <p className="muted small">Optional. Reads bag photos and researches the weekly Discover board. Without it, Brewlab uses OCR and you add board candidates yourself.</p>
-        <AiProvider />
+        {demo ? <p className="note small">Not available in the online demo — on your own install you add your provider's key here.</p> : <AiProvider />}
       </section>
 
       {group("Your data")}
-      <BackupsCard />
-      <MetricsCard />
+      {demo ? (
+        <section className="card" data-testid="demo-data-card">
+          <h2>Backups</h2>
+          <p className="muted small">Your own install backs up nightly and keeps snapshots you can download. In the demo you can still export this copy's data:</p>
+          <a className="button block" href="/api/export" download>Export all data</a>
+        </section>
+      ) : (
+        <>
+          <BackupsCard />
+          <MetricsCard />
+        </>
+      )}
       <section className="card" data-testid="settings-setup">
         <h2>Setup</h2>
         <button className="block" onClick={() => act(async () => { await api.post("/api/setup/restart"); await reloadSetup(); })}>
@@ -103,6 +114,7 @@ export function Settings() {
       </section>
 
       {group("App")}
+      <AppearanceSettings />
       {!standalone() && (
         <section className="card">
           <h2>Install the app</h2>
@@ -184,6 +196,7 @@ function deviceSummary() {
 /** Version, project links (release notes, bug report, gear request) and the optional update check. */
 function About() {
   const { settings, saveSettings, act } = useData();
+  const demo = useDemo();
   const [info, setInfo] = useState<AboutInfo | null>(null);
   const [checking, setChecking] = useState(false);
   useEffect(() => {
@@ -214,6 +227,7 @@ function About() {
           <code className="cmd">git pull &amp;&amp; docker compose up -d --build</code>
         </div>
       )}
+      {!demo && <>
       <label className="toggle-row">
         <input type="checkbox" checked={settings.updateCheck} data-testid="update-check"
           onChange={(e) => {
@@ -236,6 +250,7 @@ function About() {
             : "Not checked yet"}
         </span>
       </div>
+      </>}
       <ul className="link-list">
         <li><a href={bugUrl} target="_blank" rel="noopener noreferrer" data-testid="report-bug">Report a bug <span className="muted">›</span></a></li>
         <li><a href={info.links.gear} target="_blank" rel="noopener noreferrer" data-testid="request-gear">Ask for gear to be added <span className="muted">›</span></a></li>
@@ -317,6 +332,25 @@ export function ScreenInfo() {
 
 /** Brew setup's "grind for a different dose" adjustment: on/off, how much, which methods. */
 /** How long each roast level rests, and when its peak window ends (days off roast). */
+/** Dark or light, for this device. */
+function AppearanceSettings() {
+  const [theme, setTheme] = usePref<Theme>("theme", "dark");
+  return (
+    <section className="card" data-testid="settings-appearance">
+      <div className="pref-row">
+        <h2>Appearance</h2>
+        <div className="seg big" role="group" aria-label="Theme">
+          {(["dark", "light"] as const).map((t) => (
+            <button key={t} className={theme === t ? "on" : ""} aria-pressed={theme === t}
+              onClick={() => { setTheme(t); applyTheme(t); }}>{t === "dark" ? "Dark" : "Light"}</button>
+          ))}
+        </div>
+      </div>
+      <p className="muted small">For this device. Dark is the default.</p>
+    </section>
+  );
+}
+
 function RestSettings() {
   const { settings, saveSettings, act } = useData();
   const vocab = useVocab();

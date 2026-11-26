@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.8.0
+
+- **Online demo mode** (`DEMO=1`, see docs/DEMO.md): a public demo people can try without
+  installing. Each visitor gets a private, in-memory copy of the fictional demo data with five
+  months of made-up history, dropped after an hour idle. Photo and link import, AI, backups,
+  restore, the update check and metrics are left out, and nothing is written to the data folder.
+  A Fly.io config is in `deploy/fly/fly.toml`.
+- **Dark by default, with a Dark / Light switch** in More → Settings → App → Appearance (per
+  device). Brewlab no longer follows the device's light/dark setting.
+- README screenshots are all in dark mode.
+- The photo uploads folder is created on the first upload instead of at startup.
+
 ## 0.7.2
 
 - **The ratio calculator holds the ratio**, like Brew setup: typing coffee moves the water and

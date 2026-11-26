@@ -28,6 +28,8 @@ It's built for phones first and works just as well on tablets and computers. Ins
 
 <sub>Recipes · the brew timer · the grind converter · Discover · your Stash · Insights; on a computer, Insights and the Brew Log with two filters on (demo data and made-up history, all fictional). Screenshots are made by <code>tests/e2e/screenshots.mjs</code>.</sub>
 
+To put a demo online that people can try without installing (a private, throwaway copy of the fictional demo data for each visitor), see [docs/DEMO.md](docs/DEMO.md).
+
 > ⚠️ **There is no login.** Anyone who can reach Brewlab can read and change everything in it. Run it on your home network or behind Tailscale/WireGuard, and if you put it behind a public hostname, **add authentication in your reverse proxy** (an access list, basic auth, Authelia, Cloudflare Access…). Never forward its port on your router.
 
 ---

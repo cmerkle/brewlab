@@ -202,6 +202,15 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   anything reads it — iOS kills the worker after the response, and a lost write left Home Screen apps opening an old
   page offline. The app compares `__APP_VERSION__` (vite define) with `/api/about` on load, focus, visibility and
   `online`, and shows the update bar when they differ.
+- **Online demo** (`DEMO=1`, `src/server/demo.ts`, docs/DEMO.md, `deploy/fly/fly.toml`): one in-memory copy of a template DB per
+  visitor (cookie `brewlab_demo`; template = `demo/` + `demo/history.mjs`, rebuilt daily; `apiApp(db)` per copy), dropped after
+  `DEMO_IDLE_MIN` idle, capped (`DEMO_MAX_SANDBOXES`, `DEMO_NEW_PER_IP`). `blocked()` 403s whatever writes outside the copy or calls
+  out (import, AI key, backups, restore, update check, metrics, uploads); a new such endpoint must be added there. The UI reads
+  `setup.demo` (`useDemo`) for the banner and to leave those features out. Never writes to `/data`. One machine only.
+- **Theme:** dark by default, light per device (More → Settings → App → Appearance, pref `brewlab.theme`). Colours are
+  tokens on `:root` (light) overridden by `:root[data-theme="dark"]`; an inline script in index.html sets `data-theme`
+  and `theme-color` before the first paint (`applyTheme` after a change). Don't use `prefers-color-scheme` in app CSS.
+  README screenshots are all dark (`tests/e2e/screenshots.mjs`).
 - **Dialogs** render via a portal to `<body>` (`FullScreen`): iOS WebKit confines fixed overlays
   inside a scroller. Never render a fixed overlay inside `<main>` without a portal; the layout audit
   enforces "dialog directly under body".

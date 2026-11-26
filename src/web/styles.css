@@ -21,28 +21,27 @@
   --chart-track: #efe7de;
   color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #12100e;
-    --surface: #1d1916;
-    --surface-2: #252019;
-    --text: #f3ece5;
-    --muted: #a99a8c;
-    --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23a99a8c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-    --line: #2f2822;
-    --accent: #dba476;
-    --accent-ink: #1a120c;
-    --accent-soft: #33261c;
-    --shadow: none;
-    --ok: #8fd19b;
-    --ok-soft: #1f3324;
-    --warn-soft: #3a2f16;
-    --warn: #e9cd84;
-    --danger: #f08a78;
-    --chart-1: #cf7f3e;
-    --chart-track: #2a241e;
-    color-scheme: dark;
-  }
+/* Dark is the default (index.html sets data-theme before the first paint; More → Settings → Appearance). */
+:root[data-theme="dark"] {
+  --bg: #12100e;
+  --surface: #1d1916;
+  --surface-2: #252019;
+  --text: #f3ece5;
+  --muted: #a99a8c;
+  --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23a99a8c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --line: #2f2822;
+  --accent: #dba476;
+  --accent-ink: #1a120c;
+  --accent-soft: #33261c;
+  --shadow: none;
+  --ok: #8fd19b;
+  --ok-soft: #1f3324;
+  --warn-soft: #3a2f16;
+  --warn: #e9cd84;
+  --danger: #f08a78;
+  --chart-1: #cf7f3e;
+  --chart-track: #2a241e;
+  color-scheme: dark;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -79,6 +78,8 @@ a { color: var(--accent); }
   padding-right: max(16px, env(safe-area-inset-right));
 }
 .update-bar { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; background: var(--accent-soft); color: var(--text); font-size: .85rem; font-weight: 600; padding: 6px 16px; }
+.demo-bar { font-weight: 400; flex-wrap: nowrap; justify-content: space-between; text-align: left; }
+.demo-bar a { font-weight: 600; }
 .offline { background: var(--warn-soft); color: var(--warn); text-align: center; font-size: .85rem; font-weight: 600; padding: 6px 16px; }
 .brand { display: inline-flex; align-items: center; text-decoration: none; }
 /* Brewlab wordmark (Logo.tsx): colours follow the theme. */

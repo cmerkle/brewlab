@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Wordmark } from "./Logo";
-import { DataProvider, BackButton, IconButton, fireAction, useEdgeSwipeBack, anyDialogOpen, useData } from "./ui";
+import { DataProvider, BackButton, IconButton, fireAction, useEdgeSwipeBack, anyDialogOpen, useData, useDemo } from "./ui";
 import { Setup } from "./Setup";
 import { RatioCalculator } from "./brew/RatioCalculator";
 import type { ReactNode } from "react";
@@ -244,6 +244,7 @@ export function App() {
           <button className="small-btn" onClick={reloadForUpdate}>Reload</button>
         </div>
       )}
+      <DemoBar />
       {route.section === "discover" && (
         <nav className="tabs" aria-label="Discover tabs">
           {DISCOVER_TABS.map((t) => (
@@ -322,6 +323,23 @@ function MainNav({ items, hidden, measure, onFit }: { items: NavItem[]; hidden: 
 }
 
 /** First-run setup until it's finished or skipped; then the app. */
+/** The online demo says what it is, once per visit (dismissable). */
+function DemoBar() {
+  const demo = useDemo();
+  const [hidden, setHidden] = useState(() => { try { return sessionStorage.getItem("demoBar") === "hidden"; } catch { return false; } });
+  if (!demo || hidden) return null;
+  const hide = () => { setHidden(true); try { sessionStorage.setItem("demoBar", "hidden"); } catch { /* private mode */ } };
+  return (
+    <div className="update-bar demo-bar" role="note" data-testid="demo-bar">
+      <span>
+        <strong>Online demo.</strong> Your changes are private and reset after {demo.idleMinutes >= 60 && demo.idleMinutes % 60 === 0 ? `${demo.idleMinutes / 60} h` : `${demo.idleMinutes} min`} idle.{" "}
+        <a href={demo.repo} target="_blank" rel="noopener noreferrer">Get Brewlab</a>
+      </span>
+      <button className="small-btn" onClick={hide} aria-label="Hide the demo note">OK</button>
+    </div>
+  );
+}
+
 function Gate({ children }: { children: ReactNode }) {
   const { setup } = useData();
   if (!setup) return <div className="shell"><main><p className="muted" style={{ padding: 24 }}>Loading…</p></main></div>;

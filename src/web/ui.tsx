@@ -27,6 +27,13 @@ export function setPref(key: string, value: unknown) {
   }
 }
 /** useState that persists to localStorage. */
+/** Colour theme, per device (dark unless picked otherwise). index.html applies it before the first paint. */
+export type Theme = "dark" | "light";
+export function applyTheme(t: Theme) {
+  document.documentElement.dataset.theme = t;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", t === "light" ? "#f5f0ea" : "#12100e");
+}
+
 export function usePref<T>(key: string, fallback: T): [T, (v: T) => void] {
   const [v, setV] = useState<T>(() => getPref(key, fallback));
   return [v, (n: T) => { setV(n); setPref(key, n); }];
@@ -46,7 +53,9 @@ export interface Settings {
   backupKeep: number | null;
   restWindows: RestOverrides;
 }
-export interface SetupState { onboarded: boolean; empty: boolean; settings: Settings }
+/** Set on the online demo (DEMO=1): each visitor's copy is dropped after `idleMinutes` idle. */
+export interface DemoInfo { idleMinutes: number; repo: string }
+export interface SetupState { onboarded: boolean; empty: boolean; settings: Settings; demo?: DemoInfo | null }
 
 interface Data {
   loaded: boolean;
@@ -175,6 +184,8 @@ export function TagInput({ id, label, tags, onChange, suggestions = [], placehol
   );
 }
 export const useData = () => useContext(Ctx)!;
+/** The online demo's info, or null on a real install. */
+export const useDemo = () => useData().setup?.demo ?? null;
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
   const [limits, setLimits] = useState<Limits | null>(null);

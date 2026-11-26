@@ -284,6 +284,23 @@ try {
   await p.getByRole("link", { name: /^Settings/ }).click();
   await p.getByTestId("settings").waitFor();
   check(p.url().endsWith("#/more/settings") && (await p.locator("h1").first().innerText()) === "Settings", "More → Settings opens the settings page");
+  // Appearance: dark by default, light for this device when picked (kept across reloads), back to dark.
+  {
+    const theme = () => p.evaluate(() => [document.documentElement.dataset.theme, getComputedStyle(document.body).backgroundColor,
+      document.querySelector('meta[name="theme-color"]').content]);
+    const t0 = await theme();
+    const themes = p.getByRole("group", { name: "Theme" });
+    await themes.getByRole("button", { name: "Light" }).click();
+    const t1 = await theme();
+    await p.reload();
+    await p.getByTestId("settings").waitFor();
+    const t2 = await theme();
+    await p.getByRole("group", { name: "Theme" }).getByRole("button", { name: "Dark" }).click();
+    const t3 = await theme();
+    check(t0[0] === "dark" && t0[2] === "#12100e" && t1[0] === "light" && t1[1] !== t0[1]
+      && t2[0] === "light" && t2[2] === "#f5f0ea" && t3[0] === "dark",
+      `theme: dark by default (${t0.join(" ")}), Light → ${t1.join(" ")}, kept after reload (${t2[0]}), Dark again (${t3[0]})`);
+  }
   await p.getByRole("button", { name: "Back to More" }).click();
   await p.getByTestId("more-pages").waitFor();
   check(p.url().endsWith("#/more"), "Settings → Back to More");

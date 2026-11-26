@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, type Avoid, type Edition, type Pick, type Tasting } from "../api";
-import { useData, Field, ErrorBox, NumInput, fmtDate } from "../ui";
+import { useData, useDemo, Field, ErrorBox, NumInput, fmtDate } from "../ui";
 import { Taste } from "./Taste";
 
 interface Board {
@@ -267,6 +267,7 @@ function Refresh({ board, reload }: { board: Board; reload: () => void }) {
   const [link, setLink] = useState("");
   const [fetching, setFetching] = useState(false);
   const [linkMsg, setLinkMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const demo = useDemo(); // the online demo doesn't fetch other sites
   const fromLink = async () => {
     setFetching(true);
     setLinkMsg(null);
@@ -347,14 +348,14 @@ function Refresh({ board, reload }: { board: Board; reload: () => void }) {
           ))}
         </ul>
         <h4>Add a candidate</h4>
-        <div className="field">
+        {!demo && <div className="field">
           <label htmlFor="c-link">Fill from a roaster product link</label>
           <div className="row">
             <input id="c-link" type="url" placeholder="https://roaster.example/products/coffee" value={link} onChange={(e) => setLink(e.target.value)} />
             <button onClick={fromLink} disabled={!link || fetching}>{fetching ? "Fetching…" : "Fetch"}</button>
           </div>
           {linkMsg && <div className={linkMsg.ok ? "ok-box small" : "note"} role="status" data-testid="cand-link-result">{linkMsg.text}{linkMsg.ok ? " Add why it fits and a brew tip yourself." : ""}</div>}
-        </div>
+        </div>}
         <div className="grid2">
           {t("name", "Coffee")}{t("roaster", "Roaster")}{t("origin", "Origin")}{t("processMethod", "Process")}
           {t("tastingNotes", "Tasting notes")}{t("roastLevel", "Roast level")}{t("priceText", "Price as listed")}

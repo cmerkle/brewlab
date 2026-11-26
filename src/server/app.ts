@@ -21,7 +21,8 @@ import { metricsHandler } from "./metrics.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
-export function createApp(db = openDb()) {
+/** Startup tidy-ups and migrations on a database (logs what changed). */
+export function prepareDb(db: ReturnType<typeof openDb>) {
   const lib = loadCatalog();
   if (lib.errors.length) console.warn(`[catalog] ${lib.errors.length} invalid library file(s):\n  ${lib.errors.join("\n  ")}`);
   else console.log(`[catalog] ${lib.gear.length} gear models, ${lib.recipes.length} recipe templates`);
@@ -47,7 +48,10 @@ export function createApp(db = openDb()) {
   if (applySeedTaste(db, SEED_DIR)) console.log("[discover] taste settings applied from seed data (taste.json)");
   const removed = dedupeRecipes(db);
   if (removed) console.log(`Removed ${removed} duplicate recipe(s).`);
+}
 
+/** The JSON API for one database: everything under /api (plus /metrics), ending in the 404 and error handlers. */
+export function apiApp(db: ReturnType<typeof openDb>) {
   const app = express();
   app.disable("x-powered-by");
   app.use(express.json({ limit: "2mb" }));
@@ -55,9 +59,9 @@ export function createApp(db = openDb()) {
   app.get("/api/health", async (_req, res) => {
     const c = llmConfig();
     res.json({
-      ok: true, db: DB_PATH, llm: c.enabled,
+      ok: true, db: process.env.DEMO === "1" ? "in memory (online demo)" : DB_PATH, llm: c.enabled,
       llmProvider: { provider: c.provider, model: c.model, baseUrl: c.baseUrl, researchSupported: c.researchSupported, problem: c.problem },
-      ocr: await tesseractAvailable(), counts: counts(db), tz: process.env.TZ ?? null, version: VERSION,
+      ocr: process.env.DEMO !== "1" && (await tesseractAvailable()), counts: counts(db), tz: process.env.TZ ?? null, version: VERSION,
     });
   });
   app.get("/metrics", metricsHandler(db)); // Prometheus; off unless switched on in Settings
@@ -72,13 +76,27 @@ export function createApp(db = openDb()) {
     console.error(err);
     res.status(err?.status || 500).json({ error: err?.type === "entity.parse.failed" ? "Malformed JSON" : "Server error" });
   });
+  return app;
+}
 
-  app.use("/uploads", express.static(UPLOAD_DIR, { fallthrough: false }));
+/** The built web app (dist/public), with index.html for every other path; null when not built. */
+export function staticApp() {
   const pub = path.join(here, "..", "public"); // dist/server/app.js → dist/public
-  if (fs.existsSync(pub)) {
-    app.use(express.static(pub, { index: false }));
-    app.get("*", (_req, res) => res.sendFile(path.join(pub, "index.html")));
-  }
+  if (!fs.existsSync(pub)) return null;
+  const app = express.Router();
+  app.use(express.static(pub, { index: false }));
+  app.get("*", (_req, res) => res.sendFile(path.join(pub, "index.html")));
+  return app;
+}
+
+export function createApp(db = openDb()) {
+  prepareDb(db);
+  const app = express();
+  app.disable("x-powered-by");
+  app.use(apiApp(db));
+  app.use("/uploads", express.static(UPLOAD_DIR, { fallthrough: false }));
+  const pub = staticApp();
+  if (pub) app.use(pub);
   return { app, db };
 }
 

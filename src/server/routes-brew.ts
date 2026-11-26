@@ -624,10 +624,14 @@ export function brewRouter(db: DB) {
   });
 
   /* ---------- imports ---------- */
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  // The folder is made on the first upload, not here: the online demo builds this router per visitor
+  // and never writes to the data folder.
   const upload = multer({
     storage: multer.diskStorage({
-      destination: UPLOAD_DIR,
+      destination: (_req, _file, cb) => {
+        fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+        cb(null, UPLOAD_DIR);
+      },
       filename: (_req, file, cb) => cb(null, `bag-${Date.now()}-${Math.random().toString(36).slice(2, 8)}${file.mimetype === "image/png" ? ".png" : ".jpg"}`),
     }),
     limits: { fileSize: 15 * 1024 * 1024 },

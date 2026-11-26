@@ -2,7 +2,7 @@
 //   curl -XPOST $BASE/api/setup/demo && curl -XPOST $BASE/api/setup/complete
 //   BASE=http://localhost:3104 node screenshot-data.mjs     (five months of fictional brews, for Insights)
 //   BASE=http://localhost:3104 node screenshots.mjs        → docs/screenshots/*.png
-// Phone shots in dark mode; desktop-* shots in light mode at 1440×900.
+// Every shot in dark mode (the app's default); desktop-* shots at 1440×900.
 import { chromium } from "playwright";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -55,7 +55,7 @@ const DESKTOP = { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1.5
 
 const b = await chromium.launch();
 for (const [name, go] of Object.entries(shots)) {
-  const ctx = await b.newContext({ ...(name.startsWith("desktop") ? { ...DESKTOP, colorScheme: "light" } : { ...PHONE, colorScheme: "dark" }), timezoneId: "UTC" });
+  const ctx = await b.newContext({ ...(name.startsWith("desktop") ? { ...DESKTOP, colorScheme: "dark" } : { ...PHONE, colorScheme: "dark" }), timezoneId: "UTC" });
   const p = await ctx.newPage();
   await go(p);
   await p.waitForTimeout(600);

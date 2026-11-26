@@ -40,7 +40,9 @@ export function effectiveEnv(env: NodeJS.ProcessEnv = process.env): { env: NodeJ
 const apiKey = () => effectiveEnv().env.LLM_API_KEY?.trim() || undefined;
 
 export function llmConfig(envIn?: NodeJS.ProcessEnv): LlmConfig {
-  const { env, source } = envIn ? { env: envIn, source: "environment" as const } : effectiveEnv();
+  // The online demo never uses an AI provider: anonymous visitors would spend the key's credit.
+  const { env, source } = envIn ? { env: envIn, source: "environment" as const }
+    : process.env.DEMO === "1" ? { env: {} as NodeJS.ProcessEnv, source: "environment" as const } : effectiveEnv();
   const raw = (env.LLM_PROVIDER || "anthropic").trim().toLowerCase();
   const key = env.LLM_API_KEY?.trim() || "";
   const baseUrl = env.LLM_BASE_URL?.trim() || null;

@@ -3,8 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#f5f0ea" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#12100e" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#12100e" />
+    <script>
+      // Dark unless this device picked light (More → Settings → Appearance); set before the first paint.
+      (function () {
+        var t = "dark";
+        try { if (JSON.parse(localStorage.getItem("brewlab.theme")) === "light") t = "light"; } catch (e) {}
+        document.documentElement.dataset.theme = t;
+        document.querySelector('meta[name="theme-color"]').content = t === "light" ? "#f5f0ea" : "#12100e";
+      })();
+    </script>
     <meta name="description" content="Brew recipes, grind guide, coffee stash and weekly picks." />
     <title>Brewlab</title>
     <link rel="manifest" href="/manifest.webmanifest" />

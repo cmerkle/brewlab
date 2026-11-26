@@ -4,7 +4,7 @@ import path from "node:path";
 import { type DB, nowIso } from "./db.js";
 import { tidyBags } from "./bags.js";
 import { getSettings, setSettings, isOnboarded, setOnboarded } from "./settings.js";
-import { compatibleTemplates, renderTemplate, catalogRecipe } from "./catalog.js";
+import { compatibleTemplates, renderTemplate, catalogRecipe, LIBRARY_REPO } from "./catalog.js";
 import { ownedGear, runSeed, linkGearToCatalog, normalizeGrindSettings, migrateEspressoCapable } from "./seed.js";
 import { recipeRow } from "./routes-brew.js";
 import { llmConfig, pingLlm, PROVIDERS } from "./llm.js";
@@ -23,7 +23,11 @@ export function setupRouter(db: DB) {
   const r = express.Router();
   const bad = (res: Response, msg: string, code = 400) => res.status(code).json({ error: msg });
 
-  r.get("/setup", (_req, res) => res.json({ onboarded: isOnboarded(db), empty: isEmpty(db), settings: getSettings(db) }));
+  r.get("/setup", (_req, res) => res.json({
+    onboarded: isOnboarded(db), empty: isEmpty(db), settings: getSettings(db),
+    // The online demo (DEMO=1): the app shows a banner and leaves out what the demo can't do.
+    demo: process.env.DEMO === "1" ? { idleMinutes: Number(process.env.DEMO_IDLE_MIN) || 60, repo: `https://github.com/${LIBRARY_REPO}` } : null,
+  }));
 
   r.put("/settings", (req, res) => {
     try {
