@@ -1,0 +1,10 @@
+{
+  "id": "breville-barista-pro",
+  "version": 1,
+  "name": "Breville Barista Pro",
+  "brand": "Breville",
+  "type": "brewer",
+  "category": "espresso-machine",
+  "details": "Espresso machine with a built-in grinder (Sage in the UK and Europe).",
+  "defaultMethod": "espresso"
+}

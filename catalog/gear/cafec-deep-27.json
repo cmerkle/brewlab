@@ -1,0 +1,10 @@
+{
+  "id": "cafec-deep-27",
+  "version": 1,
+  "name": "Cafec Deep 27",
+  "brand": "Cafec",
+  "type": "brewer",
+  "category": "cone-dripper",
+  "details": "Single-cup flower dripper with a steep 27° cone for a deeper coffee bed; takes Cafec Deep 27 filters.",
+  "defaultMethod": "pourover"
+}

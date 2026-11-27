@@ -1,0 +1,10 @@
+{
+  "id": "gaggia-classic-evo-pro",
+  "version": 1,
+  "name": "Gaggia Classic Evo Pro",
+  "brand": "Gaggia",
+  "type": "brewer",
+  "category": "espresso-machine",
+  "details": "Single-boiler espresso machine (the newer Classic).",
+  "defaultMethod": "espresso"
+}

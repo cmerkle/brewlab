@@ -1,0 +1,65 @@
+{
+  "id": "hario-skerton-plus",
+  "version": 1,
+  "name": "Hario Skerton Plus",
+  "brand": "Hario",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Hand grinder with ceramic conical burrs and a notched adjustment (the original Skerton uses the same chart).",
+  "units": "notches",
+  "burrs": "Ceramic conical burrs",
+  "grindRanges": {
+    "scale": "notches from zero (burrs closed)",
+    "min": 0,
+    "step": 1,
+    "methods": {
+      "espresso": {
+        "low": 1,
+        "high": 1
+      },
+      "moka": {
+        "low": 2,
+        "high": 3
+      },
+      "aeropress": {
+        "low": 1,
+        "high": 5
+      },
+      "rapid": {
+        "low": 2,
+        "high": 3
+      },
+      "pourover": {
+        "low": 2,
+        "high": 3
+      },
+      "batch": {
+        "low": 1,
+        "high": 5
+      },
+      "immersion": {
+        "low": 4,
+        "high": 8
+      },
+      "coldbrew": {
+        "low": 5,
+        "high": 9
+      }
+    },
+    "notes": {
+      "turkish": "Honest Coffee Guide lists no Turkish range."
+    },
+    "unsupported": [
+      "turkish"
+    ]
+  },
+  "rangeInfo": {
+    "confidence": "community",
+    "source": "https://honestcoffeeguide.com/hario-skerton-plus-grind-settings/",
+    "note": "Honest Coffee Guide's chart (community, not the manufacturer's): espresso 1, moka pot 2–3, AeroPress 1–5, V60 2–3, filter coffee machine 1–5, French press 4–8, cold brew 5–9; Turkish N/A. Its V60 row is used for pour-over, “Filter Coffee Machine” for drip, French press for immersion.",
+    "estimated": [
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
+  }
+}

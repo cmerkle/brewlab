@@ -5,25 +5,16 @@ import { api } from "./api";
 import { fmtGrind } from "../shared/grind";
 import { AiProvider } from "./AiProvider";
 import { Wordmark } from "./Logo";
+import { CATEGORY_LABELS, GearLibraryBrowser, type LibGear } from "./GearLibrary";
 import { PrefsEditor, ResetPrefs } from "./discover/Taste";
-import { useData, BackButton, NumInput, SearchInput, Field, useEdgeSwipeBack, useTemp, type Settings } from "./ui";
+import { useData, BackButton, NumInput, Field, useEdgeSwipeBack, useTemp, type Settings } from "./ui";
 
-interface LibGear {
-  id: string; name: string; brand: string | null; type: "grinder" | "brewer" | "other"; category: string;
-  units: string | null; hasRanges: boolean; methods: string[]; confidence: string | null; owned: boolean;
-}
 interface Template {
   id: string; name: string; method: string; credit: string | null; brewerName: string | null; grinderName: string | null;
   grindSetting: number | null; grinderId: string | null; doseG: number; waterG: number; tempC: number | null; alreadyAdded: boolean;
 }
 
-export const CATEGORY_LABELS: Record<string, string> = {
-  "hand-grinder": "Hand grinders", "electric-grinder": "Electric grinders", "cone-dripper": "Cone drippers",
-  "flat-bottom-dripper": "Flat-bottom drippers", "hybrid-dripper": "Hybrid / switch drippers", "immersion-dripper": "Immersion drippers",
-  "aeropress": "AeroPress", "rapid-brewer": "Rapid brewers", "french-press": "French presses", "moka-pot": "Moka pots",
-  "espresso-machine": "Espresso machines", "batch-brewer": "Drip coffee makers", "cezve": "Cezves (Turkish)",
-  "cold-brew-maker": "Cold brew makers", "siphon": "Siphons", "other": "Other",
-};
+export { CATEGORY_LABELS };
 const BREWER_CATEGORIES = Object.keys(CATEGORY_LABELS).filter((c) => !c.endsWith("grinder") && c !== "other");
 
 const STEPS = ["Welcome", "Brewers", "Grinders", "Preferences", "Starter recipes", "Discover"] as const;
@@ -145,7 +136,6 @@ function Welcome({ empty, onFresh, onDone }: { empty: boolean; onFresh: () => vo
 function GearStep({ kind }: { kind: "brewer" | "grinder" }) {
   const { gear, reload, act } = useData();
   const [lib, setLib] = useState<LibGear[] | null>(null);
-  const [q, setQ] = useState("");
   const [custom, setCustom] = useState(false);
   const load = () => api.get<{ gear: LibGear[] }>("/api/catalog").then((c) => setLib(c.gear));
   useEffect(() => {
@@ -162,10 +152,6 @@ function GearStep({ kind }: { kind: "brewer" | "grinder" }) {
       await load();
     });
   };
-  const wanted = (g: LibGear) => (kind === "grinder" ? g.type === "grinder" : g.type !== "grinder");
-  const needle = q.trim().toLowerCase();
-  const shown = (lib ?? []).filter((g) => wanted(g) && (!needle || `${g.name} ${g.brand ?? ""} ${CATEGORY_LABELS[g.category] ?? ""}`.toLowerCase().includes(needle)));
-  const groups = Object.keys(CATEGORY_LABELS).map((c) => [c, shown.filter((g) => g.category === c)] as const).filter(([, gs]) => gs.length);
   const yours = gear.filter((g) => (kind === "grinder" ? g.type === "grinder" : g.type !== "grinder"));
 
   return (
@@ -176,32 +162,23 @@ function GearStep({ kind }: { kind: "brewer" | "grinder" }) {
       {yours.length > 0 && (
         <p className="small" data-testid="setup-yours"><strong>Yours:</strong> {yours.map((g) => g.name).join(", ")}</p>
       )}
-      <SearchInput placeholder={kind === "brewer" ? "Search brewers…" : "Search grinders…"} label={`Search the ${kind} library`} value={q} onChange={setQ} />
-      {!lib && <p className="muted">Loading…</p>}
-      {lib && shown.length === 0 && <p className="muted">Nothing in the library matches — add it as your own below.</p>}
-      {groups.map(([cat, gs]) => (
-        <section key={cat}>
-          <h2 className="group">{CATEGORY_LABELS[cat]}</h2>
-          <ul className="lib-list">
-            {gs.map((g) => {
-              const on = Boolean(mineFor(g.id));
-              return (
-                <li key={g.id} data-lib={g.id}>
-                  <div className="lib-main">
-                    <strong>{g.name}</strong>
-                    {kind === "grinder" && (
-                      <span className="muted small">{g.hasRanges ? `Converts for ${g.methods.length} method${g.methods.length === 1 ? "" : "s"}` : "No grind ranges yet"}</span>
-                    )}
-                  </div>
-                  <button className={on ? "small-btn on" : "primary small-btn"} aria-pressed={on} onClick={() => toggle(g)} aria-label={on ? `Remove ${g.name}` : `Add ${g.name}`}>
-                    {on ? "✓ Added" : "Add"}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      ))}
+      <GearLibraryBrowser items={lib} tab={kind} emptyHint="Nothing in the library matches — add it as your own below."
+        row={(g) => {
+          const on = Boolean(mineFor(g.id));
+          return (
+            <>
+              <div className="lib-main">
+                <strong>{g.name}</strong>
+                {kind === "grinder" && (
+                  <span className="muted small">{g.hasRanges ? `Converts for ${g.methods.length} method${g.methods.length === 1 ? "" : "s"}` : "No grind ranges yet"}</span>
+                )}
+              </div>
+              <button className={on ? "small-btn on" : "primary small-btn"} aria-pressed={on} onClick={() => toggle(g)} aria-label={on ? `Remove ${g.name}` : `Add ${g.name}`}>
+                {on ? "✓ Added" : "Add"}
+              </button>
+            </>
+          );
+        }} />
       {custom ? (
         kind === "brewer" ? <CustomBrewer onDone={() => setCustom(false)} /> : <CustomGrinder onDone={() => setCustom(false)} />
       ) : (

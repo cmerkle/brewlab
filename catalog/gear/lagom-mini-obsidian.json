@@ -1,0 +1,63 @@
+{
+  "id": "lagom-mini-obsidian",
+  "version": 1,
+  "name": "Option-O Lagom Mini (Obsidian burrs)",
+  "brand": "Option-O",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Compact single-dose electric grinder with 48 mm conical burrs; settings in dots from zero. These are the Obsidian burrs.",
+  "units": "",
+  "burrs": "48 mm Obsidian conical burrs",
+  "grindRanges": {
+    "scale": "dots from zero (burrs closed)",
+    "min": 0,
+    "step": 1,
+    "methods": {
+      "turkish": {
+        "low": 6,
+        "high": 31
+      },
+      "espresso": {
+        "low": 26,
+        "high": 53
+      },
+      "moka": {
+        "low": 51,
+        "high": 93
+      },
+      "aeropress": {
+        "low": 46,
+        "high": 135
+      },
+      "rapid": {
+        "low": 78,
+        "high": 90
+      },
+      "pourover": {
+        "low": 57,
+        "high": 99
+      },
+      "batch": {
+        "low": 43,
+        "high": 127
+      },
+      "immersion": {
+        "low": 98,
+        "high": 183
+      },
+      "coldbrew": {
+        "low": 114,
+        "high": 198
+      }
+    }
+  },
+  "rangeInfo": {
+    "confidence": "community",
+    "source": "https://honestcoffeeguide.com/option-o-lagom-mini-obsidian-burrs-grind-settings/",
+    "note": "Honest Coffee Guide's chart (community, not the manufacturer's): Turkish 6–31, espresso 26–53, moka pot 51–93, AeroPress 46–135, V60 57–99, filter coffee machine 43–127, French press 98–183, cold brew 114–198. Its V60 row is used for pour-over, “Filter Coffee Machine” for drip, French press for immersion.",
+    "estimated": [
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
+  }
+}

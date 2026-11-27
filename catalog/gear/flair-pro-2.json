@@ -1,0 +1,10 @@
+{
+  "id": "flair-pro-2",
+  "version": 1,
+  "name": "Flair Pro 2",
+  "brand": "Flair",
+  "type": "brewer",
+  "category": "espresso-machine",
+  "details": "Manual lever espresso maker.",
+  "defaultMethod": "espresso"
+}

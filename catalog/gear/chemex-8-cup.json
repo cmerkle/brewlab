@@ -1,0 +1,10 @@
+{
+  "id": "chemex-8-cup",
+  "version": 1,
+  "name": "Chemex 8-cup",
+  "brand": "Chemex",
+  "type": "brewer",
+  "category": "other",
+  "details": "Large glass pour-over brewer with thick bonded filters.",
+  "defaultMethod": "pourover"
+}

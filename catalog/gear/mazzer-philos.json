@@ -1,0 +1,11 @@
+{
+  "id": "mazzer-philos",
+  "version": 1,
+  "name": "Mazzer Philos",
+  "brand": "Mazzer",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Single-dose electric grinder with 64 mm flat burrs (brew or espresso burr sets). No grind chart in the library yet — type your setting.",
+  "units": "",
+  "burrs": null
+}

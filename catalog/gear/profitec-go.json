@@ -1,0 +1,10 @@
+{
+  "id": "profitec-go",
+  "version": 1,
+  "name": "Profitec Go",
+  "brand": "Profitec",
+  "type": "brewer",
+  "category": "espresso-machine",
+  "details": "Single-boiler espresso machine with PID.",
+  "defaultMethod": "espresso"
+}

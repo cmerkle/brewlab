@@ -1,0 +1,10 @@
+{
+  "id": "bodum-chambord",
+  "version": 1,
+  "name": "Bodum Chambord",
+  "brand": "Bodum",
+  "type": "brewer",
+  "category": "french-press",
+  "details": "Glass French press.",
+  "defaultMethod": "immersion"
+}

@@ -1,0 +1,13 @@
+{
+  "id": "hario-switch-02",
+  "version": 1,
+  "name": "Hario Switch 02",
+  "brand": "Hario",
+  "type": "brewer",
+  "category": "hybrid-dripper",
+  "details": "Immersion / percolation hybrid with a valve; 1–4 cups.",
+  "variants": [
+    "02"
+  ],
+  "defaultMethod": "immersion"
+}

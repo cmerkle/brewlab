@@ -1,0 +1,10 @@
+{
+  "id": "oxo-9-cup",
+  "version": 1,
+  "name": "OXO Brew 9-Cup",
+  "brand": "OXO",
+  "type": "brewer",
+  "category": "batch-brewer",
+  "details": "9-cup drip coffee maker.",
+  "defaultMethod": "batch"
+}

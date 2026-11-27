@@ -1,0 +1,13 @@
+{
+  "id": "hario-v60-neo-02",
+  "version": 1,
+  "name": "Hario V60 NEO 02",
+  "brand": "Hario",
+  "type": "brewer",
+  "category": "cone-dripper",
+  "details": "V60 cone redesigned with many fine ribs for a faster, more even flow; 1–4 cups.",
+  "variants": [
+    "02"
+  ],
+  "defaultMethod": "pourover"
+}

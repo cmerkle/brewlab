@@ -1,0 +1,70 @@
+{
+  "id": "1zpresso-k-plus",
+  "version": 1,
+  "name": "1Zpresso K-Plus",
+  "brand": "1Zpresso",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Hand grinder with external numbered dial, 100 clicks per rotation (dial reading = clicks ÷ 10). All-rounder, espresso-capable.",
+  "units": "clicks",
+  "burrs": null,
+  "grindRanges": {
+    "scale": "clicks from zero (burrs closed); dial number = clicks ÷ 10",
+    "min": 0,
+    "step": 1,
+    "methods": {
+      "turkish": {
+        "low": 20,
+        "high": 35
+      },
+      "espresso": {
+        "low": 30,
+        "high": 45
+      },
+      "moka": {
+        "low": 50,
+        "high": 70
+      },
+      "aeropress": {
+        "low": 50,
+        "high": 70
+      },
+      "rapid": {
+        "low": 60,
+        "high": 85
+      },
+      "pourover": {
+        "low": 80,
+        "high": 90
+      },
+      "batch": {
+        "low": 50,
+        "high": 70
+      },
+      "immersion": {
+        "low": 90,
+        "high": 100
+      },
+      "coldbrew": {
+        "low": 95,
+        "high": 105
+      }
+    },
+    "notes": {
+      "moka": "1Zpresso groups moka pot with AeroPress and drip coffee maker.",
+      "aeropress": "1Zpresso groups AeroPress, moka pot and drip coffee maker.",
+      "pourover": "1Zpresso groups siphon with pour over.",
+      "immersion": "French press."
+    }
+  },
+  "rangeInfo": {
+    "confidence": "manufacturer",
+    "source": "https://1zpresso.coffee/grind-setting/",
+    "note": "1Zpresso “K-Pro/K-Max/K-Plus Grind Setting Reference” chart (K-series-Grind-Setting-Reference-211129.jpg on that page), in dial points: Turkish 2–3.5, espresso 3–4.5, AeroPress/moka/drip coffee maker 5–7, siphon/pour over 8–9, French press 9–10. “Each of the ten clicks between each whole number allows for extremely fine adjustment.”",
+    "estimated": [
+      "rapid",
+      "coldbrew"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range; cold brew: the French press range moved half its width coarser. Dial in from there."
+  }
+}

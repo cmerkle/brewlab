@@ -1,0 +1,10 @@
+{
+  "id": "fellow-clara",
+  "version": 1,
+  "name": "Fellow Clara",
+  "brand": "Fellow",
+  "type": "brewer",
+  "category": "french-press",
+  "details": "Insulated French press.",
+  "defaultMethod": "immersion"
+}

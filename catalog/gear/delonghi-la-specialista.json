@@ -1,0 +1,10 @@
+{
+  "id": "delonghi-la-specialista",
+  "version": 1,
+  "name": "De'Longhi La Specialista",
+  "brand": "De'Longhi",
+  "type": "brewer",
+  "category": "espresso-machine",
+  "details": "Espresso machine with a built-in grinder.",
+  "defaultMethod": "espresso"
+}

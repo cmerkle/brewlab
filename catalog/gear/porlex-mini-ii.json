@@ -1,0 +1,63 @@
+{
+  "id": "porlex-mini-ii",
+  "version": 1,
+  "name": "Porlex Mini II",
+  "brand": "Porlex",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Compact hand grinder with ceramic conical burrs; clicks counted from zero.",
+  "units": "clicks",
+  "burrs": "Ceramic conical burrs",
+  "grindRanges": {
+    "scale": "clicks from zero (burrs closed)",
+    "min": 0,
+    "step": 1,
+    "methods": {
+      "turkish": {
+        "low": 1,
+        "high": 3
+      },
+      "espresso": {
+        "low": 4,
+        "high": 6
+      },
+      "moka": {
+        "low": 7,
+        "high": 11
+      },
+      "aeropress": {
+        "low": 6,
+        "high": 16
+      },
+      "rapid": {
+        "low": 10,
+        "high": 11
+      },
+      "pourover": {
+        "low": 7,
+        "high": 12
+      },
+      "batch": {
+        "low": 6,
+        "high": 15
+      },
+      "immersion": {
+        "low": 12,
+        "high": 22
+      },
+      "coldbrew": {
+        "low": 14,
+        "high": 24
+      }
+    }
+  },
+  "rangeInfo": {
+    "confidence": "community",
+    "source": "https://honestcoffeeguide.com/porlex-mini-ii-grind-settings/",
+    "note": "Honest Coffee Guide's chart (community, not the manufacturer's): Turkish 1–3, espresso 4–6, moka pot 7–11, AeroPress 6–16, V60 7–12, filter coffee machine 6–15, French press 12–22, cold brew 14–24. Its V60 row is used for pour-over, “Filter Coffee Machine” for drip, French press for immersion.",
+    "estimated": [
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
+  }
+}

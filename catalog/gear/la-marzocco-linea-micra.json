@@ -1,0 +1,10 @@
+{
+  "id": "la-marzocco-linea-micra",
+  "version": 1,
+  "name": "La Marzocco Linea Micra",
+  "brand": "La Marzocco",
+  "type": "brewer",
+  "category": "espresso-machine",
+  "details": "Compact dual-boiler espresso machine.",
+  "defaultMethod": "espresso"
+}

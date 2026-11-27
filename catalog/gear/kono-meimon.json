@@ -1,0 +1,10 @@
+{
+  "id": "kono-meimon",
+  "version": 1,
+  "name": "Kono Meimon",
+  "brand": "Kono",
+  "type": "brewer",
+  "category": "cone-dripper",
+  "details": "Cone dripper with short ribs near the outlet.",
+  "defaultMethod": "pourover"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "hario-alpha-dripper",
+  "version": 1,
+  "name": "Hario Alpha Dripper",
+  "brand": "Hario",
+  "type": "brewer",
+  "category": "cone-dripper",
+  "details": "V60-01-size cone with concave ribs and a larger outlet; 1–2 cups.",
+  "defaultMethod": "pourover"
+}

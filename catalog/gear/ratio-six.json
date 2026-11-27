@@ -1,0 +1,10 @@
+{
+  "id": "ratio-six",
+  "version": 1,
+  "name": "Ratio Six",
+  "brand": "Ratio",
+  "type": "brewer",
+  "category": "batch-brewer",
+  "details": "Drip coffee maker with a bloom phase.",
+  "defaultMethod": "batch"
+}

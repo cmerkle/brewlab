@@ -1,0 +1,66 @@
+{
+  "id": "capresso-infinity",
+  "version": 1,
+  "name": "Capresso Infinity",
+  "brand": "Capresso",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Electric conical burr grinder with 16 settings.",
+  "units": "",
+  "burrs": "Conical burrs",
+  "grindRanges": {
+    "scale": "settings 1–16",
+    "min": 1,
+    "max": 16,
+    "step": 1,
+    "methods": {
+      "espresso": {
+        "low": 1,
+        "high": 3
+      },
+      "moka": {
+        "low": 3,
+        "high": 7
+      },
+      "aeropress": {
+        "low": 3,
+        "high": 12
+      },
+      "rapid": {
+        "low": 6,
+        "high": 8
+      },
+      "pourover": {
+        "low": 4,
+        "high": 8
+      },
+      "batch": {
+        "low": 2,
+        "high": 11
+      },
+      "immersion": {
+        "low": 8,
+        "high": 16
+      },
+      "coldbrew": {
+        "low": 10,
+        "high": 16
+      }
+    },
+    "notes": {
+      "turkish": "Honest Coffee Guide lists no Turkish range."
+    },
+    "unsupported": [
+      "turkish"
+    ]
+  },
+  "rangeInfo": {
+    "confidence": "community",
+    "source": "https://honestcoffeeguide.com/capresso-infinity-grind-settings/",
+    "note": "Honest Coffee Guide's chart (community, not the manufacturer's): espresso 1–3, moka pot 3–7, AeroPress 3–12, V60 4–8, filter coffee machine 2–11, French press 8–16, cold brew 10–16; Turkish N/A. Its V60 row is used for pour-over, “Filter Coffee Machine” for drip, French press for immersion.",
+    "estimated": [
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
+  }
+}

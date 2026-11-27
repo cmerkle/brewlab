@@ -1,0 +1,10 @@
+{
+  "id": "chemex-3-cup",
+  "version": 1,
+  "name": "Chemex 3-cup",
+  "brand": "Chemex",
+  "type": "brewer",
+  "category": "other",
+  "details": "Small glass pour-over brewer with thick bonded filters.",
+  "defaultMethod": "pourover"
+}

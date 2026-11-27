@@ -1,0 +1,10 @@
+{
+  "id": "decent-de1",
+  "version": 1,
+  "name": "Decent DE1",
+  "brand": "Decent",
+  "type": "brewer",
+  "category": "espresso-machine",
+  "details": "Profiling espresso machine controlled from a tablet.",
+  "defaultMethod": "espresso"
+}

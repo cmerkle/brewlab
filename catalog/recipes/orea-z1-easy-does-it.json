@@ -1,0 +1,55 @@
+{
+  "id": "orea-z1-easy-does-it",
+  "version": 1,
+  "name": "Orea Z1 — Easy does it",
+  "credit": "Orea",
+  "method": "pourover",
+  "brewer": {
+    "ids": [
+      "orea-z1"
+    ],
+    "categories": []
+  },
+  "doseG": 16,
+  "waterG": 260,
+  "tempC": 96,
+  "grind": {
+    "position": 0.9,
+    "preferredGrinders": [
+      "comandante-c40"
+    ]
+  },
+  "steps": [
+    {
+      "atSec": 0,
+      "label": "Pour to 60g",
+      "targetWaterG": 60,
+      "detail": "Spiral pour"
+    },
+    {
+      "atSec": 40,
+      "label": "Pour to 110g",
+      "targetWaterG": 110,
+      "detail": null
+    },
+    {
+      "atSec": 75,
+      "label": "Pour to 160g",
+      "targetWaterG": 160,
+      "detail": null
+    },
+    {
+      "atSec": 105,
+      "label": "Pour to 210g",
+      "targetWaterG": 210,
+      "detail": null
+    },
+    {
+      "atSec": 135,
+      "label": "Pour to 260g",
+      "targetWaterG": 260,
+      "detail": "Let it draw down — done around 2:30–3:00"
+    }
+  ],
+  "notes": "Orea's own Z1 percolation recipe (orea.uk/guides-z1): medium/coarse, 22–26 clicks (Comandante). The Z1 needs its Melodrip; no pre-wetting or pre-heating."
+}

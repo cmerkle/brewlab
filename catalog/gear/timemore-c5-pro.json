@@ -1,0 +1,11 @@
+{
+  "id": "timemore-c5-pro",
+  "version": 1,
+  "name": "Timemore Chestnut C5 Pro",
+  "brand": "Timemore",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Hand grinder; Timemore lists 48 settings per rotation (0.031 mm per click), the whole range in one rotation. No grind chart in the library yet — type your setting.",
+  "units": "clicks",
+  "burrs": null
+}

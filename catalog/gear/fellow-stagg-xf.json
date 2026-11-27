@@ -1,0 +1,10 @@
+{
+  "id": "fellow-stagg-xf",
+  "version": 1,
+  "name": "Fellow Stagg [XF]",
+  "brand": "Fellow",
+  "type": "brewer",
+  "category": "cone-dripper",
+  "details": "Larger double-walled dripper.",
+  "defaultMethod": "pourover"
+}

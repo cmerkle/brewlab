@@ -1,0 +1,11 @@
+{
+  "id": "kitchenaid-burr-grinder",
+  "version": 1,
+  "name": "KitchenAid Burr Grinder",
+  "brand": "KitchenAid",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Electric burr grinder with 70 settings. Its scale runs backwards (higher numbers are finer), which the converter doesn't handle yet. No grind chart in the library yet — type your setting.",
+  "units": "",
+  "burrs": null
+}

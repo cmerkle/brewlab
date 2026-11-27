@@ -1,0 +1,11 @@
+{
+  "id": "timemore-g1",
+  "version": 1,
+  "name": "Timemore Chestnut G1",
+  "brand": "Timemore",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Hand grinder with large conical burrs. No grind chart in the library yet — type your setting.",
+  "units": "clicks",
+  "burrs": null
+}

@@ -1,0 +1,68 @@
+{
+  "id": "kingrinder-p0",
+  "version": 1,
+  "name": "Kingrinder P0",
+  "brand": "Kingrinder",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Hand grinder with internal adjustment: 30 clicks per rotation, about 33.33 µm per click, counted from zero. 38 mm stainless steel burr.",
+  "units": "clicks",
+  "burrs": "38 mm stainless steel burr",
+  "grindRanges": {
+    "scale": "clicks from zero (adjustment turned until the burrs touch)",
+    "min": 0,
+    "step": 1,
+    "methods": {
+      "moka": {
+        "low": 30,
+        "high": 40
+      },
+      "aeropress": {
+        "low": 30,
+        "high": 40
+      },
+      "rapid": {
+        "low": 35,
+        "high": 52
+      },
+      "pourover": {
+        "low": 45,
+        "high": 60
+      },
+      "batch": {
+        "low": 45,
+        "high": 60
+      },
+      "immersion": {
+        "low": 70,
+        "high": 80
+      },
+      "coldbrew": {
+        "low": 75,
+        "high": 85
+      }
+    },
+    "notes": {
+      "turkish": "Kingrinder's chart gives no extra-fine (Turkish) setting for the P0.",
+      "espresso": "Kingrinder's chart gives no fine (espresso) setting for the P0.",
+      "moka": "Kingrinder groups moka pot and AeroPress (medium-fine).",
+      "aeropress": "Kingrinder groups moka pot and AeroPress (medium-fine).",
+      "immersion": "French press (coarse)."
+    },
+    "unsupported": [
+      "turkish",
+      "espresso"
+    ]
+  },
+  "rangeInfo": {
+    "confidence": "manufacturer",
+    "source": "https://www.kingrinder.com/",
+    "note": "Kingrinder's “Grind Setting Chart of KINGrinder (Clicks)” on its site, P0 column: medium-fine 30–40, medium 45–60, coarse 70–80. Kingrinder's chart is by grind size, not brew method; mapped as their K4/K6 manual pairs them (extra fine → Turkish, fine → espresso, medium-fine → moka pot/AeroPress, medium → pour-over, coarse → French press). Same page: 30 clicks per round, 33.33 µm per click.",
+    "estimated": [
+      "rapid",
+      "batch",
+      "coldbrew"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range; drip coffee maker: the pour-over range; cold brew: the French press range moved half its width coarser. Dial in from there."
+  }
+}

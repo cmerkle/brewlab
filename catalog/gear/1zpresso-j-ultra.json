@@ -1,0 +1,70 @@
+{
+  "id": "1zpresso-j-ultra",
+  "version": 1,
+  "name": "1Zpresso J-Ultra",
+  "brand": "1Zpresso",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Hand grinder with external adjustment: 100 clicks per rotation (10 numbers × 10 clicks). Espresso-focused with fine steps.",
+  "units": "clicks",
+  "burrs": null,
+  "grindRanges": {
+    "scale": "clicks from zero (burrs closed)",
+    "min": 0,
+    "step": 1,
+    "methods": {
+      "turkish": {
+        "low": 75,
+        "high": 120
+      },
+      "espresso": {
+        "low": 100,
+        "high": 170
+      },
+      "moka": {
+        "low": 200,
+        "high": 270
+      },
+      "aeropress": {
+        "low": 200,
+        "high": 270
+      },
+      "rapid": {
+        "low": 235,
+        "high": 300
+      },
+      "pourover": {
+        "low": 270,
+        "high": 330
+      },
+      "batch": {
+        "low": 200,
+        "high": 270
+      },
+      "immersion": {
+        "low": 400,
+        "high": 440
+      },
+      "coldbrew": {
+        "low": 420,
+        "high": 460
+      }
+    },
+    "notes": {
+      "moka": "1Zpresso groups moka pot with AeroPress and drip coffee maker.",
+      "aeropress": "1Zpresso groups AeroPress, moka pot and drip coffee maker.",
+      "pourover": "1Zpresso groups siphon with pour over.",
+      "immersion": "French press."
+    }
+  },
+  "rangeInfo": {
+    "confidence": "manufacturer",
+    "source": "https://1zpresso.coffee/grind-setting/",
+    "note": "1Zpresso “J-Ultra Grind Setting Reference” chart (J-Ultra-Grind-setting-reference-20231103-en.jpg on that page), in clicks: Turkish 75–120, espresso 100–170, AeroPress/moka/drip coffee maker 200–270, siphon/pour over 270–330, French press 400–440.",
+    "estimated": [
+      "rapid",
+      "coldbrew"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range; cold brew: the French press range moved half its width coarser. Dial in from there."
+  }
+}

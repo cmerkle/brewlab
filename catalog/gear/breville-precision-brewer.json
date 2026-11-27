@@ -1,0 +1,10 @@
+{
+  "id": "breville-precision-brewer",
+  "version": 1,
+  "name": "Breville Precision Brewer",
+  "brand": "Breville",
+  "type": "brewer",
+  "category": "batch-brewer",
+  "details": "Drip coffee maker with adjustable temperature and bloom (Sage in the UK and Europe).",
+  "defaultMethod": "batch"
+}

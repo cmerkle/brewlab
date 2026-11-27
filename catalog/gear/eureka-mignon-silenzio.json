@@ -1,0 +1,11 @@
+{
+  "id": "eureka-mignon-silenzio",
+  "version": 1,
+  "name": "Eureka Mignon Silenzio",
+  "brand": "Eureka",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Electric flat-burr grinder with a stepless dial counted in turns and numbers (1+4 = one turn and number 4). No grind chart in the library yet — type your setting.",
+  "units": "",
+  "burrs": null
+}

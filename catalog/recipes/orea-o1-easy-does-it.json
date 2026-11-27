@@ -1,0 +1,55 @@
+{
+  "id": "orea-o1-easy-does-it",
+  "version": 1,
+  "name": "Orea O1 — Easy does it",
+  "credit": "Orea",
+  "method": "pourover",
+  "brewer": {
+    "ids": [
+      "orea-o1"
+    ],
+    "categories": []
+  },
+  "doseG": 16,
+  "waterG": 260,
+  "tempC": 94,
+  "grind": {
+    "position": 1.1,
+    "preferredGrinders": [
+      "comandante-c40"
+    ]
+  },
+  "steps": [
+    {
+      "atSec": 0,
+      "label": "Pour to 60g",
+      "targetWaterG": 60,
+      "detail": "Gentle spiral pour"
+    },
+    {
+      "atSec": 40,
+      "label": "Pour to 110g",
+      "targetWaterG": 110,
+      "detail": null
+    },
+    {
+      "atSec": 70,
+      "label": "Pour to 160g",
+      "targetWaterG": 160,
+      "detail": null
+    },
+    {
+      "atSec": 100,
+      "label": "Pour to 210g",
+      "targetWaterG": 210,
+      "detail": null
+    },
+    {
+      "atSec": 130,
+      "label": "Pour to 260g",
+      "targetWaterG": 260,
+      "detail": "Let it draw down — done around 2:40–3:40"
+    }
+  ],
+  "notes": "Orea's own O1 recipe (orea.uk/guides-o1): medium-coarse, 24–28 clicks on a Comandante C40, OREA flat paper filter plus the Negotiator."
+}

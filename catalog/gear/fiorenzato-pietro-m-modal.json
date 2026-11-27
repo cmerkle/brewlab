@@ -1,0 +1,66 @@
+{
+  "id": "fiorenzato-pietro-m-modal",
+  "version": 1,
+  "name": "Fiorenzato Pietro (M-Modal burrs)",
+  "brand": "Fiorenzato",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Vertical hand grinder with 58 mm flat burrs and a stepless ring nut numbered 0–10. These are the M-Modal burrs (multi-purpose, aimed at filter).",
+  "units": "",
+  "burrs": "58 mm M-Modal flat burrs",
+  "grindRanges": {
+    "scale": "ring-nut numbers 0–10, stepless (3.2 = number 3, step 2)",
+    "min": 0,
+    "max": 10,
+    "step": 0.1,
+    "methods": {
+      "espresso": {
+        "low": 0,
+        "high": 2
+      },
+      "moka": {
+        "low": 1.8,
+        "high": 5.7
+      },
+      "aeropress": {
+        "low": 1.2,
+        "high": 9.7
+      },
+      "rapid": {
+        "low": 4.2,
+        "high": 5.4
+      },
+      "pourover": {
+        "low": 2.3,
+        "high": 6.2
+      },
+      "batch": {
+        "low": 1,
+        "high": 8.9
+      },
+      "immersion": {
+        "low": 6.2,
+        "high": 10
+      },
+      "coldbrew": {
+        "low": 7.6,
+        "high": 10
+      }
+    },
+    "notes": {
+      "turkish": "Honest Coffee Guide lists no Turkish range for the M-Modal burrs, and Fiorenzato's chart shows none."
+    },
+    "unsupported": [
+      "turkish"
+    ]
+  },
+  "rangeInfo": {
+    "confidence": "community",
+    "source": "https://honestcoffeeguide.com/fiorenzato-pietro-m-modal-burrs-grind-settings/",
+    "note": "Honest Coffee Guide's chart (community, not the manufacturer's): espresso 0–2.0, moka pot 1.8–5.7, AeroPress 1.2–9.7, V60 2.3–6.2, filter coffee machine 1.0–8.9, French press 6.2–10.0, cold brew 7.6–10.0; Turkish N/A. Its V60 row is used for pour-over, “Filter Coffee Machine” for drip, French press for immersion. Fiorenzato's own ring-nut chart (in the Pietro manual) shows no espresso range for these burrs, so treat the espresso row as a stretch.",
+    "estimated": [
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "id": "filtron",
+  "version": 1,
+  "name": "Filtron Cold Water Coffee Concentrate Brewer",
+  "brand": "Filtron",
+  "type": "brewer",
+  "category": "cold-brew-maker",
+  "details": "Cold brew concentrate maker with a felt filter.",
+  "defaultMethod": "coldbrew"
+}

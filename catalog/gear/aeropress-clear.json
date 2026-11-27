@@ -1,0 +1,10 @@
+{
+  "id": "aeropress-clear",
+  "version": 1,
+  "name": "AeroPress Clear",
+  "brand": "AeroPress",
+  "type": "brewer",
+  "category": "aeropress",
+  "details": "AeroPress in clear Tritan.",
+  "defaultMethod": "aeropress"
+}

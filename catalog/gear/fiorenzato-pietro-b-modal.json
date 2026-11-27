@@ -1,0 +1,64 @@
+{
+  "id": "fiorenzato-pietro-b-modal",
+  "version": 1,
+  "name": "Fiorenzato Pietro (B-Modal burrs)",
+  "brand": "Fiorenzato",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Vertical hand grinder with 58 mm flat burrs and a stepless ring nut numbered 0–10. These are the B-Modal burrs (the finer set, espresso to filter).",
+  "units": "",
+  "burrs": "58 mm B-Modal flat burrs",
+  "grindRanges": {
+    "scale": "ring-nut numbers 0–10, stepless (3.2 = number 3, step 2)",
+    "min": 0,
+    "max": 10,
+    "step": 0.1,
+    "methods": {
+      "turkish": {
+        "low": 0,
+        "high": 0.6
+      },
+      "espresso": {
+        "low": 0.2,
+        "high": 2.8
+      },
+      "moka": {
+        "low": 2.6,
+        "high": 6.5
+      },
+      "aeropress": {
+        "low": 2,
+        "high": 10
+      },
+      "rapid": {
+        "low": 5,
+        "high": 6
+      },
+      "pourover": {
+        "low": 3.1,
+        "high": 7
+      },
+      "batch": {
+        "low": 1.8,
+        "high": 9.7
+      },
+      "immersion": {
+        "low": 7,
+        "high": 10
+      },
+      "coldbrew": {
+        "low": 8.4,
+        "high": 10
+      }
+    }
+  },
+  "rangeInfo": {
+    "confidence": "community",
+    "source": "https://honestcoffeeguide.com/fiorenzato-pietro-b-modal-burrs-grind-settings/",
+    "note": "Honest Coffee Guide's chart (community, not the manufacturer's): Turkish 0–0.6, espresso 0.2–2.8, moka pot 2.6–6.5, AeroPress 2.0–10.0, V60 3.1–7.0, filter coffee machine 1.8–9.7, French press 7.0–10.0, cold brew 8.4–10.0. Its V60 row is used for pour-over, “Filter Coffee Machine” for drip, French press for immersion. Fiorenzato's own ring-nut chart (in the Pietro manual) shows these burrs covering ibrik to cold brew.",
+    "estimated": [
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "id": "fellow-ode",
+  "version": 1,
+  "name": "Fellow Ode (Gen 1)",
+  "brand": "Fellow",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Electric flat-burr filter grinder (the first Ode); settings 1–11 with sub-steps.",
+  "units": "",
+  "burrs": null,
+  "grindRanges": {
+    "scale": "numbered settings 1–11, with two sub-steps between numbers (5.1 = 5⅓, 5.2 = 5⅔)",
+    "min": 1,
+    "max": 11,
+    "step": 0.3333333333333333,
+    "notation": "thirds",
+    "methods": {
+      "moka": {
+        "low": 1,
+        "high": 1
+      },
+      "aeropress": {
+        "low": 1,
+        "high": 4
+      },
+      "rapid": {
+        "low": 2.5,
+        "high": 3.5
+      },
+      "pourover": {
+        "low": 2,
+        "high": 5
+      },
+      "batch": {
+        "low": 4,
+        "high": 6
+      },
+      "immersion": {
+        "low": 6,
+        "high": 10
+      },
+      "coldbrew": {
+        "low": 9,
+        "high": 11
+      }
+    },
+    "notes": {
+      "turkish": "The Ode (Gen 1) is a filter-only grinder.",
+      "espresso": "The Ode (Gen 1) is a filter-only grinder and doesn't grind fine enough for espresso.",
+      "batch": "Fellow's “Electric Coffee Maker” range.",
+      "immersion": "Fellow's French press range.",
+      "coldbrew": "Fellow's cold brew range."
+    },
+    "unsupported": [
+      "turkish",
+      "espresso"
+    ]
+  },
+  "rangeInfo": {
+    "confidence": "manufacturer",
+    "source": "https://cdn.shopify.com/s/files/1/0057/6235/1219/files/Ode-BrewGrinder_QuickStartGuide_ae5a2762-cc34-4f50-9f4d-62b11d28cf1a.pdf",
+    "note": "Fellow's Ode Brew Grinder Quick Start and Brewing Guide (grind settings page): 1–2 Prismo AeroPress attachment, 1–4 AeroPress, 2–3 cupping, 2–5 pour-over, 4–6 electric coffee maker, 6–10 French press, 9–11 cold brew. Not for the Ode Gen 2, whose numbers differ.",
+    "estimated": [
+      "moka",
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: moka pot: from the top of the espresso range to halfway to the top of the AeroPress range (or one AeroPress span finer when there's no espresso range); Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
+  }
+}

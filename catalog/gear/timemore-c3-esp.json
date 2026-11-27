@@ -1,0 +1,70 @@
+{
+  "id": "timemore-c3-esp",
+  "version": 1,
+  "name": "Timemore Chestnut C3 ESP",
+  "brand": "Timemore",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Espresso-focused hand grinder counted in circles (rotations) from the start point (dial turned fully clockwise); 0.7 = 7 on the dial in the first circle. Timemore advises not to grind at the finest 0–0.4 circles.",
+  "units": "rotations",
+  "burrs": null,
+  "grindRanges": {
+    "scale": "circles (rotations) from the start point",
+    "min": 0,
+    "step": 0.1,
+    "methods": {
+      "espresso": {
+        "low": 0.8,
+        "high": 1.1
+      },
+      "moka": {
+        "low": 1.1,
+        "high": 1.2
+      },
+      "aeropress": {
+        "low": 1.1,
+        "high": 1.4
+      },
+      "rapid": {
+        "low": 1.2,
+        "high": 1.7
+      },
+      "pourover": {
+        "low": 1.4,
+        "high": 2
+      },
+      "batch": {
+        "low": 1.4,
+        "high": 2
+      },
+      "immersion": {
+        "low": 2,
+        "high": 2.3
+      },
+      "coldbrew": {
+        "low": 2.2,
+        "high": 2.4
+      }
+    },
+    "notes": {
+      "turkish": "Timemore lists no Turkish setting.",
+      "immersion": "French press."
+    },
+    "unsupported": [
+      "turkish"
+    ]
+  },
+  "rangeInfo": {
+    "confidence": "manufacturer",
+    "source": "https://www.manualslib.com/manual/3575839/Timemore-Chestnut-C-Series.html",
+    "note": "Timemore Chestnut C3 series manual (on ManualsLib), C3 ESP table: espresso 0.8–1.1 circles, pour over 1.4–2.0, French press 2.0–2.3. “For reference only.”",
+    "estimated": [
+      "moka",
+      "aeropress",
+      "rapid",
+      "batch",
+      "coldbrew"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: moka pot: from the top of the espresso range to halfway to the top of the AeroPress range (or one AeroPress span finer when there's no espresso range); AeroPress: between the espresso and pour-over ranges (or one pour-over span finer when there's no espresso range); Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range; drip coffee maker: the pour-over range; cold brew: the French press range moved half its width coarser. Dial in from there."
+  }
+}

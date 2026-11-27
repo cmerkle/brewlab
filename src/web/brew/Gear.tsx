@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { CATEGORY_LABELS } from "../Setup";
+import { CATEGORY_LABELS, GearLibraryBrowser, type LibGear, type GearTab } from "../GearLibrary";
 import { api, type Gear as GearT, type RangeInfo } from "../api";
-import { useData, Field, FullScreen, ErrorBox, NumInput, useAction, SearchInput } from "../ui";
+import { useData, Field, FullScreen, ErrorBox, NumInput, useAction, usePref } from "../ui";
 import { METHODS, METHOD_LABELS, CATEGORY_METHOD, validateRanges, type Method, type GrindRanges } from "../../shared/grind";
 import { estimateRanges, estimateNoteFor, type EstimateRules } from "../../shared/estimate";
 
@@ -466,16 +466,12 @@ function SuggestToLibrary({ item, onClose }: { item: GearT; onClose: () => void 
 
 /* ------------------------------ Gear library picker ------------------------------ */
 
-interface LibGear {
-  id: string; name: string; brand: string | null; type: "grinder" | "brewer" | "other"; category: string;
-  units: string | null; hasRanges: boolean; methods: string[]; confidence: string | null; owned: boolean;
-}
 
 /** Add gear from the built-in library (an editable copy), or start a custom item. */
 function LibraryPicker({ onClose, onCustom }: { onClose: () => void; onCustom: () => void }) {
   const { reload, act } = useData();
   const [items, setItems] = useState<LibGear[] | null>(null);
-  const [q, setQ] = useState("");
+  const [tab, setTab] = usePref<GearTab>("gearLibraryTab", "brewer");
   const load = () => api.get<{ gear: LibGear[] }>("/api/catalog").then((c) => setItems(c.gear));
   useEffect(() => {
     load().catch(() => setItems([]));
@@ -486,41 +482,29 @@ function LibraryPicker({ onClose, onCustom }: { onClose: () => void; onCustom: (
       await reload(["gear"]);
       await load();
     }, `Added ${g.name}`);
-  const needle = q.trim().toLowerCase();
-  const shown = (items ?? []).filter((g) => !needle || `${g.name} ${g.brand ?? ""} ${g.category}`.toLowerCase().includes(needle));
-  const groups = Object.keys(CATEGORY_LABELS).map((c) => [c, shown.filter((g) => g.category === c)] as const).filter(([, gs]) => gs.length);
   return (
     <FullScreen title="Add gear" onClose={onClose}
       footer={<button className="block" onClick={onCustom}>Add custom gear</button>}>
       <div className="stack" data-testid="gear-library">
         <p className="hint">Pick from the library — you get your own copy, editable like any gear. Not listed? Add custom gear below.</p>
-        <SearchInput placeholder="Search grinders, brewers…" label="Search the gear library" value={q} onChange={setQ} />
-        {!items && <p className="muted">Loading…</p>}
-        {items && shown.length === 0 && <p className="muted">Nothing in the library matches — add it as custom gear.</p>}
-        {groups.map(([cat, gs]) => (
-          <section key={cat}>
-            <h2 className="group">{CATEGORY_LABELS[cat]}</h2>
-            <ul className="lib-list">
-              {gs.map((g) => (
-                <li key={g.id} data-lib={g.id}>
-                  <div className="lib-main">
-                    <strong>{g.name}</strong>
-                    <span className="muted small">
-                      {g.type === "grinder"
-                        ? g.hasRanges ? `Grind ranges for ${g.methods.length} method${g.methods.length === 1 ? "" : "s"}${g.confidence ? ` · ${g.confidence}` : ""}` : "No grind ranges yet — you can add your own"
-                        : g.brand ?? ""}
-                    </span>
-                  </div>
-                  {g.owned ? (
-                    <button className="small-btn" onClick={() => add(g)} aria-label={`Add another ${g.name}`}>✓ Added · add another</button>
-                  ) : (
-                    <button className="primary small-btn" onClick={() => add(g)} aria-label={`Add ${g.name}`}>Add</button>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
+        <GearLibraryBrowser items={items} tab={tab} onTab={setTab} emptyHint="Nothing in the library matches — add it as custom gear."
+          row={(g) => (
+            <>
+              <div className="lib-main">
+                <strong>{g.name}</strong>
+                <span className="muted small">
+                  {g.type === "grinder"
+                    ? g.hasRanges ? `Grind ranges for ${g.methods.length} method${g.methods.length === 1 ? "" : "s"}${g.confidence ? ` · ${g.confidence}` : ""}` : "No grind ranges yet — you can add your own"
+                    : g.brand ?? ""}
+                </span>
+              </div>
+              {g.owned ? (
+                <button className="small-btn" onClick={() => add(g)} aria-label={`Add another ${g.name}`}>✓ Added · add another</button>
+              ) : (
+                <button className="primary small-btn" onClick={() => add(g)} aria-label={`Add ${g.name}`}>Add</button>
+              )}
+            </>
+          )} />
       </div>
     </FullScreen>
   );

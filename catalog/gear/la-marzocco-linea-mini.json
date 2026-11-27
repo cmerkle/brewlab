@@ -1,0 +1,10 @@
+{
+  "id": "la-marzocco-linea-mini",
+  "version": 1,
+  "name": "La Marzocco Linea Mini",
+  "brand": "La Marzocco",
+  "type": "brewer",
+  "category": "espresso-machine",
+  "details": "Dual-boiler espresso machine.",
+  "defaultMethod": "espresso"
+}

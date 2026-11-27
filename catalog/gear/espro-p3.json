@@ -1,0 +1,10 @@
+{
+  "id": "espro-p3",
+  "version": 1,
+  "name": "Espro P3",
+  "brand": "Espro",
+  "type": "brewer",
+  "category": "french-press",
+  "details": "Glass French press with a double micro-filter.",
+  "defaultMethod": "immersion"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "meticulous",
+  "version": 1,
+  "name": "Meticulous",
+  "brand": "Meticulous",
+  "type": "brewer",
+  "category": "espresso-machine",
+  "details": "Profiling espresso machine with a motor-driven piston.",
+  "defaultMethod": "espresso"
+}

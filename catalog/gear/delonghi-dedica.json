@@ -1,0 +1,10 @@
+{
+  "id": "delonghi-dedica",
+  "version": 1,
+  "name": "De'Longhi Dedica",
+  "brand": "De'Longhi",
+  "type": "brewer",
+  "category": "espresso-machine",
+  "details": "Slim espresso machine.",
+  "defaultMethod": "espresso"
+}

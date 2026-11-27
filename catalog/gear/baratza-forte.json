@@ -1,0 +1,11 @@
+{
+  "id": "baratza-forte",
+  "version": 1,
+  "name": "Baratza Forté",
+  "brand": "Baratza",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Electric flat-burr grinder with macro settings 1–10 and micro steps A–Z (AP and BG). No grind chart in the library yet — type your setting.",
+  "units": "",
+  "burrs": null
+}

@@ -1,0 +1,10 @@
+{
+  "id": "cafelat-robot",
+  "version": 1,
+  "name": "Cafelat Robot",
+  "brand": "Cafelat",
+  "type": "brewer",
+  "category": "espresso-machine",
+  "details": "Manual lever espresso maker.",
+  "defaultMethod": "espresso"
+}

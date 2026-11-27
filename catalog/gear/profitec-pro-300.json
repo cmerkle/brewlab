@@ -1,0 +1,10 @@
+{
+  "id": "profitec-pro-300",
+  "version": 1,
+  "name": "Profitec Pro 300",
+  "brand": "Profitec",
+  "type": "brewer",
+  "category": "espresso-machine",
+  "details": "Dual-boiler espresso machine.",
+  "defaultMethod": "espresso"
+}

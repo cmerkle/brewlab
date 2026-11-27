@@ -1,0 +1,64 @@
+{
+  "id": "breville-dose-control-pro",
+  "version": 1,
+  "name": "Breville Dose Control Pro",
+  "brand": "Breville",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Electric conical grinder with 60 settings (Sage in the UK and Europe).",
+  "units": "",
+  "burrs": null,
+  "grindRanges": {
+    "scale": "settings 1–60",
+    "min": 1,
+    "max": 60,
+    "step": 1,
+    "methods": {
+      "turkish": {
+        "low": 1,
+        "high": 2
+      },
+      "espresso": {
+        "low": 1,
+        "high": 18
+      },
+      "moka": {
+        "low": 17,
+        "high": 44
+      },
+      "aeropress": {
+        "low": 13,
+        "high": 60
+      },
+      "rapid": {
+        "low": 34,
+        "high": 36
+      },
+      "pourover": {
+        "low": 21,
+        "high": 48
+      },
+      "batch": {
+        "low": 11,
+        "high": 60
+      },
+      "immersion": {
+        "low": 48,
+        "high": 60
+      },
+      "coldbrew": {
+        "low": 59,
+        "high": 60
+      }
+    }
+  },
+  "rangeInfo": {
+    "confidence": "community",
+    "source": "https://honestcoffeeguide.com/breville-sage-the-dose-control-pro-grind-settings/",
+    "note": "Honest Coffee Guide's chart (community, not the manufacturer's): Turkish 1–2, espresso 1–18, moka pot 17–44, AeroPress 13–60, V60 21–48, filter coffee machine 11–60, French press 48–60, cold brew 59–60. Its V60 row is used for pour-over, “Filter Coffee Machine” for drip, French press for immersion.",
+    "estimated": [
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
+  }
+}

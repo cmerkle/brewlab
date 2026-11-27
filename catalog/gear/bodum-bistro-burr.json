@@ -1,0 +1,11 @@
+{
+  "id": "bodum-bistro-burr",
+  "version": 1,
+  "name": "Bodum Bistro Burr Grinder",
+  "brand": "Bodum",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Electric conical burr grinder with a dial marked fine to coarse. No grind chart in the library yet — type your setting.",
+  "units": "",
+  "burrs": null
+}

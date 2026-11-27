@@ -483,6 +483,13 @@ label.tpl input { width: 20px; height: 20px; flex: 0 0 auto; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 button.chip { min-height: 34px; height: auto; padding: 6px 12px; border-radius: 999px; font-size: .85rem; font-weight: 500; background: var(--surface); border: 1px solid var(--line); }
 button.chip.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+/* Gear library kind filter: one row that scrolls sideways. */
+.chip-row { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.chip-row::-webkit-scrollbar { display: none; }
+.chip-row button.chip { flex: 0 0 auto; white-space: nowrap; }
+.chip-row button.chip .n { opacity: .7; margin-left: 2px; font-variant-numeric: tabular-nums; }
+.chip-row button.chip:disabled { opacity: .45; }
+h2.group .small { font-weight: 500; margin-left: 4px; }
 label.toggle-row { display: flex; align-items: center; gap: 12px; min-height: 40px; cursor: pointer; }
 label.toggle-row input { width: 20px; height: 20px; flex: 0 0 auto; }
 pre.prompt { white-space: pre-wrap; word-break: break-word; font-size: .75rem; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px; max-height: 50vh; overflow: auto; margin: 0; }

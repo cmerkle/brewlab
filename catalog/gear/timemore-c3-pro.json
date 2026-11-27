@@ -1,0 +1,11 @@
+{
+  "id": "timemore-c3-pro",
+  "version": 1,
+  "name": "Timemore Chestnut C3 Pro",
+  "brand": "Timemore",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Hand grinder with a folding handle; clicks counted from the start point (dial turned fully clockwise). No grind chart in the library yet — type your setting.",
+  "units": "clicks",
+  "burrs": null
+}

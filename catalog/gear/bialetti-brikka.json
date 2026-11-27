@@ -1,0 +1,10 @@
+{
+  "id": "bialetti-brikka",
+  "version": 1,
+  "name": "Bialetti Brikka",
+  "brand": "Bialetti",
+  "type": "brewer",
+  "category": "moka-pot",
+  "details": "Moka pot with a pressure valve for a crema-like top.",
+  "defaultMethod": "moka"
+}

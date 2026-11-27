@@ -211,6 +211,9 @@ SQLite at `/data/brewlab.db`, uploads at `/data/uploads`, port 7642.
   tokens on `:root` (light) overridden by `:root[data-theme="dark"]`; an inline script in index.html sets `data-theme`
   and `theme-color` before the first paint (`applyTheme` after a change). Don't use `prefers-color-scheme` in app CSS.
   README screenshots are all dark (`tests/e2e/screenshots.mjs`).
+- **Gear library browser** (`src/web/GearLibrary.tsx`, used by Gear → Add gear and setup's Brewers / Grinders steps):
+  Brewers / Grinders tabs (last tab is a per-device pref), one search over both (the empty state offers the other tab),
+  kind chips, brewers grouped by kind and grinders by brand. `CATEGORY_LABELS` lives there.
 - **Dialogs** render via a portal to `<body>` (`FullScreen`): iOS WebKit confines fixed overlays
   inside a scroller. Never render a fixed overlay inside `<main>` without a portal; the layout audit
   enforces "dialog directly under body".

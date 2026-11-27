@@ -1,0 +1,14 @@
+{
+  "id": "origami-air",
+  "version": 1,
+  "name": "Origami Air",
+  "brand": "Origami",
+  "type": "brewer",
+  "category": "cone-dripper",
+  "details": "Resin dripper; takes cone or wave filters.",
+  "variants": [
+    "S",
+    "M"
+  ],
+  "defaultMethod": "pourover"
+}

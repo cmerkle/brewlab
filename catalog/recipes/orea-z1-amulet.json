@@ -1,0 +1,49 @@
+{
+  "id": "orea-z1-amulet",
+  "version": 1,
+  "name": "Orea Z1 — AMULET",
+  "credit": "Matt Cowie (AMULET)",
+  "method": "pourover",
+  "brewer": {
+    "ids": [
+      "orea-z1"
+    ],
+    "categories": []
+  },
+  "doseG": 15.3,
+  "waterG": 240,
+  "tempC": 92.5,
+  "grind": {
+    "position": 0.9,
+    "preferredGrinders": [
+      "comandante-c40"
+    ]
+  },
+  "steps": [
+    {
+      "atSec": 0,
+      "label": "Pour to 60g",
+      "targetWaterG": 60,
+      "detail": "Very fast pour"
+    },
+    {
+      "atSec": 40,
+      "label": "Pour to 140g",
+      "targetWaterG": 140,
+      "detail": "Even faster pour"
+    },
+    {
+      "atSec": 75,
+      "label": "Pour to 190g",
+      "targetWaterG": 190,
+      "detail": "Slow circular pour"
+    },
+    {
+      "atSec": 105,
+      "label": "Pour to 240g",
+      "targetWaterG": 240,
+      "detail": "Slow circular pour; aim to finish 2:15–2:45"
+    }
+  ],
+  "notes": "AMULET's Z1 recipe by Matt Cowie (Glasgow), published on orea.uk/guides-z1: 1:15, water 91.5–93.5 °C. The grind isn't stated; this starts where Orea's own Z1 recipe does."
+}

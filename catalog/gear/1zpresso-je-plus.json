@@ -1,0 +1,70 @@
+{
+  "id": "1zpresso-je-plus",
+  "version": 1,
+  "name": "1Zpresso JE-Plus",
+  "brand": "1Zpresso",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Hand grinder with external adjustment: 10 numbers per rotation, 4 clicks per number (2.2 = 2 rotations and 2 numbers). Espresso-focused; also the JE-Pro.",
+  "units": "rotations",
+  "burrs": null,
+  "grindRanges": {
+    "scale": "rotations from zero (burrs closed); 2.2 = 2 rotations and 2 numbers",
+    "min": 0,
+    "step": 0.1,
+    "methods": {
+      "turkish": {
+        "low": 1.6,
+        "high": 2.2
+      },
+      "espresso": {
+        "low": 2.2,
+        "high": 3.2
+      },
+      "moka": {
+        "low": 4,
+        "high": 5
+      },
+      "aeropress": {
+        "low": 4,
+        "high": 5
+      },
+      "rapid": {
+        "low": 4.5,
+        "high": 6
+      },
+      "pourover": {
+        "low": 5.4,
+        "high": 6.6
+      },
+      "batch": {
+        "low": 4,
+        "high": 5
+      },
+      "immersion": {
+        "low": 6.4,
+        "high": 7
+      },
+      "coldbrew": {
+        "low": 6.7,
+        "high": 7.3
+      }
+    },
+    "notes": {
+      "moka": "1Zpresso groups moka pot with AeroPress and drip coffee maker.",
+      "aeropress": "1Zpresso groups AeroPress, moka pot and drip coffee maker.",
+      "pourover": "1Zpresso groups siphon with pour over.",
+      "immersion": "French press."
+    }
+  },
+  "rangeInfo": {
+    "confidence": "manufacturer",
+    "source": "https://1zpresso.coffee/grind-setting/",
+    "note": "1Zpresso “Je-Pro/Plus Grind Setting Reference” chart (JE-Plus-Grind-Setting-Reference-20200909.jpg on that page), in rotations: Turkish 1.6–2.2, espresso 2.2–3.2, AeroPress/moka/drip coffee maker 4.0–5.0, siphon/pour over 5.4–6.6, French press from 6.4 to the end of the chart (7).",
+    "estimated": [
+      "rapid",
+      "coldbrew"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range; cold brew: the French press range moved half its width coarser. Dial in from there."
+  }
+}

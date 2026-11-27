@@ -1,0 +1,11 @@
+{
+  "id": "timemore-nano",
+  "version": 1,
+  "name": "Timemore Chestnut Nano",
+  "brand": "Timemore",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Compact travel hand grinder with a folding handle. No grind chart in the library yet — type your setting.",
+  "units": "clicks",
+  "burrs": null
+}

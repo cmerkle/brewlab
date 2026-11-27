@@ -1,0 +1,10 @@
+{
+  "id": "breville-bambino-plus",
+  "version": 1,
+  "name": "Breville Bambino Plus",
+  "brand": "Breville",
+  "type": "brewer",
+  "category": "espresso-machine",
+  "details": "Compact espresso machine with automatic milk frothing (Sage in the UK and Europe).",
+  "defaultMethod": "espresso"
+}

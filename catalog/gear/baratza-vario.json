@@ -1,0 +1,11 @@
+{
+  "id": "baratza-vario",
+  "version": 1,
+  "name": "Baratza Vario",
+  "brand": "Baratza",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Electric flat-burr grinder with macro settings 1–10 and micro steps A–W (also the Vario W and W+). No grind chart in the library yet — type your setting.",
+  "units": "",
+  "burrs": null
+}

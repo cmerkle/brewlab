@@ -1,0 +1,11 @@
+{
+  "id": "femobook-a4z",
+  "version": 1,
+  "name": "Femobook A4Z",
+  "brand": "Femobook",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Battery electric filter grinder with 48 mm conical burrs (the 1Zpresso ZP6's burr set), stepped adjustment counted in clicks. No published grind chart yet — type your setting.",
+  "units": "clicks",
+  "burrs": "48 mm conical burrs (ZP6 set)"
+}

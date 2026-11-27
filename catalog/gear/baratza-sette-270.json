@@ -1,0 +1,66 @@
+{
+  "id": "baratza-sette-270",
+  "version": 1,
+  "name": "Baratza Sette 270",
+  "brand": "Baratza",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Electric conical grinder with macro settings and a stepless-feel micro adjustment; espresso-focused.",
+  "units": "",
+  "burrs": null,
+  "grindRanges": {
+    "scale": "macro settings 1–31 (the micro adjustment fine-tunes between them)",
+    "min": 1,
+    "max": 31,
+    "step": 1,
+    "methods": {
+      "espresso": {
+        "low": 1,
+        "high": 7
+      },
+      "moka": {
+        "low": 7,
+        "high": 18
+      },
+      "aeropress": {
+        "low": 5,
+        "high": 31
+      },
+      "rapid": {
+        "low": 14,
+        "high": 18
+      },
+      "pourover": {
+        "low": 9,
+        "high": 20
+      },
+      "batch": {
+        "low": 4,
+        "high": 28
+      },
+      "immersion": {
+        "low": 21,
+        "high": 31
+      },
+      "coldbrew": {
+        "low": 25,
+        "high": 31
+      }
+    },
+    "notes": {
+      "turkish": "Honest Coffee Guide lists no Turkish range."
+    },
+    "unsupported": [
+      "turkish"
+    ]
+  },
+  "rangeInfo": {
+    "confidence": "community",
+    "source": "https://honestcoffeeguide.com/baratza-sette-270-grind-settings/",
+    "note": "Honest Coffee Guide's chart (community, not the manufacturer's): espresso 1–7, moka pot 7–18, AeroPress 5–31, V60 9–20, filter coffee machine 4–28, French press 21–31, cold brew 25–31; Turkish N/A. Its V60 row is used for pour-over, “Filter Coffee Machine” for drip, French press for immersion.",
+    "estimated": [
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
+  }
+}

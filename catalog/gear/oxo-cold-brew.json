@@ -1,0 +1,10 @@
+{
+  "id": "oxo-cold-brew",
+  "version": 1,
+  "name": "OXO Cold Brew Maker",
+  "brand": "OXO",
+  "type": "brewer",
+  "category": "cold-brew-maker",
+  "details": "Cold brew maker with a rainmaker lid and a release switch.",
+  "defaultMethod": "coldbrew"
+}

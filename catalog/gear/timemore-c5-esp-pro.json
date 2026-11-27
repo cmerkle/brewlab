@@ -1,0 +1,11 @@
+{
+  "id": "timemore-c5-esp-pro",
+  "version": 1,
+  "name": "Timemore Chestnut C5 ESP Pro",
+  "brand": "Timemore",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Espresso-focused hand grinder; Timemore lists 50 settings per rotation (0.015 mm per click) over three rotations. No grind chart in the library yet — type your setting.",
+  "units": "clicks",
+  "burrs": null
+}

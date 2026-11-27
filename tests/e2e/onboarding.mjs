@@ -378,9 +378,38 @@ try {
   check((await p.locator('[data-testid="range-table"] .est-badge').count()) === 3, "typing your own value clears that row's est. badge");
   await p.getByRole("button", { name: "Cancel" }).click();
 
-  // "Estimate the empty rows": the library's rules fill ticked rows from the grinder's own ranges.
+  // Add gear: Brewers / Grinders tabs, kind chips, grinders grouped by brand, search across both tabs.
   await p.goto(`${BASE}/#/brew/gear`);
   await p.getByRole("button", { name: "Add gear" }).click();
+  {
+    const lib = p.getByTestId("gear-library");
+    await lib.locator("li").first().waitFor();
+    const groups = async () => (await lib.locator('[data-testid="lib-group"] h2').allInnerTexts()).map((t) => t.replace(/\s+\d+$/, "").toLowerCase());
+    const brewerGroups = await groups();
+    const onlyBrewers = !(await lib.locator('li[data-lib="comandante-c40"]').count());
+    await p.getByTestId("lib-tab-grinder").click();
+    const grinderGroups = await groups();
+    check(brewerGroups.includes("cone drippers") && brewerGroups.includes("espresso machines") && onlyBrewers
+      && grinderGroups.includes("1zpresso") && grinderGroups.includes("kingrinder") && grinderGroups.includes("timemore"),
+      `Add gear: Brewers tab grouped by kind (${brewerGroups.slice(0, 3).join(", ")}…), Grinders tab by brand (${grinderGroups.slice(0, 3).join(", ")}…)`);
+    await lib.getByRole("group", { name: "Kind of grinder" }).getByRole("button", { name: /^Hand/ }).click();
+    const handOnly = (await lib.locator('li[data-lib="niche-zero"]').count()) === 0 && (await lib.locator('li[data-lib="comandante-c40"]').count()) === 1;
+    await lib.getByRole("group", { name: "Kind of grinder" }).getByRole("button", { name: "All" }).click();
+    check(handOnly && (await lib.locator('li[data-lib="niche-zero"]').count()) === 1, "the Hand chip leaves out electric grinders; All brings them back");
+    await p.getByRole("button", { name: "Back" }).last().click();
+    await p.getByRole("button", { name: "Add gear" }).click();
+    await lib.locator("li").first().waitFor();
+    check((await p.getByTestId("lib-tab-grinder").getAttribute("aria-selected")) === "true", "the picker reopens on the tab you used last");
+    await p.getByTestId("lib-tab-brewer").click();
+    await p.getByLabel("Search the gear library").fill("comandante");
+    await p.getByTestId("lib-empty").waitFor();
+    const hint = await p.getByTestId("lib-empty").innerText();
+    await p.getByTestId("lib-empty").getByRole("button", { name: "Show grinders" }).click();
+    check(/1 grinder does/.test(hint) && (await lib.locator('li[data-lib="comandante-c40"]').count()) === 1,
+      `searching on the wrong tab points to the other one (“${hint.replace(/\s+/g, " ")}”)`);
+    await p.getByLabel("Search the gear library").fill("");
+  }
+  // "Estimate the empty rows": the library's rules fill ticked rows from the grinder's own ranges.
   await p.getByRole("button", { name: "Add custom gear" }).click();
   await p.fill("#ge-name", "Estimate Mill");
   await p.selectOption("#ge-type", "grinder");

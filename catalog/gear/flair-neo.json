@@ -1,0 +1,10 @@
+{
+  "id": "flair-neo",
+  "version": 1,
+  "name": "Flair Neo",
+  "brand": "Flair",
+  "type": "brewer",
+  "category": "espresso-machine",
+  "details": "Entry manual lever espresso maker.",
+  "defaultMethod": "espresso"
+}

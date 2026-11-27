@@ -1,0 +1,63 @@
+{
+  "id": "porlex-tall",
+  "version": 1,
+  "name": "Porlex Tall",
+  "brand": "Porlex",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Tall hand grinder with ceramic conical burrs; clicks counted from zero.",
+  "units": "clicks",
+  "burrs": "Ceramic conical burrs",
+  "grindRanges": {
+    "scale": "clicks from zero (burrs closed)",
+    "min": 0,
+    "step": 1,
+    "methods": {
+      "turkish": {
+        "low": 1,
+        "high": 1
+      },
+      "espresso": {
+        "low": 2,
+        "high": 3
+      },
+      "moka": {
+        "low": 4,
+        "high": 5
+      },
+      "aeropress": {
+        "low": 3,
+        "high": 8
+      },
+      "rapid": {
+        "low": 5,
+        "high": 6
+      },
+      "pourover": {
+        "low": 4,
+        "high": 6
+      },
+      "batch": {
+        "low": 3,
+        "high": 7
+      },
+      "immersion": {
+        "low": 6,
+        "high": 11
+      },
+      "coldbrew": {
+        "low": 7,
+        "high": 12
+      }
+    }
+  },
+  "rangeInfo": {
+    "confidence": "community",
+    "source": "https://honestcoffeeguide.com/porlex-tall-grind-settings/",
+    "note": "Honest Coffee Guide's chart (community, not the manufacturer's): Turkish 1, espresso 2–3, moka pot 4–5, AeroPress 3–8, V60 4–6, filter coffee machine 3–7, French press 6–11, cold brew 7–12. Its V60 row is used for pour-over, “Filter Coffee Machine” for drip, French press for immersion.",
+    "estimated": [
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
+  }
+}

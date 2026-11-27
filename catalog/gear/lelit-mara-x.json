@@ -1,0 +1,10 @@
+{
+  "id": "lelit-mara-x",
+  "version": 1,
+  "name": "Lelit Mara X",
+  "brand": "Lelit",
+  "type": "brewer",
+  "category": "espresso-machine",
+  "details": "Heat-exchanger espresso machine.",
+  "defaultMethod": "espresso"
+}

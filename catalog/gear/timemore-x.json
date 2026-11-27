@@ -1,0 +1,11 @@
+{
+  "id": "timemore-x",
+  "version": 1,
+  "name": "Timemore Chestnut X",
+  "brand": "Timemore",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Hand grinder with external adjustment. No grind chart in the library yet — type your setting.",
+  "units": "clicks",
+  "burrs": null
+}

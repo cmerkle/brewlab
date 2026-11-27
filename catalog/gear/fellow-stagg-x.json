@@ -1,0 +1,10 @@
+{
+  "id": "fellow-stagg-x",
+  "version": 1,
+  "name": "Fellow Stagg [X]",
+  "brand": "Fellow",
+  "type": "brewer",
+  "category": "flat-bottom-dripper",
+  "details": "Small double-walled flat-bottom dripper.",
+  "defaultMethod": "pourover"
+}

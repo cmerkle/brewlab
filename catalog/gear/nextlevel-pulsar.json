@@ -1,0 +1,10 @@
+{
+  "id": "nextlevel-pulsar",
+  "version": 1,
+  "name": "NextLevel Pulsar",
+  "brand": "NextLevel",
+  "type": "brewer",
+  "category": "flat-bottom-dripper",
+  "details": "No-bypass flat-bottom brewer with a dispersion cap and a flow valve.",
+  "defaultMethod": "pourover"
+}

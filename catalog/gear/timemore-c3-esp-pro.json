@@ -1,0 +1,11 @@
+{
+  "id": "timemore-c3-esp-pro",
+  "version": 1,
+  "name": "Timemore Chestnut C3 ESP Pro",
+  "brand": "Timemore",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Espresso-focused hand grinder with a folding handle. No grind chart in the library yet — type your setting.",
+  "units": "clicks",
+  "burrs": null
+}

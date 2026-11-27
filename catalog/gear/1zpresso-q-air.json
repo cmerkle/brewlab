@@ -1,0 +1,66 @@
+{
+  "id": "1zpresso-q-air",
+  "version": 1,
+  "name": "1Zpresso Q Air",
+  "brand": "1Zpresso",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Compact, light hand grinder (plastic body) with internal adjustment: 10 numbers per rotation, 3 clicks per number. Uses the Q series chart.",
+  "units": "rotations",
+  "burrs": null,
+  "grindRanges": {
+    "scale": "rotations from zero (burrs closed); 1.8 = 1 rotation and 8 numbers",
+    "min": 0,
+    "step": 0.1,
+    "methods": {
+      "moka": {
+        "low": 1.2,
+        "high": 2
+      },
+      "aeropress": {
+        "low": 1.2,
+        "high": 2
+      },
+      "rapid": {
+        "low": 1.6,
+        "high": 2.5
+      },
+      "pourover": {
+        "low": 1.8,
+        "high": 3.2
+      },
+      "batch": {
+        "low": 1.2,
+        "high": 2
+      },
+      "immersion": {
+        "low": 2.6,
+        "high": 3.8
+      },
+      "coldbrew": {
+        "low": 3.2,
+        "high": 4.4
+      }
+    },
+    "notes": {
+      "turkish": "1Zpresso's Q chart lists no Turkish range.",
+      "espresso": "1Zpresso's Q chart lists no espresso range.",
+      "moka": "1Zpresso groups moka pot with AeroPress and drip coffee maker.",
+      "aeropress": "1Zpresso groups AeroPress, moka pot and drip coffee maker."
+    },
+    "unsupported": [
+      "turkish",
+      "espresso"
+    ]
+  },
+  "rangeInfo": {
+    "confidence": "manufacturer",
+    "source": "https://1zpresso.coffee/grind-setting/",
+    "note": "1Zpresso “Q Grind Setting Reference” chart for the Q series (grind-setting_q_en_20260423.jpg on that page), in rotations: AeroPress/moka/drip coffee maker 1.2–2.0, siphon/pour over 1.8–3.2, French press 2.6–3.8.",
+    "estimated": [
+      "rapid",
+      "coldbrew"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: cold brew: the French press range moved half its width coarser; Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
+  }
+}

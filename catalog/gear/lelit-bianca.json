@@ -1,0 +1,10 @@
+{
+  "id": "lelit-bianca",
+  "version": 1,
+  "name": "Lelit Bianca",
+  "brand": "Lelit",
+  "type": "brewer",
+  "category": "espresso-machine",
+  "details": "Dual-boiler espresso machine with flow profiling.",
+  "defaultMethod": "espresso"
+}

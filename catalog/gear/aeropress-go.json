@@ -1,0 +1,10 @@
+{
+  "id": "aeropress-go",
+  "version": 1,
+  "name": "AeroPress Go",
+  "brand": "AeroPress",
+  "type": "brewer",
+  "category": "aeropress",
+  "details": "Travel AeroPress that packs into its own mug.",
+  "defaultMethod": "aeropress"
+}

@@ -1,0 +1,11 @@
+{
+  "id": "zerno-z1",
+  "version": 1,
+  "name": "Zerno Z1",
+  "brand": "Zerno",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Single-dose electric grinder with a stepless micrometer adjustment. No grind chart in the library yet — type your setting.",
+  "units": "",
+  "burrs": null
+}

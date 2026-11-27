@@ -1,0 +1,64 @@
+{
+  "id": "cuisinart-dbm-8",
+  "version": 1,
+  "name": "Cuisinart Supreme Grind (DBM-8)",
+  "brand": "Cuisinart",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Electric burr mill with 18 settings (dots). Also sold as the Professional Burr Mill.",
+  "units": "",
+  "burrs": null,
+  "grindRanges": {
+    "scale": "dots 1–18",
+    "min": 1,
+    "max": 18,
+    "step": 1,
+    "methods": {
+      "moka": {
+        "low": 1,
+        "high": 3
+      },
+      "aeropress": {
+        "low": 1,
+        "high": 7
+      },
+      "rapid": {
+        "low": 2,
+        "high": 4
+      },
+      "pourover": {
+        "low": 1,
+        "high": 4
+      },
+      "batch": {
+        "low": 1,
+        "high": 6
+      },
+      "immersion": {
+        "low": 5,
+        "high": 10
+      },
+      "coldbrew": {
+        "low": 6,
+        "high": 12
+      }
+    },
+    "notes": {
+      "turkish": "Honest Coffee Guide lists no Turkish range.",
+      "espresso": "Honest Coffee Guide lists no espresso range."
+    },
+    "unsupported": [
+      "turkish",
+      "espresso"
+    ]
+  },
+  "rangeInfo": {
+    "confidence": "community",
+    "source": "https://honestcoffeeguide.com/cuisinart-dbm-8-grind-settings/",
+    "note": "Honest Coffee Guide's chart (community, not the manufacturer's): moka pot 1–3, AeroPress 1–7, V60 1–4, filter coffee machine 1–6, French press 5–10, cold brew 6–12; Turkish, espresso N/A. Its V60 row is used for pour-over, “Filter Coffee Machine” for drip, French press for immersion. The guide stops at 12 because coarser settings are past 1400 µm.",
+    "estimated": [
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "id": "1zpresso-x-ultra",
+  "version": 1,
+  "name": "1Zpresso X-Ultra",
+  "brand": "1Zpresso",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Hand grinder with external adjustment: 60 clicks per rotation (6 numbers × 10 clicks). All-rounder, espresso-capable.",
+  "units": "clicks",
+  "burrs": null,
+  "grindRanges": {
+    "scale": "clicks from zero (burrs closed)",
+    "min": 0,
+    "step": 1,
+    "methods": {
+      "turkish": {
+        "low": 20,
+        "high": 40
+      },
+      "espresso": {
+        "low": 40,
+        "high": 70
+      },
+      "moka": {
+        "low": 70,
+        "high": 110
+      },
+      "aeropress": {
+        "low": 70,
+        "high": 110
+      },
+      "rapid": {
+        "low": 90,
+        "high": 140
+      },
+      "pourover": {
+        "low": 120,
+        "high": 160
+      },
+      "batch": {
+        "low": 70,
+        "high": 110
+      },
+      "immersion": {
+        "low": 160,
+        "high": 190
+      },
+      "coldbrew": {
+        "low": 175,
+        "high": 205
+      }
+    },
+    "notes": {
+      "moka": "1Zpresso groups moka pot with AeroPress and drip coffee maker.",
+      "aeropress": "1Zpresso groups AeroPress, moka pot and drip coffee maker.",
+      "pourover": "1Zpresso groups siphon with pour over.",
+      "immersion": "French press."
+    }
+  },
+  "rangeInfo": {
+    "confidence": "manufacturer",
+    "source": "https://1zpresso.coffee/grind-setting/",
+    "note": "1Zpresso “X-Ultra Grind Setting Reference” chart (X-Ultra-Grind-setting-reference-20230802.jpg on that page), in clicks: Turkish 20–40, espresso 40–70, AeroPress/moka/drip coffee maker 70–110, siphon/pour over 120–160, French press 160–190.",
+    "estimated": [
+      "rapid",
+      "coldbrew"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range; cold brew: the French press range moved half its width coarser. Dial in from there."
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "id": "lagom-mini-moonshine",
+  "version": 1,
+  "name": "Option-O Lagom Mini (Moonshine burrs)",
+  "brand": "Option-O",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Compact single-dose electric grinder with 48 mm conical burrs; settings in dots from zero. These are the Moonshine burrs.",
+  "units": "",
+  "burrs": "48 mm Moonshine conical burrs",
+  "grindRanges": {
+    "scale": "dots from zero (burrs closed)",
+    "min": 0,
+    "step": 1,
+    "methods": {
+      "turkish": {
+        "low": 4,
+        "high": 22
+      },
+      "espresso": {
+        "low": 18,
+        "high": 38
+      },
+      "moka": {
+        "low": 36,
+        "high": 66
+      },
+      "aeropress": {
+        "low": 32,
+        "high": 96
+      },
+      "rapid": {
+        "low": 55,
+        "high": 64
+      },
+      "pourover": {
+        "low": 40,
+        "high": 70
+      },
+      "batch": {
+        "low": 30,
+        "high": 90
+      },
+      "immersion": {
+        "low": 69,
+        "high": 130
+      },
+      "coldbrew": {
+        "low": 80,
+        "high": 140
+      }
+    }
+  },
+  "rangeInfo": {
+    "confidence": "community",
+    "source": "https://honestcoffeeguide.com/option-o-lagom-mini-moonshine-burrs-grind-settings/",
+    "note": "Honest Coffee Guide's chart (community, not the manufacturer's): Turkish 4–22, espresso 18–38, moka pot 36–66, AeroPress 32–96, V60 40–70, filter coffee machine 30–90, French press 69–130, cold brew 80–140. Its V60 row is used for pour-over, “Filter Coffee Machine” for drip, French press for immersion.",
+    "estimated": [
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
+  }
+}

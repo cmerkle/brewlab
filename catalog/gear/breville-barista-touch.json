@@ -1,0 +1,10 @@
+{
+  "id": "breville-barista-touch",
+  "version": 1,
+  "name": "Breville Barista Touch",
+  "brand": "Breville",
+  "type": "brewer",
+  "category": "espresso-machine",
+  "details": "Touchscreen espresso machine with a built-in grinder (Sage in the UK and Europe).",
+  "defaultMethod": "espresso"
+}

@@ -1,0 +1,11 @@
+{
+  "id": "oxo-brew-conical",
+  "version": 1,
+  "name": "OXO Brew Conical Burr Grinder",
+  "brand": "OXO",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Electric conical burr grinder with 15 numbered settings plus micro-adjustments. No grind chart in the library yet — type your setting.",
+  "units": "",
+  "burrs": "Conical burrs"
+}

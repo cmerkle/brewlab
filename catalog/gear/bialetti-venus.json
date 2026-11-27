@@ -1,0 +1,10 @@
+{
+  "id": "bialetti-venus",
+  "version": 1,
+  "name": "Bialetti Venus",
+  "brand": "Bialetti",
+  "type": "brewer",
+  "category": "moka-pot",
+  "details": "Stainless steel moka pot.",
+  "defaultMethod": "moka"
+}

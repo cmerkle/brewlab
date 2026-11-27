@@ -1,0 +1,10 @@
+{
+  "id": "rancilio-silvia",
+  "version": 1,
+  "name": "Rancilio Silvia",
+  "brand": "Rancilio",
+  "type": "brewer",
+  "category": "espresso-machine",
+  "details": "Single-boiler espresso machine.",
+  "defaultMethod": "espresso"
+}

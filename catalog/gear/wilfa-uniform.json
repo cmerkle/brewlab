@@ -1,0 +1,64 @@
+{
+  "id": "wilfa-uniform",
+  "version": 1,
+  "name": "Wilfa Svart Uniform",
+  "brand": "Wilfa",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Electric flat-burr grinder with 41 numbered settings.",
+  "units": "",
+  "burrs": "58 mm flat burrs (stock)",
+  "grindRanges": {
+    "scale": "settings 1–41",
+    "min": 1,
+    "max": 41,
+    "step": 1,
+    "methods": {
+      "turkish": {
+        "low": 1,
+        "high": 1
+      },
+      "espresso": {
+        "low": 1,
+        "high": 9
+      },
+      "moka": {
+        "low": 9,
+        "high": 23
+      },
+      "aeropress": {
+        "low": 7,
+        "high": 38
+      },
+      "rapid": {
+        "low": 18,
+        "high": 22
+      },
+      "pourover": {
+        "low": 11,
+        "high": 25
+      },
+      "batch": {
+        "low": 6,
+        "high": 35
+      },
+      "immersion": {
+        "low": 25,
+        "high": 41
+      },
+      "coldbrew": {
+        "low": 31,
+        "high": 41
+      }
+    }
+  },
+  "rangeInfo": {
+    "confidence": "community",
+    "source": "https://honestcoffeeguide.com/wilfa-uniform-grind-settings/",
+    "note": "Honest Coffee Guide's chart (community, not the manufacturer's): Turkish 1, espresso 1–9, moka pot 9–23, AeroPress 7–38, V60 11–25, filter coffee machine 6–35, French press 25–41, cold brew 31–41. Its V60 row is used for pour-over, “Filter Coffee Machine” for drip, French press for immersion. For the stock burrs.",
+    "estimated": [
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
+  }
+}

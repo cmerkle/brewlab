@@ -1,0 +1,66 @@
+{
+  "id": "mahlkonig-x54",
+  "version": 1,
+  "name": "Mahlkönig X54",
+  "brand": "Mahlkönig",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Electric flat-burr home grinder with numbered settings.",
+  "units": "",
+  "burrs": "54 mm flat burrs",
+  "grindRanges": {
+    "scale": "settings 1–35",
+    "min": 1,
+    "max": 35,
+    "step": 0.5,
+    "methods": {
+      "espresso": {
+        "low": 1,
+        "high": 8
+      },
+      "moka": {
+        "low": 7.5,
+        "high": 22
+      },
+      "aeropress": {
+        "low": 5,
+        "high": 35
+      },
+      "rapid": {
+        "low": 17,
+        "high": 20
+      },
+      "pourover": {
+        "low": 9.5,
+        "high": 24
+      },
+      "batch": {
+        "low": 4,
+        "high": 34.5
+      },
+      "immersion": {
+        "low": 24,
+        "high": 35
+      },
+      "coldbrew": {
+        "low": 30,
+        "high": 35
+      }
+    },
+    "notes": {
+      "turkish": "Honest Coffee Guide lists no Turkish range."
+    },
+    "unsupported": [
+      "turkish"
+    ]
+  },
+  "rangeInfo": {
+    "confidence": "community",
+    "source": "https://honestcoffeeguide.com/mahlkonig-x54-grind-settings/",
+    "note": "Honest Coffee Guide's chart (community, not the manufacturer's): espresso 1–8, moka pot 7.5–22, AeroPress 5–35, V60 9.5–24, filter coffee machine 4–34.5, French press 24–35, cold brew 30–35; Turkish N/A. Its V60 row is used for pour-over, “Filter Coffee Machine” for drip, French press for immersion.",
+    "estimated": [
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
+  }
+}

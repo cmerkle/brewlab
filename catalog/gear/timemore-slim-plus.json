@@ -1,0 +1,11 @@
+{
+  "id": "timemore-slim-plus",
+  "version": 1,
+  "name": "Timemore Chestnut Slim Plus",
+  "brand": "Timemore",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Slim, light hand grinder. No grind chart in the library yet — type your setting.",
+  "units": "clicks",
+  "burrs": null
+}

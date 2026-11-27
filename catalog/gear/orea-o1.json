@@ -1,0 +1,10 @@
+{
+  "id": "orea-o1",
+  "version": 1,
+  "name": "Orea O1",
+  "brand": "Orea",
+  "type": "brewer",
+  "category": "flat-bottom-dripper",
+  "details": "Small single-cup flat-bottom dripper; takes 155 flat filters.",
+  "defaultMethod": "pourover"
+}

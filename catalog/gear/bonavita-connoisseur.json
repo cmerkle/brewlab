@@ -1,0 +1,10 @@
+{
+  "id": "bonavita-connoisseur",
+  "version": 1,
+  "name": "Bonavita Connoisseur",
+  "brand": "Bonavita",
+  "type": "brewer",
+  "category": "batch-brewer",
+  "details": "8-cup drip coffee maker.",
+  "defaultMethod": "batch"
+}

@@ -1,0 +1,70 @@
+{
+  "id": "kingrinder-k7",
+  "version": 1,
+  "name": "Kingrinder K7",
+  "brand": "Kingrinder",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Hand grinder with external adjustment: 100 clicks per rotation, about 15 µm per click, counted from zero. 53 mm stainless steel burr.",
+  "units": "clicks",
+  "burrs": "53 mm stainless steel burr",
+  "grindRanges": {
+    "scale": "clicks from zero (adjustment turned until the burrs touch)",
+    "min": 0,
+    "step": 1,
+    "methods": {
+      "turkish": {
+        "low": 20,
+        "high": 30
+      },
+      "espresso": {
+        "low": 30,
+        "high": 40
+      },
+      "moka": {
+        "low": 40,
+        "high": 50
+      },
+      "aeropress": {
+        "low": 40,
+        "high": 50
+      },
+      "rapid": {
+        "low": 45,
+        "high": 70
+      },
+      "pourover": {
+        "low": 60,
+        "high": 80
+      },
+      "batch": {
+        "low": 60,
+        "high": 80
+      },
+      "immersion": {
+        "low": 80,
+        "high": 100
+      },
+      "coldbrew": {
+        "low": 90,
+        "high": 110
+      }
+    },
+    "notes": {
+      "moka": "Kingrinder groups moka pot and AeroPress (medium-fine).",
+      "aeropress": "Kingrinder groups moka pot and AeroPress (medium-fine).",
+      "immersion": "French press (coarse)."
+    }
+  },
+  "rangeInfo": {
+    "confidence": "manufacturer",
+    "source": "https://www.kingrinder.com/",
+    "note": "Kingrinder's “Grind Setting Chart of KINGrinder (Clicks)” on its site, K7 column: extra fine 20–30, fine 30–40, medium-fine 40–50, medium 60–80, coarse 80–100. Kingrinder's chart is by grind size, not brew method; mapped as their K4/K6 manual pairs them (extra fine → Turkish, fine → espresso, medium-fine → moka pot/AeroPress, medium → pour-over, coarse → French press). Same page: 100 clicks per round, 15 µm per click.",
+    "estimated": [
+      "rapid",
+      "batch",
+      "coldbrew"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range; drip coffee maker: the pour-over range; cold brew: the French press range moved half its width coarser. Dial in from there."
+  }
+}

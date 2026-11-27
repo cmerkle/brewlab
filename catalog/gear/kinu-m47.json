@@ -1,0 +1,63 @@
+{
+  "id": "kinu-m47",
+  "version": 1,
+  "name": "Kinu M47",
+  "brand": "Kinu",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Hand grinder with 47 mm conical burrs; settings in rotations from zero. The Classic, Simplicity and Phoenix share one chart.",
+  "units": "rotations",
+  "burrs": "47 mm conical burrs",
+  "grindRanges": {
+    "scale": "rotations from zero (burrs closed)",
+    "min": 0,
+    "step": 0.1,
+    "methods": {
+      "turkish": {
+        "low": 0.3,
+        "high": 1.3
+      },
+      "espresso": {
+        "low": 1.1,
+        "high": 2.3
+      },
+      "moka": {
+        "low": 2.2,
+        "high": 4
+      },
+      "aeropress": {
+        "low": 2,
+        "high": 5.8
+      },
+      "rapid": {
+        "low": 3.4,
+        "high": 3.9
+      },
+      "pourover": {
+        "low": 2.5,
+        "high": 4.2
+      },
+      "batch": {
+        "low": 1.9,
+        "high": 5.4
+      },
+      "immersion": {
+        "low": 4.2,
+        "high": 7.8
+      },
+      "coldbrew": {
+        "low": 4.9,
+        "high": 8.5
+      }
+    }
+  },
+  "rangeInfo": {
+    "confidence": "community",
+    "source": "https://honestcoffeeguide.com/kinu-m47-classic-grind-settings/",
+    "note": "Honest Coffee Guide's chart (community, not the manufacturer's): Turkish 0.3–1.3, espresso 1.1–2.3, moka pot 2.2–4, AeroPress 2–5.8, V60 2.5–4.2, filter coffee machine 1.9–5.4, French press 4.2–7.8, cold brew 4.9–8.5. Its V60 row is used for pour-over, “Filter Coffee Machine” for drip, French press for immersion. Same table on its Simplicity and Phoenix pages.",
+    "estimated": [
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
+  }
+}

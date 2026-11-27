@@ -1,0 +1,10 @@
+{
+  "id": "bee-house-dripper",
+  "version": 1,
+  "name": "Bee House Dripper",
+  "brand": "Bee House",
+  "type": "brewer",
+  "category": "cone-dripper",
+  "details": "Ceramic wedge dripper with two holes; takes Melitta-style filters.",
+  "defaultMethod": "pourover"
+}

@@ -1,0 +1,66 @@
+{
+  "id": "timemore-sculptor-078s",
+  "version": 1,
+  "name": "Timemore Sculptor 078S",
+  "brand": "Timemore",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "Electric single-dose grinder with 78 mm flat burrs and a stepless dial.",
+  "units": "",
+  "burrs": "78 mm flat burrs (stock)",
+  "grindRanges": {
+    "scale": "dial numbers from zero, 0–18, stepless",
+    "min": 0,
+    "max": 18,
+    "step": 0.1,
+    "methods": {
+      "espresso": {
+        "low": 0,
+        "high": 2.6
+      },
+      "moka": {
+        "low": 2.3,
+        "high": 7.6
+      },
+      "aeropress": {
+        "low": 1.6,
+        "high": 13
+      },
+      "rapid": {
+        "low": 5.6,
+        "high": 7.3
+      },
+      "pourover": {
+        "low": 3,
+        "high": 8.3
+      },
+      "batch": {
+        "low": 1.2,
+        "high": 11.9
+      },
+      "immersion": {
+        "low": 8.2,
+        "high": 18
+      },
+      "coldbrew": {
+        "low": 10.2,
+        "high": 18
+      }
+    },
+    "notes": {
+      "turkish": "Honest Coffee Guide lists no Turkish range."
+    },
+    "unsupported": [
+      "turkish"
+    ]
+  },
+  "rangeInfo": {
+    "confidence": "community",
+    "source": "https://honestcoffeeguide.com/timemore-sculptor-078s-grind-settings/",
+    "note": "Honest Coffee Guide's chart (community, not the manufacturer's): espresso 0–2.6, moka pot 2.3–7.6, AeroPress 1.6–13, V60 3–8.3, filter coffee machine 1.2–11.9, French press 8.2–18, cold brew 10.2–18; Turkish N/A. Its V60 row is used for pour-over, “Filter Coffee Machine” for drip, French press for immersion. For the stock burrs.",
+    "estimated": [
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
+  }
+}

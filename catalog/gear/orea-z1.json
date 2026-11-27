@@ -1,0 +1,10 @@
+{
+  "id": "orea-z1",
+  "version": 1,
+  "name": "Orea Z1",
+  "brand": "Orea",
+  "type": "brewer",
+  "category": "flat-bottom-dripper",
+  "details": "Zero-bypass flat-bottom dripper.",
+  "defaultMethod": "pourover"
+}

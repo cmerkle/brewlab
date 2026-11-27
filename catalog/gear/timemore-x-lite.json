@@ -1,0 +1,11 @@
+{
+  "id": "timemore-x-lite",
+  "version": 1,
+  "name": "Timemore Chestnut X Lite",
+  "brand": "Timemore",
+  "type": "grinder",
+  "category": "hand-grinder",
+  "details": "Hand grinder with external adjustment, lighter body than the X. No grind chart in the library yet — type your setting.",
+  "units": "clicks",
+  "burrs": null
+}

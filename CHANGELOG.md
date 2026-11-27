@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.8.1
+
+- **Add gear has Brewers and Grinders tabs.** One search covers both (and points to the other tab
+  when only it has matches); kind chips filter the list (Cone, Flat-bottom, Espresso…; Hand,
+  Electric); brewers are grouped by kind and grinders by brand. The tab you used last is
+  remembered on that device. Setup's Brewers and Grinders steps use the same browser.
+- **About 125 more pieces of gear in the library** (169 in all): every current 1Zpresso,
+  Kingrinder and Timemore Chestnut grinder, the Fellow Ode Gen 1, Fiorenzato Pietro, Turin DF54 /
+  DF64V / DF83, Lagom, Timemore Sculptor, Baratza, Eureka, Varia, Weber and more; brewers including
+  the Cafec Deep 27, Orea O1 and Z1, Hario V60 01, Neo, Alpha, Switch and Mugen, Pulsar, Chemex,
+  Origami, AeroPress Go / Clear, French presses, moka pots, drip machines, cold brew makers and 19
+  espresso machines. Grind ranges come only from published charts (manufacturer or community, with
+  the source shown); grinders without a published chart are in the library without ranges.
+- **Three recipes for Orea brewers** (Easy Does It on the O1 and Z1, and AMULET's Z1 recipe).
+
 ## 0.8.0
 
 - **Online demo mode** (`DEMO=1`, see docs/DEMO.md): a public demo people can try without

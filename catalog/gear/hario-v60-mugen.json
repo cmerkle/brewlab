@@ -1,0 +1,10 @@
+{
+  "id": "hario-v60-mugen",
+  "version": 1,
+  "name": "Hario V60 Mugen",
+  "brand": "Hario",
+  "type": "brewer",
+  "category": "cone-dripper",
+  "details": "V60 cone with a single spiral rib for a slower, one-pour brew.",
+  "defaultMethod": "pourover"
+}

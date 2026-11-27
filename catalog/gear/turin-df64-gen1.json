@@ -1,0 +1,64 @@
+{
+  "id": "turin-df64-gen1",
+  "version": 1,
+  "name": "Turin DF64 (Gen 1)",
+  "brand": "Turin",
+  "type": "grinder",
+  "category": "electric-grinder",
+  "details": "The first DF64: electric single-dose grinder with 64 mm flat burrs and a stepless dial 0–90.",
+  "units": "",
+  "burrs": "64 mm flat burrs (stock)",
+  "grindRanges": {
+    "scale": "dial numbers 0–90, stepless",
+    "min": 0,
+    "max": 90,
+    "step": 1,
+    "methods": {
+      "turkish": {
+        "low": 0,
+        "high": 6
+      },
+      "espresso": {
+        "low": 3,
+        "high": 19
+      },
+      "moka": {
+        "low": 18,
+        "high": 43
+      },
+      "aeropress": {
+        "low": 15,
+        "high": 69
+      },
+      "rapid": {
+        "low": 34,
+        "high": 42
+      },
+      "pourover": {
+        "low": 22,
+        "high": 47
+      },
+      "batch": {
+        "low": 13,
+        "high": 64
+      },
+      "immersion": {
+        "low": 47,
+        "high": 90
+      },
+      "coldbrew": {
+        "low": 56,
+        "high": 90
+      }
+    }
+  },
+  "rangeInfo": {
+    "confidence": "community",
+    "source": "https://honestcoffeeguide.com/turin-df64-gen-1-grind-settings/",
+    "note": "Honest Coffee Guide's chart (community, not the manufacturer's): Turkish 0–6, espresso 3–19, moka pot 18–43, AeroPress 15–69, V60 22–47, filter coffee machine 13–64, French press 47–90, cold brew 56–90. Its V60 row is used for pour-over, “Filter Coffee Machine” for drip, French press for immersion. For the stock burrs.",
+    "estimated": [
+      "rapid"
+    ],
+    "estimateNote": "Estimated by extrapolating the cited ranges, not from the source: Rapid Brewer: from the middle of the AeroPress range to the middle of the pour-over range. Dial in from there."
+  }
+}
